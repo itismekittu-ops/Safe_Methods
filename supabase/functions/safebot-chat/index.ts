@@ -225,7 +225,7 @@ ${rateContext ? `--- Current Rate Data ---\n${rateContext}\n--- End Rate Data --
       Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-5.6-luna",
       messages,
       max_tokens: 500,
       temperature: 0.3,
