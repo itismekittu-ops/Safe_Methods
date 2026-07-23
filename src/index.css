@@ -1,0 +1,51 @@
+/* --- MANAGED FONT IMPORTS START (do not edit manually) --- */
+/* INTERNAL USE NAME: Heading */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+/* INTERNAL USE NAME: Body */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+/* --- MANAGED FONT IMPORTS END --- */
+
+/* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+:root {
+  --primary: #0B3D2E;
+  --primary-foreground: #F7F3EA;
+  --accent: #D4AF37;
+  --accent-foreground: #1F1B16;
+  --background: #F7F3EA;
+  --surface: #FFFDF8;
+  --foreground: #1F1B16;
+  --muted: #EDE7D8;
+  --muted-foreground: #6B6354;
+  --border: #D4AF37;
+  --border-subtle: #E3DCCB;
+  --success: #3E6B4F;
+  --warning: #B07D2B;
+  --destructive: #8A2D2D;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --hairline: 1px solid #D4AF37;
+  --hairline-subtle: 1px solid #E3DCCB;
+  --shadow-soft: 0 1px 2px rgba(31, 27, 22, 0.06);
+  --shadow-raised: 0 4px 12px rgba(31, 27, 22, 0.08);
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
