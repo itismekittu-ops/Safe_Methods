@@ -28,7 +28,7 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 #### (F1-US2) See Best-Matched Financial Products & Banks
 * **As a** visitor,
 * **WHEN I** ask a financial question,
-* **I want to** see which financial products/banks best meet my needs in the right sidebar (ordered from top match to least match),
+* **I want to** see which financial products/banks best meet my needs in the right sidebar (ordered verticaly best match at the top and least match at the bottom). And each row should have bank icon + consultant name + interest rate.
 * **AND IF** needed, select specific banks or advisors to request quotes or advice from,
 * **So that** I can visually compare options and understand the competitive landscape.
 * **Dependencies:** F1-US1
