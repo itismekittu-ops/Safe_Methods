@@ -1,8 +1,8 @@
 # 🗺️ Specification Directory & System Map
 
 > **Operational Directive:** You are acting as a Senior Lead Engineer building this application via Spec-Driven Development (SDD) in Bolt.  
-> **Platform Engine:** Bolt.new | **Single Source of Truth (SSOT):** `/.specs/`
->  Read this `INDEX.md` file to understand the project map before generating code.
+> **Platform Engine:** Bolt.new | **Single Source of Truth (SSOT):** `/specs/`
+>  Read this `agents.md` file to understand the project map before generating code.
 ---
 
 ## 📚 1. Document Index Map / Spec Directory
