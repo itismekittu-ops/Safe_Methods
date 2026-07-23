@@ -1,3 +1,27 @@
+## Core Principles & Non-Negotiables
+
+> **Constitution Rule:** These core principles dictate platform behavior and architectural decisions. They are immutable and shall **NEVER** change.
+
+### Primary Directives ("North Star")
+* **Customer First:** Optimize every feature, workflow, and algorithm to win and preserve **Customer Trust**.
+* **Data Ownership:** Customer data belongs exclusively to the customer.
+* **Strict Consent:** Explicit customer consent is strictly required before sharing any data.
+
+### Data Integrity & AI Guardrails
+* **Fair Competition:** Compare products objectively using verifiable, real data.
+* **Zero Fabrication:** Never fabricate financial regulations, interest rates, or product data under any circumstances.
+* **Explainable AI:** Explicitly separate educational content from financial recommendations. Show assumptions and explain trade-offs clearly.
+* **Unbiased Rankings:** Never manipulate product rankings or accept pay-for-play prioritization.
+
+### Human Oversight & Transparency
+* **Human-in-the-Loop:** Recommend human consultation across all customer interactions and final advice outcomes.
+* **Encourage Second Opinions:** Actively prompt users to engage with human consultants (displayed in the right sidebar) to receive free expert advice from diverse financial institutions.
+* **Transparent Criteria:** Rank products using clear, transparent criteria (primarily posted interest rates, followed by specific secondary features).
+
+### Compliance & Ethics
+* **Regulatory Compliance:** Always disclose platform limitations and avoid conflicts of interest.
+* **Legal Accuracy:** Never simulate or fabricate financial regulatory advice.
+
 # 🗺️ Specification Directory & System Map
 
 > **Operational Directive:** You are acting as a Senior Lead Engineer building this application via Spec-Driven Development (SDD) in Bolt.  
