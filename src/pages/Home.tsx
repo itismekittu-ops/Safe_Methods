@@ -5,6 +5,7 @@ import { SafeBotDemo } from '../components/SafeBotDemo';
 import { CtaSection } from '../components/CtaSection';
 import { BlogSection } from '../components/BlogSection';
 import { ContactSection } from '../components/ContactSection';
+import { ExitIntentPopup } from '../components/ExitIntentPopup';
 export function Home() {
   return (
     <main>
@@ -14,6 +15,7 @@ export function Home() {
       <CtaSection />
       <BlogSection />
       <ContactSection />
+      <ExitIntentPopup />
     </main>);
 
 }
