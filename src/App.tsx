@@ -7,6 +7,7 @@ import { ServiceDetail } from './pages/ServiceDetail';
 import { BlogPost } from './pages/BlogPost';
 import { Auth } from './pages/Auth';
 import { Account } from './pages/Account';
+import { ResetPassword } from './pages/ResetPassword';
 export function App() {
   return (
     <BrowserRouter>
@@ -18,6 +19,7 @@ export function App() {
             <Route path="/blog" element={<BlogPost />} />
             <Route path="/login" element={<Auth />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
         </Routes>
       </AuthProvider>

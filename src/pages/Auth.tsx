@@ -5,6 +5,7 @@ import { Tabs, TabList, Tab, TabPanel } from "../components/Tabs";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Logo } from "../components/Logo";
+import { CheckCircleIcon } from "lucide-react";
 import { useAuth } from "../lib/auth";
 
 const GoogleIcon = () => (
@@ -17,7 +18,7 @@ const GoogleIcon = () => (
 );
 
 export function Auth() {
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -28,6 +29,13 @@ export function Auth() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  // Forgot password state
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSent, setForgotSent] = useState(false);
+
   // Signup state
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -36,6 +44,23 @@ export function Auth() {
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState<string | null>(null);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    if (!forgotEmail.trim()) {
+      setForgotError("Please enter your email address.");
+      return;
+    }
+    setForgotLoading(true);
+    const { error } = await resetPassword(forgotEmail.trim());
+    setForgotLoading(false);
+    if (error) {
+      setForgotError(error);
+    } else {
+      setForgotSent(true);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,46 +120,122 @@ export function Auth() {
               </TabList>
 
               <TabPanel value="login">
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <TextInput
-                    label="Email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    required
-                  />
-                  <div>
+                {forgotMode ? (
+                  forgotSent ? (
+                    <div className="space-y-5 text-center py-4">
+                      <div className="w-14 h-14 rounded-full bg-success/10 border border-success/30 flex items-center justify-center mx-auto">
+                        <CheckCircleIcon className="w-7 h-7 text-success" />
+                      </div>
+                      <div>
+                        <h3 className="font-heading text-xl text-foreground mb-2">Check your email</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          We've sent a password reset link to <span className="font-medium text-foreground">{forgotEmail}</span>. Click the link in the email to set a new password.
+                        </p>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => {
+                          setForgotMode(false);
+                          setForgotSent(false);
+                          setForgotEmail("");
+                        }}
+                      >
+                        Back to log in
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-5">
+                      <div>
+                        <h3 className="font-heading text-xl text-foreground mb-2">Reset your password</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                          Enter your email and we'll send you a link to set a new password.
+                        </p>
+                      </div>
+                      <TextInput
+                        label="Email"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
+                      {forgotError && (
+                        <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
+                          {forgotError}
+                        </p>
+                      )}
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        className="w-full bg-accent text-primary hover:bg-accent/90 border-transparent"
+                        disabled={forgotLoading}
+                      >
+                        {forgotLoading ? "Sending link..." : "Send Reset Link"}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotMode(false);
+                          setForgotError(null);
+                        }}
+                        className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Back to log in
+                      </button>
+                    </form>
+                  )
+                ) : (
+                  <form onSubmit={handleLogin} className="space-y-5">
                     <TextInput
-                      label="Password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      label="Email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                       required
                     />
-                    <div className="flex justify-end mt-2">
-                      <a href="#" className="text-sm text-muted-foreground hover:text-accent transition-colors">
-                        Forgot password?
-                      </a>
+                    <div>
+                      <TextInput
+                        label="Password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                      />
+                      <div className="flex justify-end mt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForgotMode(true);
+                            setForgotEmail(loginEmail);
+                            setForgotError(null);
+                            setForgotSent(false);
+                          }}
+                          className="text-sm text-muted-foreground hover:text-accent transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {loginError && (
-                    <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
-                      {loginError}
-                    </p>
-                  )}
+                    {loginError && (
+                      <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
+                        {loginError}
+                      </p>
+                    )}
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    className="w-full mt-2 bg-accent text-primary hover:bg-accent/90 border-transparent"
-                    disabled={loginLoading}
-                  >
-                    {loginLoading ? "Signing in..." : "Log In"}
-                  </Button>
-                </form>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-full mt-2 bg-accent text-primary hover:bg-accent/90 border-transparent"
+                      disabled={loginLoading}
+                    >
+                      {loginLoading ? "Signing in..." : "Log In"}
+                    </Button>
+                  </form>
+                )}
               </TabPanel>
 
               <TabPanel value="signup">
