@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "lucide-react";
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
+import { Button } from "./Button";
 
 const SUGGESTIONS = [
   { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
