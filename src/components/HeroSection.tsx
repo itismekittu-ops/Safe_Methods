@@ -3,6 +3,7 @@ import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "luc
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
+import { supabase } from "../lib/supabase";
 
 const SUGGESTIONS = [
   { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
@@ -51,12 +52,40 @@ export function HeroSection() {
     scrollToBottom();
   }, [messages]);
 
-  // Restore session token from sessionStorage on mount
+  // Restore session token and chat history from sessionStorage on mount (F1-US9)
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
-    if (stored) {
-      setSessionToken(stored);
-    }
+    if (!stored) return;
+    setSessionToken(stored);
+
+    (async () => {
+      try {
+        const { data: session } = await supabase
+          .from("chat_sessions")
+          .select("id")
+          .eq("session_token", stored)
+          .maybeSingle();
+
+        if (!session) return;
+
+        const { data: rows } = await supabase
+          .from("chat_messages")
+          .select("role, content")
+          .eq("session_id", session.id)
+          .order("created_at", { ascending: true });
+
+        if (rows && rows.length > 0) {
+          setMessages(
+            rows.map((r) => ({
+              role: r.role === "user" ? "user" as const : "bot" as const,
+              content: r.content,
+            }))
+          );
+        }
+      } catch {
+        // Silently ignore — user starts with a fresh chat
+      }
+    })();
   }, []);
 
   const handleSend = useCallback(
