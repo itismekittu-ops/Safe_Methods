@@ -1,5 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import {
+  createTraceContext,
+  addTrace,
+  addSpan,
+  addGeneration,
+  addTag,
+  flush,
+  type TraceContext,
+} from "./langfuse.ts";
+import {
+  detectSensitivePii,
+  redactPii,
+  checkMultiTurnAssembly,
+} from "./pii.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +24,10 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+
+const MODEL_NAME = "gpt-5.6-luna";
+const MODEL_VERSION = "2025-07";
+const PROMPT_VERSION = "v1";
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
@@ -50,14 +68,7 @@ interface FunctionResponse {
   blockReason?: string;
 }
 
-// ─── Input Guardrails ──────────────────────────────────
-
-const PII_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
-  { pattern: /\b\d{3}[-\s]?\d{3}[-\s]?\d{3}\b/, label: "sin_number" },
-  { pattern: /\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/, label: "ssn" },
-  { pattern: /\b(?:\d[ -]*?){13,16}\b/, label: "credit_card" },
-  { pattern: /\b\d{9}\b/, label: "government_id" },
-];
+// ─── Input Guardrails (non-PII) ──────────────────────
 
 const MAX_MESSAGE_LENGTH = 2000;
 const JAILBREAK_PATTERNS = [
@@ -68,24 +79,8 @@ const JAILBREAK_PATTERNS = [
   /act as (if you are )?(a|an) (different|new|jailbroken)/i,
 ];
 
-function runInputGuardrails(message: string): { passed: boolean; reason?: string } {
-  if (!message || message.trim().length === 0) {
-    return { passed: false, reason: "Your message appears to be empty. Please type a question and try again." };
-  }
-  if (message.length > MAX_MESSAGE_LENGTH) {
-    return { passed: false, reason: "Your message is too long. Please keep it under 2000 characters." };
-  }
-  for (const { pattern, label } of PII_PATTERNS) {
-    if (pattern.test(message)) {
-      return { passed: false, reason: `For your security, please don't share sensitive information like ${label.replace("_", " ")}s in this chat. Please remove any personal identification numbers and try again.` };
-    }
-  }
-  for (const pattern of JAILBREAK_PATTERNS) {
-    if (pattern.test(message)) {
-      return { passed: false, reason: "I'm here to help with financial questions. I can't process that type of request." };
-    }
-  }
-  return { passed: true };
+function checkJailbreak(message: string): boolean {
+  return JAILBREAK_PATTERNS.some((p) => p.test(message));
 }
 
 // ─── Output Guardrails ─────────────────────────────────
@@ -94,10 +89,10 @@ function runOutputGuardrails(response: string): { passed: boolean; reason?: stri
   if (response.length > 4000) {
     return { passed: false, reason: "I'm having trouble generating a concise response right now. Please try again." };
   }
-  for (const { pattern, label } of PII_PATTERNS) {
-    if (pattern.test(response)) {
-      return { passed: false, reason: "I apologize, but I couldn't generate a safe response. Please try rephrasing your question." };
-    }
+  // GR-OUT-03: check for sensitive PII in LLM output
+  const piiFound = detectSensitivePii(response);
+  if (piiFound.length > 0) {
+    return { passed: false, reason: "I apologize, but I couldn't generate a safe response. Please try rephrasing your question." };
   }
   return { passed: true };
 }
@@ -248,7 +243,7 @@ ${rateContext ? `--- Current Rate Data ---\n${rateContext}\n--- End Rate Data --
       Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "gpt-5.6-luna",
+      model: MODEL_NAME,
       messages,
       max_tokens: 500,
       temperature: 0.3,
@@ -295,6 +290,31 @@ async function saveMessages(sessionToken: string, userMsg: string, assistantMsg:
   ]);
 }
 
+// ─── Fetch session history for multi-turn PII ──────────
+
+async function getSessionHistory(sessionToken: string): Promise<string[]> {
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("id")
+    .eq("session_token", sessionToken)
+    .maybeSingle();
+
+  if (!session) return [];
+
+  const { data: rows } = await supabase
+    .from("chat_messages")
+    .select("role, content")
+    .eq("session_id", session.id)
+    .order("created_at", { ascending: true });
+
+  if (!rows) return [];
+
+  // Only user messages matter for PII assembly detection
+  return rows
+    .filter((r: { role: string }) => r.role === "user")
+    .map((r: { content: string }) => r.content);
+}
+
 // ─── Main Handler ──────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -302,28 +322,236 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
+  const traceCtx: TraceContext = createTraceContext("");
+  const traceStart = Date.now();
+
   try {
     const body: RequestBody = await req.json();
     const { message, sessionToken, history = [] } = body;
 
-    // 1. Input guardrails
-    const guardResult = runInputGuardrails(message);
-    if (!guardResult.passed) {
-      const token = await ensureSession(sessionToken);
+    // Ensure session early so we can fetch history for multi-turn PII
+    const token = await ensureSession(sessionToken);
+    traceCtx.sessionId = token;
+
+    // Fetch authoritative session history from DB for multi-turn PII
+    const dbHistory = await getSessionHistory(token);
+
+    // ── Stage 1: Input Guardrails (GR-IN-01 through GR-IN-06) ──
+    const guardStart = Date.now();
+    const guardSpanId = crypto.randomUUID();
+
+    // GR-IN-01: empty message
+    if (!message || message.trim().length === 0) {
+      const guardEnd = Date.now();
+      addSpan(traceCtx, {
+        id: guardSpanId,
+        traceId: traceCtx.traceId,
+        name: "input_guardrail",
+        startTime: new Date(guardStart).toISOString(),
+        endTime: new Date(guardEnd).toISOString(),
+        input: { message: "[EMPTY]" },
+        output: { passed: false, reason: "empty_message" },
+        level: "WARNING",
+      });
+      addTag(traceCtx, "guardrail:empty_message");
+      addTag(traceCtx, "blocked");
+
+      // OBS-PII-01/02: redact even in guardrail failure traces
+      addTrace(traceCtx, {
+        id: traceCtx.traceId,
+        name: "chat_turn",
+        sessionId: token,
+        metadata: { prompt_version: PROMPT_VERSION },
+        tags: [],
+      });
+      // Fire-and-forget trace flush
+      flush(traceCtx);
+
       return new Response(
         JSON.stringify({
-          reply: guardResult.reason ?? "Your message was blocked by safety filters.",
+          reply: "Your message appears to be empty. Please type a question and try again.",
           banks: [],
           followUps: [],
           sessionToken: token,
           blocked: true,
-          blockReason: guardResult.reason,
+          blockReason: "empty_message",
         } satisfies FunctionResponse),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 2. Detect topic and fetch rates
+    // GR-IN-02: length limit
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      const guardEnd = Date.now();
+      addSpan(traceCtx, {
+        id: guardSpanId,
+        traceId: traceCtx.traceId,
+        name: "input_guardrail",
+        startTime: new Date(guardStart).toISOString(),
+        endTime: new Date(guardEnd).toISOString(),
+        input: { length: message.length },
+        output: { passed: false, reason: "length_exceeded" },
+        level: "WARNING",
+      });
+      addTag(traceCtx, "guardrail:length_exceeded");
+      addTag(traceCtx, "blocked");
+
+      addTrace(traceCtx, {
+        id: traceCtx.traceId,
+        name: "chat_turn",
+        sessionId: token,
+        metadata: { prompt_version: PROMPT_VERSION },
+        tags: [],
+      });
+      flush(traceCtx);
+
+      return new Response(
+        JSON.stringify({
+          reply: "Your message is too long. Please keep it under 2000 characters.",
+          banks: [],
+          followUps: [],
+          sessionToken: token,
+          blocked: true,
+          blockReason: "length_exceeded",
+        } satisfies FunctionResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // GR-IN-04: per-message sensitive PII (SIN/SSN/card/government ID)
+    const sensitivePii = detectSensitivePii(message);
+    if (sensitivePii.length > 0) {
+      const guardEnd = Date.now();
+      // OBS-PII-01/02/03: redact before tracing — never log raw PII
+      const piiLabels = sensitivePii.map((p) => `[PII_DETECTED:${p.label}]`);
+      addSpan(traceCtx, {
+        id: guardSpanId,
+        traceId: traceCtx.traceId,
+        name: "input_guardrail",
+        startTime: new Date(guardStart).toISOString(),
+        endTime: new Date(guardEnd).toISOString(),
+        input: { message: redactPii(message) },
+        output: { passed: false, reason: "sensitive_pii", pii_types: piiLabels },
+        level: "WARNING",
+      });
+      addTag(traceCtx, "guardrail:sensitive_pii");
+      addTag(traceCtx, "blocked");
+
+      addTrace(traceCtx, {
+        id: traceCtx.traceId,
+        name: "chat_turn",
+        sessionId: token,
+        metadata: { prompt_version: PROMPT_VERSION },
+        tags: [],
+      });
+      flush(traceCtx);
+
+      return new Response(
+        JSON.stringify({
+          reply: "For your security, please don't share sensitive identification numbers (like SIN, SSN, or card numbers) in this chat. Please remove any personal identification numbers and try again. If you need to share details for a quote, use the \"Get Quotes\" button to submit through our secure form.",
+          banks: [],
+          followUps: [],
+          sessionToken: token,
+          blocked: true,
+          blockReason: "sensitive_pii",
+        } satisfies FunctionResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // GR-IN-03: jailbreak detection
+    if (checkJailbreak(message)) {
+      const guardEnd = Date.now();
+      addSpan(traceCtx, {
+        id: guardSpanId,
+        traceId: traceCtx.traceId,
+        name: "input_guardrail",
+        startTime: new Date(guardStart).toISOString(),
+        endTime: new Date(guardEnd).toISOString(),
+        input: { message: redactPii(message) },
+        output: { passed: false, reason: "jailbreak_attempt" },
+        level: "WARNING",
+      });
+      addTag(traceCtx, "guardrail:jailbreak");
+      addTag(traceCtx, "blocked");
+
+      addTrace(traceCtx, {
+        id: traceCtx.traceId,
+        name: "chat_turn",
+        sessionId: token,
+        metadata: { prompt_version: PROMPT_VERSION },
+        tags: [],
+      });
+      flush(traceCtx);
+
+      return new Response(
+        JSON.stringify({
+          reply: "I'm here to help with financial questions. I can't process that type of request.",
+          banks: [],
+          followUps: [],
+          sessionToken: token,
+          blocked: true,
+          blockReason: "jailbreak_attempt",
+        } satisfies FunctionResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // GR-IN-05: multi-turn PII assembly detection
+    // Uses authoritative DB history + current message
+    const assembly = checkMultiTurnAssembly(message, dbHistory);
+    if (assembly.blocked) {
+      const guardEnd = Date.now();
+      addSpan(traceCtx, {
+        id: guardSpanId,
+        traceId: traceCtx.traceId,
+        name: "input_guardrail",
+        startTime: new Date(guardStart).toISOString(),
+        endTime: new Date(guardEnd).toISOString(),
+        input: { message: redactPii(message) },
+        output: { passed: false, reason: "multi_turn_pii_assembly", categories: assembly.categories },
+        level: "WARNING",
+      });
+      addTag(traceCtx, "guardrail:multi_turn_pii_assembly");
+      addTag(traceCtx, "blocked");
+
+      addTrace(traceCtx, {
+        id: traceCtx.traceId,
+        name: "chat_turn",
+        sessionId: token,
+        metadata: { prompt_version: PROMPT_VERSION },
+        tags: [],
+      });
+      flush(traceCtx);
+
+      return new Response(
+        JSON.stringify({
+          reply: assembly.reason,
+          banks: [],
+          followUps: [],
+          sessionToken: token,
+          blocked: true,
+          blockReason: "multi_turn_pii_assembly",
+        } satisfies FunctionResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Guardrails passed — log the span
+    const guardEnd = Date.now();
+    addSpan(traceCtx, {
+      id: guardSpanId,
+      traceId: traceCtx.traceId,
+      name: "input_guardrail",
+      startTime: new Date(guardStart).toISOString(),
+      endTime: new Date(guardEnd).toISOString(),
+      input: { message: redactPii(message) },
+      output: { passed: true, latency_ms: guardEnd - guardStart },
+    });
+
+    // ── Stage 2: Retrieval (RAG) ──
+    const retrievalStart = Date.now();
+    const retrievalSpanId = crypto.randomUUID();
     const productType = detectProductType(message);
     let bankRankings: BankRanking[] = [];
     let rateContext: string | null = null;
@@ -359,26 +587,100 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 3. Generate response (LLM or fallback)
+    const retrievalEnd = Date.now();
+    // OBS-TRACE-03: retrieved RAG chunks attached to the trace
+    addSpan(traceCtx, {
+      id: retrievalSpanId,
+      traceId: traceCtx.traceId,
+      name: "retrieval",
+      startTime: new Date(retrievalStart).toISOString(),
+      endTime: new Date(retrievalEnd).toISOString(),
+      input: { product_type: productType },
+      output: {
+        chunks_count: bankRankings.length,
+        rate_context: rateContext ? "[REDACTED_RATES]" : null,
+        banks: bankRankings.map((b) => ({ name: b.name, rate: b.rate })),
+      },
+    });
+    if (productType) addTag(traceCtx, `rag:${productType}`);
+
+    // ── Stage 3: Generation (LLM) ──
+    const genStart = Date.now();
     let reply = await callLLM(message, history, rateContext);
+    const genEnd = Date.now();
+
+    // OBS-TRACE-04: model name, model version, and prompt version attached
+    addGeneration(traceCtx, {
+      id: crypto.randomUUID(),
+      traceId: traceCtx.traceId,
+      parentId: retrievalSpanId,
+      name: "generation",
+      startTime: new Date(genStart).toISOString(),
+      endTime: new Date(genEnd).toISOString(),
+      model: MODEL_NAME,
+      modelParameters: { temperature: 0.3, max_tokens: 500 },
+      input: { message: redactPii(message), prompt_version: PROMPT_VERSION },
+      output: reply ? { response: redactPii(reply) } : { response: "[FALLBACK]" },
+      metadata: { model_version: MODEL_VERSION, prompt_version: PROMPT_VERSION },
+    });
+
     if (!reply) {
       reply = buildFallbackResponse(message, productType, rateContext);
     }
 
-    // 4. Output guardrails
+    // ── Stage 4: Output Guardrails ──
+    const outputGuardStart = Date.now();
     const outputGuard = runOutputGuardrails(reply);
+    const outputGuardEnd = Date.now();
+
+    addSpan(traceCtx, {
+      id: crypto.randomUUID(),
+      traceId: traceCtx.traceId,
+      name: "output_guardrail",
+      startTime: new Date(outputGuardStart).toISOString(),
+      endTime: new Date(outputGuardEnd).toISOString(),
+      input: { response: redactPii(reply) },
+      output: outputGuard.passed
+        ? { passed: true, latency_ms: outputGuardEnd - outputGuardStart }
+        : { passed: false, reason: outputGuard.reason },
+      level: outputGuard.passed ? "DEFAULT" : "WARNING",
+    });
+
     if (!outputGuard.passed) {
       reply = "I apologize, but I'm having trouble generating a response right now. Please try rephrasing your question.";
+      addTag(traceCtx, "guardrail:output_blocked");
     }
 
-    // 5. Follow-up suggestions
+    // ── Stage 5: Follow-up suggestions ──
     const followUps = generateFollowUps(productType);
 
-    // 6. Persist session + messages
-    const token = await ensureSession(sessionToken);
+    // ── Persist session + messages ──
     await saveMessages(token, message, reply);
 
-    // 7. Return response
+    // ── Finalize trace ──
+    // OBS-TRACE-01: one trace per conversation turn, linked to persistent session ID
+    // OBS-TRACE-05: end-to-end latency
+    const traceEnd = Date.now();
+    addTrace(traceCtx, {
+      id: traceCtx.traceId,
+      name: "chat_turn",
+      sessionId: token,
+      metadata: {
+        prompt_version: PROMPT_VERSION,
+        model: MODEL_NAME,
+        model_version: MODEL_VERSION,
+        end_to_end_ms: traceEnd - traceStart,
+        guardrail_ms: guardEnd - guardStart,
+        retrieval_ms: retrievalEnd - retrievalStart,
+        generation_ms: genEnd - genStart,
+      },
+      tags: [],
+    });
+
+    // OBS-ARCH-02: fire-and-forget, never blocks
+    flush(traceCtx);
+
+    // ── Return response ──
     return new Response(
       JSON.stringify({
         reply,
@@ -389,6 +691,16 @@ Deno.serve(async (req: Request) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    // OBS-ARCH-02: even on error, attempt to flush trace (best-effort)
+    addTrace(traceCtx, {
+      id: traceCtx.traceId,
+      name: "chat_turn",
+      metadata: { error: "unhandled_exception", prompt_version: PROMPT_VERSION },
+      tags: [],
+    });
+    addTag(traceCtx, "error");
+    flush(traceCtx);
+
     return new Response(
       JSON.stringify({
         reply: "I'm experiencing a temporary issue. Please try again in a moment.",
