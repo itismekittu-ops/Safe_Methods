@@ -57,6 +57,11 @@ export function Navbar() {
                 <UserIcon className="w-4 h-4 text-primary" />
                 {user.email}
               </span>
+              <Link to="/account" className="hidden sm:block">
+                <Button variant="ghost" size="sm">
+                  My Account
+                </Button>
+              </Link>
               <Button variant="secondary" size="sm" onClick={handleSignOut}>
                 <LogOutIcon className="w-4 h-4 mr-1.5" />
                 Log Out

@@ -6,6 +6,7 @@ import { Home } from './pages/Home';
 import { ServiceDetail } from './pages/ServiceDetail';
 import { BlogPost } from './pages/BlogPost';
 import { Auth } from './pages/Auth';
+import { Account } from './pages/Account';
 export function App() {
   return (
     <BrowserRouter>
@@ -16,6 +17,7 @@ export function App() {
             <Route path="/services" element={<ServiceDetail />} />
             <Route path="/blog" element={<BlogPost />} />
             <Route path="/login" element={<Auth />} />
+            <Route path="/account" element={<Account />} />
           </Route>
         </Routes>
       </AuthProvider>
