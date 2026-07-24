@@ -15,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 interface RequestBody {
-  quoteRequestId: string;
+  email: string;
 }
 
 interface QuoteRow {
@@ -120,11 +120,11 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body: RequestBody = await req.json();
-    const { quoteRequestId } = body;
+    const { email } = body;
 
-    if (!quoteRequestId) {
+    if (!email) {
       return new Response(
-        JSON.stringify({ error: "Missing quoteRequestId" }),
+        JSON.stringify({ error: "Missing email" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -132,7 +132,9 @@ Deno.serve(async (req: Request) => {
     const { data: quote, error: fetchError } = await supabase
       .from("quote_requests")
       .select("id, name, email, phone, request_type, loan_amount, monthly_income, investment_amount, tenure, selected_institutions, consent_given, created_at")
-      .eq("id", quoteRequestId)
+      .eq("email", email.toLowerCase())
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle<QuoteRow>();
 
     if (fetchError || !quote) {

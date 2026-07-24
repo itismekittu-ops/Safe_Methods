@@ -163,31 +163,27 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
         insertPayload.session_id = sessionData.id;
       }
 
-      const { data: insertedRow, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("quote_requests")
-        .insert(insertPayload)
-        .select("id")
-        .single();
+        .insert(insertPayload);
 
       if (insertError) throw insertError;
 
       // Fire transactional confirmation email (F3-US9) — best-effort, non-blocking
-      if (insertedRow?.id) {
-        try {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-          const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-          await fetch(`${supabaseUrl}/functions/v1/send-quote-confirmation`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${anonKey}`,
-              apikey: anonKey,
-            },
-            body: JSON.stringify({ quoteRequestId: insertedRow.id }),
-          });
-        } catch {
-          // Email send is best-effort; don't block the success UI
-        }
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+        await fetch(`${supabaseUrl}/functions/v1/send-quote-confirmation`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${anonKey}`,
+            apikey: anonKey,
+          },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        });
+      } catch {
+        // Email send is best-effort; don't block the success UI
       }
 
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
@@ -196,7 +192,8 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
         onClose();
         setSuccess(false);
       }, 5000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSubmitError("Something went wrong submitting your request. Please try again.");
     } finally {
       setSubmitting(false);
