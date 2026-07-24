@@ -186,6 +186,23 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
         // Email send is best-effort; don't block the success UI
       }
 
+      // Sync lead to HubSpot CRM (GR-CONSENT-01) — best-effort, non-blocking
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+        await fetch(`${supabaseUrl}/functions/v1/sync-hubspot-lead`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${anonKey}`,
+            apikey: anonKey,
+          },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        });
+      } catch {
+        // CRM sync is best-effort; don't block the success UI
+      }
+
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
       setSuccess(true);
       setTimeout(() => {
