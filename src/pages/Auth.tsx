@@ -18,7 +18,7 @@ const GoogleIcon = () => (
 );
 
 export function Auth() {
-  const { signUp, signIn, resetPassword } = useAuth();
+  const { signUp, signIn, signInWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -44,6 +44,17 @@ export function Auth() {
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setLoginError(error);
+      setSignupError(error);
+      setGoogleLoading(false);
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,9 +316,14 @@ export function Auth() {
               </div>
             </div>
 
-            <Button variant="secondary" className="w-full flex items-center justify-center gap-3">
+            <Button
+              variant="secondary"
+              className="w-full flex items-center justify-center gap-3"
+              onClick={handleGoogle}
+              disabled={googleLoading}
+            >
               <GoogleIcon />
-              Continue with Google
+              {googleLoading ? "Connecting..." : "Continue with Google"}
             </Button>
           </CardBody>
         </Card>

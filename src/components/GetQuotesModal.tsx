@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { XIcon, CheckCircleIcon, LoaderIcon, ShieldCheckIcon } from "lucide-react";
+import { XIcon, CheckCircleIcon, LoaderIcon, ShieldCheckIcon, ArrowRightIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "./Button";
 import { TextInput } from "./TextInput";
 import { Select } from "./Select";
@@ -22,6 +23,47 @@ interface GetQuotesModalProps {
 }
 
 type RequestMode = "loan" | "investment";
+
+type Topic = "mortgage" | "personal_loan" | "gic" | "investment" | "general";
+
+interface BlogRec {
+  title: string;
+  description: string;
+  category: string;
+  image: string;
+  slug: string;
+}
+
+const BLOG_RECS: Record<Topic, BlogRec[]> = {
+  mortgage: [
+    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
+    { title: "How to Improve Your Credit Score Fast", description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.", category: "Credit", image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400", slug: "credit-score" },
+  ],
+  personal_loan: [
+    { title: "How to Improve Your Credit Score Fast", description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.", category: "Credit", image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400", slug: "credit-score" },
+    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
+  ],
+  gic: [
+    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
+    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
+  ],
+  investment: [
+    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
+    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
+  ],
+  general: [
+    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
+    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
+  ],
+};
+
+function topicFromProductType(pt: string | undefined): Topic {
+  if (pt === "mortgage") return "mortgage";
+  if (pt === "personal_loan") return "personal_loan";
+  if (pt === "gic") return "gic";
+  if (pt === "investment") return "investment";
+  return "general";
+}
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[\d\s()+\-]{7,}$/;
@@ -121,9 +163,32 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
         insertPayload.session_id = sessionData.id;
       }
 
-      const { error: insertError } = await supabase.from("quote_requests").insert(insertPayload);
+      const { data: insertedRow, error: insertError } = await supabase
+        .from("quote_requests")
+        .insert(insertPayload)
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
+
+      // Fire transactional confirmation email (F3-US9) — best-effort, non-blocking
+      if (insertedRow?.id) {
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+          const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+          await fetch(`${supabaseUrl}/functions/v1/send-quote-confirmation`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${anonKey}`,
+              apikey: anonKey,
+            },
+            body: JSON.stringify({ quoteRequestId: insertedRow.id }),
+          });
+        } catch {
+          // Email send is best-effort; don't block the success UI
+        }
+      }
 
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
       setSuccess(true);
@@ -161,7 +226,37 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
             <p className="text-muted-foreground leading-relaxed mb-2">
               You will receive offers from all selected advisors/banks within 5 business days.
             </p>
-            <p className="text-xs text-muted-foreground mt-4">This window will close automatically...</p>
+
+            {/* Contextual blog recommendations (F3-US8) */}
+            {(() => {
+              const topic = topicFromProductType(banks[0]?.productType);
+              const recs = BLOG_RECS[topic] ?? BLOG_RECS.general;
+              return (
+                <div className="mt-6 text-left">
+                  <p className="text-sm font-medium text-foreground mb-3">
+                    While you wait, explore these related resources:
+                  </p>
+                  <div className="space-y-3">
+                    {recs.map((rec) => (
+                      <Link
+                        key={rec.slug}
+                        to="/blog"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border-subtle bg-background hover:border-border hover:bg-muted transition-colors group"
+                      >
+                        <img src={rec.image} alt={rec.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
+                        <div className="min-w-0 flex-grow">
+                          <p className="text-sm font-medium text-foreground truncate">{rec.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{rec.description}</p>
+                        </div>
+                        <ArrowRightIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <p className="text-xs text-muted-foreground mt-6">This window will close automatically...</p>
           </div>
         ) : alreadySubmitted ? (
           <div className="p-8 text-center">
