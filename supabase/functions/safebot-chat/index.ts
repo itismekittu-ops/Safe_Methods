@@ -35,6 +35,10 @@ interface BankRanking {
   rate: number;
   rank: number;
   isBest: boolean;
+  consultantId: string | null;
+  consultantName: string | null;
+  consultantTitle: string | null;
+  consultantAvatarUrl: string | null;
 }
 
 interface FunctionResponse {
@@ -115,14 +119,29 @@ function detectProductType(message: string): ProductType | null {
 
 // ─── Bank Ranking ──────────────────────────────────────
 
+interface RateWithConsultant {
+  bank_name: string;
+  product_type: string;
+  term: string | null;
+  rate_percent: number;
+  consultant_id: string | null;
+  consultant_name: string | null;
+  consultant_title: string | null;
+  consultant_avatar_url: string | null;
+}
+
 function rankBanks(
-  rates: Array<{ bank_name: string; product_type: string; term: string | null; rate_percent: number }>,
+  rates: RateWithConsultant[],
   productType: ProductType
 ): BankRanking[] {
   const lowerIsBetter = productType === "mortgage" || productType === "personal_loan";
-  const sorted = [...rates].sort((a, b) =>
-    lowerIsBetter ? a.rate_percent - b.rate_percent : b.rate_percent - a.rate_percent
-  );
+  const sorted = [...rates].sort((a, b) => {
+    const diff = lowerIsBetter
+      ? a.rate_percent - b.rate_percent
+      : b.rate_percent - a.rate_percent;
+    if (diff !== 0) return diff;
+    return a.bank_name.localeCompare(b.bank_name);
+  });
   return sorted.slice(0, 5).map((r, idx) => ({
     name: r.bank_name,
     productType: r.product_type,
@@ -130,6 +149,10 @@ function rankBanks(
     rate: Number(r.rate_percent),
     rank: idx + 1,
     isBest: idx === 0,
+    consultantId: r.consultant_id,
+    consultantName: r.consultant_name,
+    consultantTitle: r.consultant_title,
+    consultantAvatarUrl: r.consultant_avatar_url,
   }));
 }
 
@@ -312,16 +335,21 @@ Deno.serve(async (req: Request) => {
           product_type,
           term,
           rate_percent,
-          banks!inner(name)
+          banks!inner(name),
+          consultants!left(id, name, title, avatar_url)
         `)
         .eq("product_type", productType);
 
       if (rates && rates.length > 0) {
-        const flatRates = rates.map((r: any) => ({
+        const flatRates: RateWithConsultant[] = rates.map((r: any) => ({
           bank_name: r.banks.name,
           product_type: r.product_type,
           term: r.term,
           rate_percent: Number(r.rate_percent),
+          consultant_id: r.consultants?.id ?? null,
+          consultant_name: r.consultants?.name ?? null,
+          consultant_title: r.consultants?.title ?? null,
+          consultant_avatar_url: r.consultants?.avatar_url ?? null,
         }));
         bankRankings = rankBanks(flatRates, productType);
         rateContext = buildRateContext(

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon } from "lucide-react";
-import { Card } from "./Card";
 
 const SUGGESTIONS = [
   { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
@@ -20,6 +19,10 @@ interface BankMatch {
   rate: number;
   rank: number;
   isBest: boolean;
+  consultantId: string | null;
+  consultantName: string | null;
+  consultantTitle: string | null;
+  consultantAvatarUrl: string | null;
 }
 
 interface ChatMessage {
@@ -134,7 +137,6 @@ export function HeroSection() {
   };
 
   const isEmpty = messages.length === 0;
-  const bestBank = banks.length > 0 ? banks[0] : null;
 
   return (
     <section className="container mx-auto px-4 py-12 md:py-20 lg:py-24 min-h-[80vh] flex flex-col">
@@ -287,194 +289,109 @@ export function HeroSection() {
             </h3>
 
             {banks.length > 0 ? (
-              <>
-                {/* Top panel: Best Bank Match */}
-                <div className="flex flex-col gap-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Best Bank Match
-                  </p>
-                  <div className="flex items-center justify-between gap-2">
-                    {banks.map((bank, idx) => (
-                      <div
-                        key={idx}
-                        className={`relative w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-surface ${
-                          bank.isBest
-                            ? "border-2 border-accent shadow-soft"
-                            : "border border-border-subtle opacity-70"
+              <div className="flex flex-col gap-3">
+                {banks.map((bank) => (
+                  <div
+                    key={bank.rank}
+                    className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
+                      bank.isBest
+                        ? "bg-accent/10 border-accent/40 shadow-soft"
+                        : "bg-surface border-border-subtle"
+                    }`}
+                  >
+                    {/* Bank icon */}
+                    <div
+                      className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
+                        bank.isBest
+                          ? "bg-accent/20 border border-accent/50"
+                          : "bg-muted border border-border-subtle"
+                      }`}
+                    >
+                      <BuildingIcon
+                        className={`w-5 h-5 ${
+                          bank.isBest ? "text-primary" : "text-muted-foreground"
                         }`}
-                        title={bank.name}
-                      >
-                        <BuildingIcon
-                          className={`w-5 h-5 ${
-                            bank.isBest ? "text-primary" : "text-muted-foreground"
-                          }`}
-                        />
-                        {bank.isBest && (
-                          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
-                            <CheckIcon className="w-3 h-3" />
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {bestBank && (
-                    <Card className="p-4 bg-surface border border-border-subtle flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-primary shrink-0">
-                        <BuildingIcon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground text-sm">
-                          {bestBank.name} Bank
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {bestBank.productType === "mortgage" || bestBank.productType === "personal_loan"
-                            ? `Lowest comparable rate at ${bestBank.rate}% — the strongest match for your goals.`
-                            : `Highest return at ${bestBank.rate}% (${bestBank.term ?? "standard term"}) — the strongest match for your goals.`}
-                        </p>
-                      </div>
-                    </Card>
-                  )}
-                </div>
-
-                {/* Gold hairline divider */}
-                <div className="border-t border-border my-6" />
-
-                {/* Rate comparison table */}
-                <div className="flex flex-col gap-3">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Rate Comparison
-                  </p>
-                  <div className="space-y-2">
-                    {banks.map((bank, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-center justify-between px-3 py-2 rounded-md text-sm ${
-                          bank.isBest
-                            ? "bg-accent/10 border border-accent/30"
-                            : "bg-surface border border-border-subtle"
-                        }`}
-                      >
-                        <span className="font-medium text-foreground">{bank.name}</span>
-                        <span
-                          className={`font-semibold ${
-                            bank.isBest ? "text-accent" : "text-muted-foreground"
-                          }`}
-                        >
-                          {bank.rate}%
+                      />
+                      {bank.isBest && (
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
+                          <CheckIcon className="w-3 h-3" />
                         </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      )}
+                    </div>
 
-                {/* Gold hairline divider */}
-                <div className="border-t border-border my-6" />
-
-                {/* Recommended Consultant */}
-                <div className="flex flex-col gap-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Recommended Consultant
-                  </p>
-                  <Card className="p-5 bg-surface border border-border-subtle flex flex-col items-center text-center gap-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&h=160&q=80"
-                      alt="Sarah Mitchell, Senior Financial Advisor"
-                      className="w-16 h-16 rounded-full object-cover border border-border-subtle"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-foreground">Sarah Mitchell</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Senior Financial Advisor
+                    {/* Consultant name + bank */}
+                    <div className="flex-grow min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">
+                        {bank.consultantName ?? bank.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {bank.name}
+                        {bank.consultantTitle ? ` · ${bank.consultantTitle}` : ""}
                       </p>
                     </div>
-                    <button className="w-full py-2.5 rounded-md bg-accent text-primary font-semibold text-sm hover:bg-accent/90 transition-colors">
-                      Book a call
-                    </button>
-                  </Card>
-                </div>
 
-                <p className="text-xs text-muted-foreground mt-4 leading-relaxed text-center">
+                    {/* Rate value */}
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`font-heading text-lg font-bold ${
+                          bank.isBest ? "text-accent" : "text-foreground"
+                        }`}
+                      >
+                        {bank.rate}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed text-center">
                   Prices are indicative and subject to change. For best results
                   it is recommended to connect directly with the advisor for
                   personalized offer.
                 </p>
-              </>
+              </div>
             ) : (
-              <>
-                {/* Default state when no banks matched yet */}
-                <div className="flex flex-col gap-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Best Bank Match
-                  </p>
-                  <div className="flex items-center justify-between gap-2">
-                    {["Meridian", "Apex", "Evergreen", "Northbank", "Summit"].map(
-                      (bankName, idx) => {
-                        const isWinner = idx === 2;
-                        return (
-                          <div
-                            key={bankName}
-                            className={`relative w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-surface ${
-                              isWinner
-                                ? "border-2 border-accent shadow-soft"
-                                : "border border-border-subtle opacity-70"
-                            }`}
-                            title={bankName}
-                          >
-                            <BuildingIcon
-                              className={`w-5 h-5 ${
-                                isWinner ? "text-primary" : "text-muted-foreground"
-                              }`}
-                            />
-                            {isWinner && (
-                              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
-                                <CheckIcon className="w-3 h-3" />
-                              </span>
-                            )}
-                          </div>
-                        );
-                      }
-                    )}
+              <div className="flex flex-col gap-3">
+                {["Meridian", "Apex", "Evergreen", "Northbank", "Summit"].map((bankName, idx) => (
+                  <div
+                    key={bankName}
+                    className={`flex items-center gap-3 p-4 rounded-lg border ${
+                      idx === 2
+                        ? "bg-accent/10 border-accent/40 shadow-soft"
+                        : "bg-surface border-border-subtle"
+                    }`}
+                  >
+                    <div
+                      className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
+                        idx === 2
+                          ? "bg-accent/20 border border-accent/50"
+                          : "bg-muted border border-border-subtle"
+                      }`}
+                    >
+                      <BuildingIcon
+                        className={`w-5 h-5 ${
+                          idx === 2 ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      />
+                      {idx === 2 && (
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
+                          <CheckIcon className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">
+                        {bankName} Bank
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        Ask a question to see ranked matches
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="font-heading text-lg font-bold text-muted-foreground">—</span>
+                    </div>
                   </div>
-                  <Card className="p-4 bg-surface border border-border-subtle flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-primary shrink-0">
-                      <BuildingIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground text-sm">
-                        Evergreen Bank
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Ask a financial question to see ranked matches from our
-                        partner institutions.
-                      </p>
-                    </div>
-                  </Card>
-                </div>
-
-                <div className="border-t border-border my-6" />
-
-                <div className="flex flex-col gap-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Recommended Consultant
-                  </p>
-                  <Card className="p-5 bg-surface border border-border-subtle flex flex-col items-center text-center gap-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&h=160&q=80"
-                      alt="Sarah Mitchell, Senior Financial Advisor"
-                      className="w-16 h-16 rounded-full object-cover border border-border-subtle"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-foreground">Sarah Mitchell</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Senior Financial Advisor
-                      </p>
-                    </div>
-                    <button className="w-full py-2.5 rounded-md bg-accent text-primary font-semibold text-sm hover:bg-accent/90 transition-colors">
-                      Book a call
-                    </button>
-                  </Card>
-                </div>
-              </>
+                ))}
+              </div>
             )}
           </div>
         </div>
