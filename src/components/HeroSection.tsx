@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon } from "lucide-react";
+import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "lucide-react";
+import { GetQuotesModal } from "./GetQuotesModal";
+import type { BankMatchRef } from "./GetQuotesModal";
 
 const SUGGESTIONS = [
   { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
@@ -37,6 +39,7 @@ export function HeroSection() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [banks, setBanks] = useState<BankMatch[]>([]);
   const [followUps, setFollowUps] = useState<string[]>([]);
+  const [quotesOpen, setQuotesOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -348,6 +351,15 @@ export function HeroSection() {
                   it is recommended to connect directly with the advisor for
                   personalized offer.
                 </p>
+
+                <Button
+                  variant="primary"
+                  className="w-full mt-4 bg-accent text-primary hover:bg-accent/90 border-transparent"
+                  onClick={() => setQuotesOpen(true)}
+                >
+                  <FileTextIcon className="w-4 h-4 mr-2" />
+                  Get Quotes
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -396,6 +408,20 @@ export function HeroSection() {
           </div>
         </div>
       )}
+
+      <GetQuotesModal
+        open={quotesOpen}
+        onClose={() => setQuotesOpen(false)}
+        banks={banks.map((b): BankMatchRef => ({
+          name: b.name,
+          productType: b.productType,
+          rate: b.rate,
+          rank: b.rank,
+          consultantId: b.consultantId,
+          consultantName: b.consultantName,
+        }))}
+        sessionToken={sessionToken}
+      />
     </section>
   );
 }
