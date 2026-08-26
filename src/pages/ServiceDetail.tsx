@@ -1,4 +1,5 @@
 import React from 'react';
+import { SEO } from '../components/SEO';
 import { Button } from '../components/Button';
 import {
   Card,
@@ -11,6 +12,11 @@ import { CheckIcon, ArrowRightIcon } from 'lucide-react';
 export function ServiceDetail() {
   return (
     <main>
+      <SEO
+        title="Debt Management Services"
+        description="Strategic restructuring and optimization of liabilities to preserve liquidity and enhance your overall net worth. Book a consultation with Safe Methods."
+        path="/services"
+      />
       {/* Banner Section */}
       <section className="bg-primary text-primary-foreground py-20 md:py-28 px-4 md:px-8 relative overflow-hidden">
         {/* Subtle decorative background element */}

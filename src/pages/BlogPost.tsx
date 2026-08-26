@@ -1,4 +1,5 @@
 import React from 'react';
+import { SEO } from '../components/SEO';
 import { ArrowRightIcon } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { Badge } from '../components/Badge';
@@ -7,6 +8,11 @@ import { Card } from '../components/Card';
 export function BlogPost() {
   return (
     <main>
+      <SEO
+        title="Navigating Generational Wealth Transfer in Uncertain Markets"
+        description="How high-net-worth families can prepare the next generation to manage significant wealth through governance, communication, and strategic planning."
+        path="/blog"
+      />
       <article>
         {/* Hero Image */}
         <div className="w-full h-[380px] md:h-[480px] bg-muted">
