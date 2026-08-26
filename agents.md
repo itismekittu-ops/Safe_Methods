@@ -38,6 +38,8 @@
 | **02. Architecture (ADD)** | `.specs/02-architecture.md` | Engineering Principles, Architecture rules | Tech Stack & Infrastrucre Specifications | System components, database models, performance targets, technical constraints. | Before creating DB tables, writing Edge Functions, or building APIs. |
 | **03. Business Rules** | `.specs/03-business-rules.md` | Customer ownership rules (BR-CUST) and canonical Sensitive PII definitions (BR-PRIV). | When setting up form validation, data persistence, or user rights endpoints. |
 | **04. AI Observability & Security** | `.specs/04-AI-Observability-Security.md` | Pre/Post Guardrails (GR-IN, GR-OUT), Langfuse REST tracing, sensitive PII redaction, 6D Evals. | When building AI chat pipelines, error handlers, or telemetry handlers. |
+| **05. AEO/SEO Standards** | `specs/05-aeo-seo-standards.md` | Technical SEO/AEO requirements and exact formats — meta tags, robots.txt, sitemap.xml, JSON-LD, llms.txt, answer-ready content blocks. | Before building or editing any public marketing route, meta tags, or structured data. |
+| **06. AEO/SEO Remediation Checklist** | `specs/06-aeo-seo-remediation-checklist.md` | One-time phased fix list (Phase 0-2) for current crawlability and indexing issues. | When executing the AEO/SEO remediation work specifically. |
 
 
 
