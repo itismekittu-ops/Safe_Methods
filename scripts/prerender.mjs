@@ -14,9 +14,7 @@ import { spawn } from "child_process";
 import puppeteer from "puppeteer";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = join(__dirname, "..");
-const distDir = join(projectRoot, "dist");
-const publicDir = join(projectRoot, "public");
+const distDir = join(__dirname, "..", "dist");
 
 const SITE_URL = "https://safemethods.com";
 
@@ -42,11 +40,7 @@ function generateSitemap() {
 ${urls}
 </urlset>`;
 
-  // Write into dist/ (the deployed output)
   writeFileSync(join(distDir, "sitemap.xml"), xml);
-  // Also write into public/ so subsequent `vite build` runs carry it forward
-  // even if prerender is skipped for some reason.
-  writeFileSync(join(publicDir, "sitemap.xml"), xml);
   console.log("  -> sitemap.xml generated");
 }
 
@@ -75,7 +69,7 @@ async function main() {
 
   // Start preview server in its own process group so we can kill the tree
   const previewProcess = spawn("npx", ["vite", "preview", "--port", String(PREVIEW_PORT), "--strictPort"], {
-    cwd: projectRoot,
+    cwd: join(__dirname, ".."),
     stdio: "pipe",
     shell: true,
     detached: true,
@@ -101,16 +95,9 @@ async function main() {
 
       const html = await page.content();
 
-      // Write as directory-based index files so hosting platforms serve them
-      // at their clean URL: /services -> /services/index.html
-      let outPath;
-      if (route === "/") {
-        outPath = join(distDir, "index.html");
-      } else {
-        const dir = join(distDir, route.slice(1));
-        mkdirSync(dir, { recursive: true });
-        outPath = join(dir, "index.html");
-      }
+      const fileName = route === "/" ? "index.html" : `${route.slice(1)}.html`;
+      const outPath = join(distDir, fileName);
+      mkdirSync(dirname(outPath), { recursive: true });
       writeFileSync(outPath, html);
       console.log(`  -> ${outPath}`);
 
