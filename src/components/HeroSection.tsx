@@ -3,7 +3,6 @@ import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "luc
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
-import { supabase } from "../lib/supabase";
 
 const SUGGESTIONS = [
   { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
@@ -60,19 +59,25 @@ export function HeroSection() {
 
     (async () => {
       try {
-        const { data: session } = await supabase
-          .from("chat_sessions")
-          .select("id")
-          .eq("session_token", stored)
-          .maybeSingle();
+        // Chat history is served by the server, which requires the session
+        // token this browser already holds. The transcript tables are not
+        // readable through the public API.
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+        const resp = await fetch(`${supabaseUrl}/functions/v1/safebot-chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${anonKey}`,
+            apikey: anonKey,
+          },
+          body: JSON.stringify({ action: "history", sessionToken: stored, message: "" }),
+        });
 
-        if (!session) return;
-
-        const { data: rows } = await supabase
-          .from("chat_messages")
-          .select("role, content")
-          .eq("session_id", session.id)
-          .order("created_at", { ascending: true });
+        if (!resp.ok) return;
+        const { messages: rows } = (await resp.json()) as {
+          messages?: Array<{ role: string; content: string }>;
+        };
 
         if (rows && rows.length > 0) {
           setMessages(

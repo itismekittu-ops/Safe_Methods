@@ -44,6 +44,7 @@ interface RequestBody {
   message: string;
   sessionToken?: string;
   history?: ChatMessage[];
+  action?: "chat" | "history";
 }
 
 interface BankRanking {
@@ -260,18 +261,46 @@ ${rateContext ? `--- Current Rate Data ---\n${rateContext}\n--- End Rate Data --
 
 // ─── Session Persistence ───────────────────────────────
 
-async function ensureSession(sessionToken?: string): Promise<string> {
+// Resolve the caller's authenticated user id, if they presented a real user
+// JWT. Anonymous callers (who send the public anon key) resolve to null.
+async function getCallerUserId(req: Request): Promise<string | null> {
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  if (!token) return null;
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error) return null;
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// The session token is a bearer capability: holding it is what grants access,
+// so it is never listable through the Data API (see migration 015). A session
+// that has been bound to a signed-in account additionally requires that
+// account's JWT, so a leaked token cannot be replayed by a stranger.
+async function ensureSession(
+  sessionToken: string | undefined,
+  callerUserId: string | null,
+): Promise<string> {
   if (sessionToken) {
     const { data } = await supabase
       .from("chat_sessions")
-      .select("session_token")
+      .select("session_token, user_id")
       .eq("session_token", sessionToken)
       .maybeSingle();
-    if (data) return sessionToken;
+
+    if (data && (data.user_id === null || data.user_id === callerUserId)) {
+      return sessionToken;
+    }
+    // Token unknown, or it belongs to a different account: never adopt it.
   }
 
   const newToken = crypto.randomUUID();
-  await supabase.from("chat_sessions").insert({ session_token: newToken });
+  await supabase
+    .from("chat_sessions")
+    .insert({ session_token: newToken, user_id: callerUserId });
   return newToken;
 }
 
@@ -288,6 +317,32 @@ async function saveMessages(sessionToken: string, userMsg: string, assistantMsg:
     { session_id: session.id, role: "user", content: userMsg },
     { session_id: session.id, role: "assistant", content: assistantMsg },
   ]);
+}
+
+// ─── Full transcript for history restore ───────────────
+
+// Returns the transcript for a session the caller proved they hold the token
+// for. A session bound to an account also requires that account's JWT.
+async function getSessionTranscript(
+  sessionToken: string,
+  callerUserId: string | null,
+): Promise<Array<{ role: string; content: string }>> {
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("id, user_id")
+    .eq("session_token", sessionToken)
+    .maybeSingle();
+
+  if (!session) return [];
+  if (session.user_id !== null && session.user_id !== callerUserId) return [];
+
+  const { data: rows } = await supabase
+    .from("chat_messages")
+    .select("role, content")
+    .eq("session_id", session.id)
+    .order("created_at", { ascending: true });
+
+  return rows ?? [];
 }
 
 // ─── Fetch session history for multi-turn PII ──────────
@@ -327,10 +382,25 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body: RequestBody = await req.json();
-    const { message, sessionToken, history = [] } = body;
+    const { message, sessionToken, history = [], action = "chat" } = body;
+
+    const callerUserId = await getCallerUserId(req);
+
+    // History restore. The browser can no longer read chat_sessions or
+    // chat_messages directly (migrations 015/016), so it asks here and must
+    // present the session token it already holds.
+    if (action === "history") {
+      const messages = sessionToken
+        ? await getSessionTranscript(sessionToken, callerUserId)
+        : [];
+      return new Response(
+        JSON.stringify({ messages }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Ensure session early so we can fetch history for multi-turn PII
-    const token = await ensureSession(sessionToken);
+    const token = await ensureSession(sessionToken, callerUserId);
     traceCtx.sessionId = token;
 
     // Fetch authoritative session history from DB for multi-turn PII

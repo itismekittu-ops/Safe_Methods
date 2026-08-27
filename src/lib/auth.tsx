@@ -53,16 +53,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: { data: { full_name: name } },
     });
-    if (error) return { error: error.message };
+    if (error) {
+      // An already-registered address must not be distinguishable from a new
+      // one, otherwise the signup form becomes an account-existence oracle.
+      const message = /already|registered|exists/i.test(error.message)
+        ? "Check your email to finish setting up your account."
+        : "We couldn't complete your signup. Please check your details and try again.";
+      return { error: message };
+    }
     if (data.user && !data.session) {
-      return { error: "Check your email for a confirmation link to complete signup." };
+      return { error: "Check your email to finish setting up your account." };
     }
     return { error: null };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    // One message for every failure, so a wrong password and an unknown
+    // address are indistinguishable.
+    if (error) return { error: "Incorrect email or password." };
     return { error: null };
   }, []);
 
@@ -71,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/` },
     });
-    if (error) return { error: error.message };
+    if (error) return { error: "We couldn't start sign-in. Please try again." };
     return { error: null };
   }, []);
 
@@ -84,13 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) return { error: error.message };
+    // Same answer whether or not the address has an account.
+    if (error) return { error: null };
     return { error: null };
   }, []);
 
   const updatePassword = useCallback(async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) return { error: error.message };
+    if (error) return { error: "We couldn't update your password. Please try again." };
     return { error: null };
   }, []);
 

@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Button } from "./Button";
 import { TextInput } from "./TextInput";
 import { Select } from "./Select";
-import { supabase } from "../lib/supabase";
 
 export interface BankMatchRef {
   name: string;
@@ -133,75 +132,35 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
 
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase
-        .from("chat_sessions")
-        .select("id")
-        .eq("session_token", sessionToken ?? "")
-        .limit(1)
-        .maybeSingle();
+      // The browser no longer writes to the database directly. The server
+      // re-validates every field, links the chat session, enforces the
+      // repeat-submission window and triggers the email and CRM steps.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-      const insertPayload: Record<string, unknown> = {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim().replace(/\s+/g, "") || null,
-        request_type: mode,
-        selected_institutions: selectedBanks,
-        consent_given: true,
-        consent_timestamp: new Date().toISOString(),
-        status: "pending",
-      };
+      const response = await fetch(`${supabaseUrl}/functions/v1/submit-quote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${anonKey}`,
+          apikey: anonKey,
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          requestType: mode,
+          loanAmount: mode === "loan" ? Number(loanAmount) : undefined,
+          monthlyIncome: mode === "loan" ? Number(monthlyIncome) : undefined,
+          investmentAmount: mode === "loan" ? undefined : Number(investmentAmount),
+          tenure: mode === "loan" ? undefined : tenure,
+          selectedInstitutions: selectedBanks,
+          consent: true,
+          sessionToken: sessionToken ?? undefined,
+        }),
+      });
 
-      if (mode === "loan") {
-        insertPayload.loan_amount = Number(loanAmount);
-        insertPayload.monthly_income = Number(monthlyIncome);
-      } else {
-        insertPayload.investment_amount = Number(investmentAmount);
-        insertPayload.tenure = tenure;
-      }
-
-      if (sessionData) {
-        insertPayload.session_id = sessionData.id;
-      }
-
-      const { error: insertError } = await supabase
-        .from("quote_requests")
-        .insert(insertPayload);
-
-      if (insertError) throw insertError;
-
-      // Fire transactional confirmation email (F3-US9) — best-effort, non-blocking
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-        await fetch(`${supabaseUrl}/functions/v1/send-quote-confirmation`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${anonKey}`,
-            apikey: anonKey,
-          },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        });
-      } catch {
-        // Email send is best-effort; don't block the success UI
-      }
-
-      // Sync lead to HubSpot CRM (GR-CONSENT-01) — best-effort, non-blocking
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-        await fetch(`${supabaseUrl}/functions/v1/sync-hubspot-lead`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${anonKey}`,
-            apikey: anonKey,
-          },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        });
-      } catch {
-        // CRM sync is best-effort; don't block the success UI
-      }
+      if (!response.ok) throw new Error("submission_failed");
 
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
       setSuccess(true);
@@ -209,8 +168,8 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
         onClose();
         setSuccess(false);
       }, 5000);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // Internal failure detail is deliberately not surfaced or logged here.
       setSubmitError("Something went wrong submitting your request. Please try again.");
     } finally {
       setSubmitting(false);

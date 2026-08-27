@@ -165,7 +165,6 @@ export function Account() {
       const { error: insertError } = await supabase.from("data_deletion_requests").insert({
         user_id: user.id,
         user_email_hash: emailHash,
-        status: "pending",
       });
       if (insertError) throw insertError;
       setDeleteSuccess(true);

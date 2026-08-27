@@ -9,10 +9,34 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+// Shared secret used only for function-to-function calls. Falls back to the
+// service role key, which is server-side only and never shipped to browsers.
+const INTERNAL_SECRET = Deno.env.get("INTERNAL_FUNCTION_SECRET") || SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
+
+// Constant-time comparison so the secret cannot be recovered by timing.
+function secretMatches(presented: string): boolean {
+  if (!INTERNAL_SECRET || presented.length !== INTERNAL_SECRET.length) return false;
+  let diff = 0;
+  for (let i = 0; i < INTERNAL_SECRET.length; i++) {
+    diff |= presented.charCodeAt(i) ^ INTERNAL_SECRET.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+// Escape text before it is interpolated into the HTML email body. Every field
+// below originates from a public form and must never be treated as markup.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 interface RequestBody {
   email: string;
@@ -36,8 +60,9 @@ interface QuoteRow {
 function buildEmailHtml(quote: QuoteRow): string {
   const isLoan = quote.request_type === "loan";
   const institutions = quote.selected_institutions.length > 0
-    ? quote.selected_institutions.join(", ")
+    ? escapeHtml(quote.selected_institutions.join(", "))
     : "all recommended institutions";
+  const safeName = escapeHtml(quote.name);
 
   const specifics = isLoan
     ? [
@@ -53,7 +78,7 @@ function buildEmailHtml(quote: QuoteRow): string {
 <html>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h2 style="color: #0f4c5c;">Your Quote Request Has Been Received</h2>
-  <p>Hi ${quote.name},</p>
+  <p>Hi ${safeName},</p>
   <p>Thank you for requesting quotes through Safe Methods. We've received your submission and forwarded your details to the following institutions:</p>
   <p style="padding: 12px; background: #f4f4f4; border-radius: 6px;"><strong>${institutions}</strong></p>
 
@@ -118,6 +143,16 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
+  // This function performs an outbound side effect for a person named only by
+  // the request body, so it is callable solely by the platform's own
+  // submit-quote function, never with the public anon key.
+  if (!secretMatches(req.headers.get("x-internal-secret") ?? "")) {
+    return new Response(
+      JSON.stringify({ error: "Not found" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     const body: RequestBody = await req.json();
     const { email } = body;
@@ -137,10 +172,12 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .maybeSingle<QuoteRow>();
 
+    // Found and not-found return the identical response, so the status code
+    // cannot be used to learn whether an address has requested a quote.
     if (fetchError || !quote) {
       return new Response(
-        JSON.stringify({ error: "Quote request not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ accepted: true }),
+        { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -157,6 +194,7 @@ Deno.serve(async (req: Request) => {
       });
 
     if (insertError) {
+      console.error("send-quote-confirmation queue failed:", insertError.message);
       return new Response(
         JSON.stringify({ error: "Failed to queue email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -164,8 +202,8 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Confirmation email queued" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ accepted: true }),
+      { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     return new Response(
