@@ -23,6 +23,50 @@ const ROUTES = [
   },
 ];
 
+const REDIRECTS = [
+  { from: "/contact", to: "/" },
+  { from: "/about-us", to: "/" },
+  { from: "/wp-content", to: "/" },
+  { from: "/wp-admin", to: "/" },
+  { from: "/wp-login.php", to: "/" },
+  { from: "/feed", to: "/" },
+  { from: "/category", to: "/" },
+  { from: "/tag", to: "/" },
+  { from: "/page", to: "/" },
+];
+
+const GONE_PATHS = ["/xmlrpc.php"];
+
+function redirectHtml(target: string, canonicalUrl: string) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="0; url=${target}" />
+  <link rel="canonical" href="${canonicalUrl}" />
+  <title>Redirecting&hellip;</title>
+  <meta name="robots" content="noindex, follow" />
+</head>
+<body>
+  <p>This page has moved. <a href="${target}">Continue to the new location</a>.</p>
+</body>
+</html>`;
+}
+
+function notFoundHtml() {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Page Not Found | Safe Methods</title>
+  <meta name="robots" content="noindex, nofollow" />
+</head>
+<body>
+  <p>This page no longer exists. <a href="/">Return to Safe Methods</a>.</p>
+</body>
+</html>`;
+}
+
 function seoPages() {
   return {
     name: 'vite-plugin-seo-pages',
@@ -55,6 +99,30 @@ function seoPages() {
         } else {
           const slug = route.path.slice(1);
           const dir = resolve(distDir, slug);
+          mkdirSync(dir, { recursive: true });
+          writeFileSync(resolve(dir, 'index.html'), html);
+        }
+      }
+
+      for (const rule of REDIRECTS) {
+        const canonicalUrl = `${SITE_URL}${rule.to === "/" ? "/" : rule.to}`;
+        const html = redirectHtml(rule.to, canonicalUrl);
+
+        if (rule.from.includes(".")) {
+          writeFileSync(resolve(distDir, rule.from.slice(1)), html);
+        } else {
+          const dir = resolve(distDir, rule.from.slice(1));
+          mkdirSync(dir, { recursive: true });
+          writeFileSync(resolve(dir, 'index.html'), html);
+        }
+      }
+
+      for (const path of GONE_PATHS) {
+        const html = notFoundHtml();
+        if (path.includes(".")) {
+          writeFileSync(resolve(distDir, path.slice(1)), html);
+        } else {
+          const dir = resolve(distDir, path.slice(1));
           mkdirSync(dir, { recursive: true });
           writeFileSync(resolve(dir, 'index.html'), html);
         }
