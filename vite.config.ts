@@ -23,49 +23,54 @@ const ROUTES = [
   },
 ];
 
-const REDIRECTS = [
-  { from: "/contact", to: "/" },
-  { from: "/about-us", to: "/" },
-  { from: "/wp-content", to: "/" },
-  { from: "/wp-admin", to: "/" },
-  { from: "/wp-login.php", to: "/" },
-  { from: "/feed", to: "/" },
-  { from: "/category", to: "/" },
-  { from: "/tag", to: "/" },
-  { from: "/page", to: "/" },
+const HOMEPAGE_JSONLD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Safe Methods",
+    "url": "https://safemethods.com",
+    "logo": "https://safemethods.com/favicon.ico",
+    "description": "Safe Methods is a financial advice marketplace that connects customers with financial experts from multiple institutions, so they can compare and choose the best product or interest rate — rather than relying on a single bank or advisor.",
+    "email": "info@safemethods.org",
+    "telephone": "+1-888-841-7755",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Mississauga",
+      "addressRegion": "Ontario",
+      "addressCountry": "Canada",
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+1-888-841-7755",
+      "contactType": "customer service",
+      "email": "info@safemethods.org",
+      "areaServed": "CA",
+      "availableLanguage": ["English"],
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FinancialService",
+    "name": "Safe Methods",
+    "url": "https://safemethods.com",
+    "description": "Safe Methods brings together AI-driven tools and human financial expertise to help customers compare loan, investment, and debt management options across institutions. The platform is newly launched and currently free for all customers to use.",
+    "areaServed": "CA",
+    "provider": {
+      "@type": "Organization",
+      "name": "Safe Methods",
+      "url": "https://safemethods.com",
+      "telephone": "+1-888-841-7755",
+      "email": "info@safemethods.org",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Mississauga",
+        "addressRegion": "Ontario",
+        "addressCountry": "Canada",
+      },
+    },
+    "serviceType": "Financial advice comparison and marketplace",
+  },
 ];
-
-const GONE_PATHS = ["/xmlrpc.php"];
-
-function redirectHtml(target: string, canonicalUrl: string) {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=${target}" />
-  <link rel="canonical" href="${canonicalUrl}" />
-  <title>Redirecting&hellip;</title>
-  <meta name="robots" content="noindex, follow" />
-</head>
-<body>
-  <p>This page has moved. <a href="${target}">Continue to the new location</a>.</p>
-</body>
-</html>`;
-}
-
-function notFoundHtml() {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Page Not Found | Safe Methods</title>
-  <meta name="robots" content="noindex, nofollow" />
-</head>
-<body>
-  <p>This page no longer exists. <a href="/">Return to Safe Methods</a>.</p>
-</body>
-</html>`;
-}
 
 function seoPages() {
   return {
@@ -89,40 +94,21 @@ function seoPages() {
     <meta name="twitter:image" content="${ogImage}" />
   </head>`;
 
-        const html = template
+        let html = template
           .replace(/<title>[^<]*<\/title>/, `<title>${route.title}</title>`)
           .replace(/<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${route.description}" />`)
           .replace('</head>', headExtras);
 
         if (route.path === "/") {
+          const jsonldScripts = HOMEPAGE_JSONLD.map(
+            (obj) =>
+              `  <script type="application/ld+json">${JSON.stringify(obj)}</script>`
+          ).join("\n");
+          html = html.replace("</head>", `${jsonldScripts}\n  </head>`);
           writeFileSync(resolve(distDir, 'index.html'), html);
         } else {
           const slug = route.path.slice(1);
           const dir = resolve(distDir, slug);
-          mkdirSync(dir, { recursive: true });
-          writeFileSync(resolve(dir, 'index.html'), html);
-        }
-      }
-
-      for (const rule of REDIRECTS) {
-        const canonicalUrl = `${SITE_URL}${rule.to === "/" ? "/" : rule.to}`;
-        const html = redirectHtml(rule.to, canonicalUrl);
-
-        if (rule.from.includes(".")) {
-          writeFileSync(resolve(distDir, rule.from.slice(1)), html);
-        } else {
-          const dir = resolve(distDir, rule.from.slice(1));
-          mkdirSync(dir, { recursive: true });
-          writeFileSync(resolve(dir, 'index.html'), html);
-        }
-      }
-
-      for (const path of GONE_PATHS) {
-        const html = notFoundHtml();
-        if (path.includes(".")) {
-          writeFileSync(resolve(distDir, path.slice(1)), html);
-        } else {
-          const dir = resolve(distDir, path.slice(1));
           mkdirSync(dir, { recursive: true });
           writeFileSync(resolve(dir, 'index.html'), html);
         }
