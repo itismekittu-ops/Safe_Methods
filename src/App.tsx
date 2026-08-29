@@ -8,6 +8,7 @@ import { BlogPost } from './pages/BlogPost';
 import { Auth } from './pages/Auth';
 import { Account } from './pages/Account';
 import { ResetPassword } from './pages/ResetPassword';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
 export function App() {
   return (
     <BrowserRouter>
@@ -20,6 +21,7 @@ export function App() {
             <Route path="/login" element={<Auth />} />
             <Route path="/account" element={<Account />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Route>
         </Routes>
       </AuthProvider>

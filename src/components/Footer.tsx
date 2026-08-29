@@ -69,9 +69,8 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/privacy-policy"
                   className="text-sm text-primary-foreground/70 hover:text-accent transition-colors">
-                  
                   Privacy Policy
                 </a>
               </li>

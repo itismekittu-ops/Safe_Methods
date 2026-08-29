@@ -21,6 +21,11 @@ const ROUTES = [
     title: "Navigating Generational Wealth Transfer in Uncertain Markets | Safe Methods",
     description: "How high-net-worth families can prepare the next generation to manage significant wealth through governance, communication, and strategic planning.",
   },
+  {
+    path: "/privacy-policy",
+    title: "Privacy Policy | Safe Methods",
+    description: "Safe Methods Privacy Policy — how we collect, use, and protect your personal information when you visit safemethods.com.",
+  },
 ];
 
 const HOMEPAGE_JSONLD = [
