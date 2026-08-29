@@ -1,0 +1,13 @@
+# Legacy WordPress redirects (301)
+/contact           /   301
+/about-us          /   301
+/wp-content/*      /   301
+/wp-admin/*        /   301
+/wp-login.php      /   301
+/feed/*            /   301
+/category/*        /   301
+/tag/*             /   301
+/page/*            /   301
+
+# WordPress artifacts — block, not redirect
+/xmlrpc.php        /404.html  404
