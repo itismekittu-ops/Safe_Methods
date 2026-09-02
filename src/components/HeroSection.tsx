@@ -398,28 +398,32 @@ export function HeroSection() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {["Meridian", "Apex", "Evergreen", "Northbank", "Summit"].map((bankName, idx) => (
+                {[
+                  { name: "RBC", consultant: "Victor Gaur", title: "Principal Financial Advisor" },
+                  { name: "TD", consultant: "Sarah Mitchell", title: "Senior Investment Advisor" },
+                  { name: "BMO", consultant: "David Chen", title: "Wealth Management Specialist" },
+                ].map((bank, idx) => (
                   <div
-                    key={bankName}
+                    key={bank.name}
                     className={`flex items-center gap-3 p-4 rounded-lg border ${
-                      idx === 2
+                      idx === 0
                         ? "bg-accent/10 border-accent/40 shadow-soft"
                         : "bg-surface border-border-subtle"
                     }`}
                   >
                     <div
                       className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
-                        idx === 2
+                        idx === 0
                           ? "bg-accent/20 border border-accent/50"
                           : "bg-muted border border-border-subtle"
                       }`}
                     >
                       <BuildingIcon
                         className={`w-5 h-5 ${
-                          idx === 2 ? "text-primary" : "text-muted-foreground"
+                          idx === 0 ? "text-primary" : "text-muted-foreground"
                         }`}
                       />
-                      {idx === 2 && (
+                      {idx === 0 && (
                         <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
                           <CheckIcon className="w-3 h-3" />
                         </span>
@@ -427,10 +431,10 @@ export function HeroSection() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <p className="font-semibold text-sm text-foreground truncate">
-                        {bankName} Bank
+                        {bank.consultant}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        Ask a question to see ranked matches
+                        {bank.name} · {bank.title}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
