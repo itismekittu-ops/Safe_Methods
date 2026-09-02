@@ -25,7 +25,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
-const MODEL_NAME = "gpt-5.6-luna";
+const MODEL_NAME = "gpt-4o-mini";
 const MODEL_VERSION = "2026-02"; 
 const PROMPT_VERSION = "v1";
 
