@@ -257,8 +257,31 @@ export function HeroSection() {
                   >
                     {msg.role === "bot" ? (
                       <ReactMarkdown
-                        className="text-gray-800 text-sm leading-relaxed [&>table]:w-full [&>table]:border-collapse [&>table]:my-4 [&>table>thead>tr>th]:border-b-2 [&>table>thead>tr>th]:border-gray-300 [&>table>thead>tr>th]:p-2 [&>table>thead>tr>th]:text-left [&>table>tbody>tr>td]:border-b [&>table>tbody>tr>td]:border-gray-200 [&>table>tbody>tr>td]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:my-3 [&>ul>li]:mb-1 [&>p]:mb-3"
                         remarkPlugins={[remarkGfm]}
+                        className="text-gray-800 text-sm leading-relaxed"
+                        components={{
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="w-full border-collapse border border-gray-300 text-sm" {...props} />
+                            </div>
+                          ),
+                          thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                          th: ({ node, ...props }) => (
+                            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800" {...props} />
+                          ),
+                          td: ({ node, ...props }) => (
+                            <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />
+                          ),
+                          ul: ({ node, ...props }) => (
+                            <ul className="list-disc pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol className="list-decimal pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />
+                        }}
                       >
                         {msg.content}
                       </ReactMarkdown>
