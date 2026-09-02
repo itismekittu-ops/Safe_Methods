@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
@@ -253,7 +255,16 @@ export function HeroSection() {
                         : "bg-muted text-foreground rounded-tl-sm"
                     }`}
                   >
-                    <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
+                    {msg.role === "bot" ? (
+                      <ReactMarkdown
+                        className="prose prose-sm max-w-none prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-table:border-collapse prose-th:border prose-th:border-border-subtle prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border-subtle prose-td:px-2 prose-td:py-1"
+                        remarkPlugins={[remarkGfm]}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
+                    )}
                   </div>
                 </div>
               ))}
