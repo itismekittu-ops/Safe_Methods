@@ -138,7 +138,13 @@ function rankBanks(
     if (diff !== 0) return diff;
     return a.bank_name.localeCompare(b.bank_name);
   });
-  return sorted.slice(0, 5).map((r, idx) => ({
+  const seenBanks = new Set<string>();
+  const deduped = sorted.filter((r) => {
+    if (seenBanks.has(r.bank_name)) return false;
+    seenBanks.add(r.bank_name);
+    return true;
+  });
+  return deduped.slice(0, 3).map((r, idx) => ({
     name: r.bank_name,
     productType: r.product_type,
     term: r.term,
@@ -235,7 +241,7 @@ Formatting & Response Rules:
   • Always recommend consulting a qualified financial advisor.
   • Never solicit or store sensitive PII.
 
-${rateContext ? \`--- Current Rate Data ---\\n\${rateContext}\\n--- End Rate Data ---\` : ""}`;
+${rateContext ? `--- Current Rate Data ---\n${rateContext}\n--- End Rate Data ---` : ""}`;
 
   const messages = [
     { role: "system", content: systemPrompt },
