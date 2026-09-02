@@ -81,3 +81,46 @@ h1, h2, h3, h4, h5, h6 {
   color: #374151;
   line-height: 1.5;
 }
+
+/* Chatbot Markdown Table & List Styling Overrides */
+.chat-markdown table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  display: table !important;
+}
+.chat-markdown th {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  padding: 6px 12px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+.chat-markdown td {
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 6px 12px !important;
+  color: #334155 !important;
+}
+.chat-markdown ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+.chat-markdown ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+.chat-markdown li {
+  margin-bottom: 0.35rem !important;
+  line-height: 1.5 !important;
+  display: list-item !important;
+}
+.chat-markdown p {
+  margin-bottom: 0.5rem !important;
+  line-height: 1.5 !important;
+}
