@@ -187,30 +187,6 @@ function generateFollowUps(productType: ProductType | null): string[] {
   return ["How do I create a monthly budget?", "Should I pay off debt or invest first?", "Can I schedule a call?"];
 }
 
-// ─── Fallback Response (no LLM key) ────────────────────
-
-function buildFallbackResponse(
-  message: string,
-  productType: ProductType | null,
-  rateContext: string | null
-): string {
-  if (!productType || !rateContext) {
-    return "I'd be happy to help with your financial questions. I can provide guidance on mortgages, personal loans, GICs, investments, budgeting, and debt management. Could you share a bit more about what you're looking for?";
-  }
-
-  const topicLabels: Record<ProductType, string> = {
-    mortgage: "mortgage rates",
-    personal_loan: "personal loan rates",
-    gic: "GIC rates",
-    investment: "investment returns",
-  };
-
-  const lowerIsBetter = productType === "mortgage" || productType === "personal_loan";
-  const bestLabel = lowerIsBetter ? "lowest" : "highest";
-
-  return `Based on your inquiry about ${topicLabels[productType]}, here's what I found from our partner institutions:\n\n${rateContext}\n\nThe ${bestLabel} rate is highlighted as the top match in the sidebar. Prices are indicative and subject to change — for best results, it's recommended to connect directly with the advisor for a personalized offer.`;
-}
-
 // ─── LLM Call (OpenAI) ─────────────────────────────────
 
 async function callLLM(
@@ -230,12 +206,14 @@ Formatting & Response Rules:
   • Format your response as exactly 2 to 3 bullet points.
   • Highlight critical concepts using **bold text**.
 - For product definitions (e.g., "What is a GIC?", "What is a mortgage rate?"):
+  • Handle minor user typos gracefully (e.g., "morgage" -> mortgage).
   • First, explain the concept in 2 to 3 bullet points using general knowledge.
-  • Then, append a Markdown comparison table below the explanation showcasing the current rates for that product.
-  • Populate this table ONLY using the numbers supplied in the "Current Rate Data" section below.
-- For direct rate inquiries:
-  • Respond directly with a clear comparison table.
-  • Use ONLY the numbers and terms supplied in the "Current Rate Data". Never invent rates.
+  • Then, append a Markdown comparison table below the explanation showcasing the current rates.
+- For direct rate inquiries AND product definitions, you MUST format the data as a Markdown table exactly like this:
+  | Institution | Term | Rate |
+  |---|---|---|
+  | RBC | 3-year | 3.45% |
+  • Populate this table ONLY using the numbers supplied in the "Current Rate Data" section below. Never invent rates.
 - Boundary Guidelines:
   • Clearly distinguish educational insights from specific product recommendations.
   • Always recommend consulting a qualified financial advisor.
@@ -710,7 +688,7 @@ Deno.serve(async (req: Request) => {
     });
 
     if (!reply) {
-      reply = buildFallbackResponse(message, productType, rateContext);
+      reply = "I'm sorry, I wasn't able to generate a response right now. Please try again in a moment.";
     }
 
     // ── Stage 4: Output Guardrails ──
