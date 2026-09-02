@@ -1,19 +1,6 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import {
-  createTraceContext,
-  addTrace,
-  addSpan,
-  addGeneration,
-  addTag,
-  flush,
-  type TraceContext,
-} from "./langfuse.ts";
-import {
-  detectSensitivePii,
-  redactPii,
-  checkMultiTurnAssembly,
-} from "./pii.ts";
+import { validateInput, validateOutput } from "./pii.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,180 +12,61 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
-const MODEL_NAME = "gpt-5.6-luna";
-const MODEL_VERSION = "2025-07";
-const PROMPT_VERSION = "v1";
-
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-// ─── Types ────────────────────────────────────────────
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface RequestBody {
-  message: string;
-  sessionToken?: string;
-  history?: ChatMessage[];
-  action?: "chat" | "history";
-}
-
-interface BankRanking {
-  name: string;
-  productType: string;
-  term: string | null;
-  rate: number;
-  rank: number;
-  isBest: boolean;
-  consultantId: string | null;
-  consultantName: string | null;
-  consultantTitle: string | null;
-  consultantAvatarUrl: string | null;
-}
-
-interface FunctionResponse {
-  reply: string;
-  banks: BankRanking[];
-  followUps: string[];
-  sessionToken: string;
-  blocked?: boolean;
-  blockReason?: string;
-}
-
-// ─── Input Guardrails (non-PII) ──────────────────────
-
-const MAX_MESSAGE_LENGTH = 2000;
-const JAILBREAK_PATTERNS = [
-  /ignore (all )?(previous )?instructions/i,
-  /you are (now )?(a|an) (different|new)/i,
-  /disregard (your )?(system )?prompt/i,
-  /reveal (your )?(system )?prompt/i,
-  /act as (if you are )?(a|an) (different|new|jailbroken)/i,
-];
-
-function checkJailbreak(message: string): boolean {
-  return JAILBREAK_PATTERNS.some((p) => p.test(message));
-}
-
-// ─── Output Guardrails ─────────────────────────────────
-
-function runOutputGuardrails(response: string): { passed: boolean; reason?: string } {
-  if (response.length > 4000) {
-    return { passed: false, reason: "I'm having trouble generating a concise response right now. Please try again." };
-  }
-  // GR-OUT-03: check for sensitive PII in LLM output
-  const piiFound = detectSensitivePii(response);
-  if (piiFound.length > 0) {
-    return { passed: false, reason: "I apologize, but I couldn't generate a safe response. Please try rephrasing your question." };
-  }
-  return { passed: true };
-}
-
-// ─── Topic Detection ───────────────────────────────────
-
-type ProductType = "mortgage" | "personal_loan" | "gic" | "investment";
-
-function detectProductType(message: string): ProductType | null {
-  const lower = message.toLowerCase();
-  if (/\bmortgage\b|\bhome loan\b|\bhouse\b|\bproperty\b|\brefinanc/.test(lower)) return "mortgage";
-  if (/\bpersonal loan\b|\bdebt consolidat|\bcredit\b|\bborrow/.test(lower)) return "personal_loan";
-  if (/\bgic\b|\bfixed deposit\b|\bguaranteed/.test(lower)) return "gic";
-  if (/\binvest|\bmutual fund\b|\bportfolio\b|\bstock\b|\bretirement\b|\brrsp\b|\btfsa\b/.test(lower)) return "investment";
-  if (/\bbudget\b|\bsave\b|\bsaving\b/.test(lower)) return "investment";
-  if (/\btax\b/.test(lower)) return "investment";
-  return null;
-}
-
-// ─── Bank Ranking ──────────────────────────────────────
-
-interface RateWithConsultant {
-  bank_name: string;
-  product_type: string;
-  term: string | null;
-  rate_percent: number;
-  consultant_id: string | null;
-  consultant_name: string | null;
-  consultant_title: string | null;
-  consultant_avatar_url: string | null;
-}
-
-function rankBanks(
-  rates: RateWithConsultant[],
-  productType: ProductType
-): BankRanking[] {
-  const lowerIsBetter = productType === "mortgage" || productType === "personal_loan";
-  const sorted = [...rates].sort((a, b) => {
-    const diff = lowerIsBetter
-      ? a.rate_percent - b.rate_percent
-      : b.rate_percent - a.rate_percent;
-    if (diff !== 0) return diff;
-    return a.bank_name.localeCompare(b.bank_name);
-  });
-  const seenBanks = new Set<string>();
-  const deduped = sorted.filter((r) => {
-    if (seenBanks.has(r.bank_name)) return false;
-    seenBanks.add(r.bank_name);
-    return true;
-  });
-  return deduped.slice(0, 3).map((r, idx) => ({
-    name: r.bank_name,
-    productType: r.product_type,
-    term: r.term,
-    rate: Number(r.rate_percent),
-    rank: idx + 1,
-    isBest: idx === 0,
-    consultantId: r.consultant_id,
-    consultantName: r.consultant_name,
-    consultantTitle: r.consultant_title,
-    consultantAvatarUrl: r.consultant_avatar_url,
-  }));
-}
-
-// ─── Knowledge Base Context ────────────────────────────
-
-function buildRateContext(
-  productType: ProductType,
-  rates: Array<{ bank_name: string; term: string | null; rate_percent: number }>
-): string {
-  const lowerIsBetter = productType === "mortgage" || productType === "personal_loan";
-  const sorted = [...rates].sort((a, b) =>
-    lowerIsBetter ? a.rate_percent - b.rate_percent : b.rate_percent - a.rate_percent
-  );
-  const lines = sorted.map(
-    (r) => `  • ${r.bank_name}: ${r.rate_percent}% (${r.term ?? "standard term"})`
-  );
-  return `Current ${productType.replace("_", " ")} rates from our partner institutions:\n${lines.join("\n")}`;
-}
-
-// ─── Follow-up Suggestions ─────────────────────────────
-
-function generateFollowUps(productType: ProductType | null): string[] {
-  const map: Record<ProductType, string[]> = {
-    mortgage: ["What are their fees?", "Can I schedule a call?", "Compare interest rates"],
-    personal_loan: ["What are their fees?", "How do I consolidate my debt?", "Can I schedule a call?"],
-    gic: ["Which bank has the highest return?", "What are the terms?", "Can I schedule a call?"],
-    investment: ["What are the risks?", "How do I start investing?", "Can I schedule a call?"],
-  };
-  if (productType && map[productType]) return map[productType];
-  return ["How do I create a monthly budget?", "Should I pay off debt or invest first?", "Can I schedule a call?"];
-}
-
-// ─── LLM Call (OpenAI) ─────────────────────────────────
-
-async function callLLM(
-  message: string,
-  history: ChatMessage[],
-  rateContext: string | null
-): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    return "";
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const systemPrompt = `You are SafeBot, a knowledgeable financial advisory assistant for Safe Methods, a Canadian financial platform.
+  try {
+    const body = await req.json();
+    const { message, history = [] } = body;
+
+    // 1. Input Validation
+    const inputCheck = validateInput(message);
+    if (!inputCheck.valid) {
+      return new Response(
+        JSON.stringify({ reply: inputCheck.error, banks: [], followUps: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Fetch Rates for Grounding Context
+    const { data: rates } = await supabase
+      .from("rates")
+      .select(`
+        product_type,
+        term,
+        rate_percent,
+        banks!inner(name),
+        consultants!left(id, name, title, avatar_url)
+      `);
+
+    let rateContext = "";
+    let flatRates: any[] = [];
+
+    if (rates && rates.length > 0) {
+      flatRates = rates.map((r: any) => ({
+        bank_name: r.banks.name,
+        product_type: r.product_type,
+        term: r.term,
+        rate_percent: Number(r.rate_percent),
+        consultant_id: r.consultants?.id ?? null,
+        consultant_name: r.consultants?.name ?? null,
+        consultant_title: r.consultants?.title ?? null,
+        consultant_avatar_url: r.consultants?.avatar_url ?? null,
+      }));
+
+      rateContext = flatRates
+        .map((r) => `• ${r.bank_name} (${r.product_type}, ${r.term ?? "standard"}): ${r.rate_percent}%`)
+        .join("\n");
+    }
+
+    // 3. System Prompt & LLM Call
+    const systemPrompt = `You are SafeBot, a knowledgeable financial advisory assistant for Safe Methods, a Canadian financial platform.
 
 Formatting & Response Rules:
 - For general financial education (e.g., "How do RRSPs work?"):
@@ -221,562 +89,85 @@ Formatting & Response Rules:
 
 ${rateContext ? `--- Current Rate Data ---\n${rateContext}\n--- End Rate Data ---` : ""}`;
 
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...history.slice(-8).map((m) => ({
-      role: m.role === "user" ? "user" : "assistant",
-      content: m.content,
-    })),
-    { role: "user", content: message },
-  ];
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...history.slice(-8).map((m: any) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content,
+      })),
+      { role: "user", content: message },
+    ];
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: MODEL_NAME,
-      messages,
-      max_tokens: 500,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    return "";
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
-}
-
-// ─── Session Persistence ───────────────────────────────
-
-// Resolve the caller's authenticated user id, if they presented a real user
-// JWT. Anonymous callers (who send the public anon key) resolve to null.
-async function getCallerUserId(req: Request): Promise<string | null> {
-  const header = req.headers.get("Authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!token) return null;
-  try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error) return null;
-    return data.user?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-// The session token is a bearer capability: holding it is what grants access,
-// so it is never listable through the Data API (see migration 015). A session
-// that has been bound to a signed-in account additionally requires that
-// account's JWT, so a leaked token cannot be replayed by a stranger.
-async function ensureSession(
-  sessionToken: string | undefined,
-  callerUserId: string | null,
-): Promise<string> {
-  if (sessionToken) {
-    const { data } = await supabase
-      .from("chat_sessions")
-      .select("session_token, user_id")
-      .eq("session_token", sessionToken)
-      .maybeSingle();
-
-    if (data && (data.user_id === null || data.user_id === callerUserId)) {
-      return sessionToken;
-    }
-    // Token unknown, or it belongs to a different account: never adopt it.
-  }
-
-  const newToken = crypto.randomUUID();
-  await supabase
-    .from("chat_sessions")
-    .insert({ session_token: newToken, user_id: callerUserId });
-  return newToken;
-}
-
-async function saveMessages(sessionToken: string, userMsg: string, assistantMsg: string) {
-  const { data: session } = await supabase
-    .from("chat_sessions")
-    .select("id")
-    .eq("session_token", sessionToken)
-    .maybeSingle();
-
-  if (!session) return;
-
-  await supabase.from("chat_messages").insert([
-    { session_id: session.id, role: "user", content: userMsg },
-    { session_id: session.id, role: "assistant", content: assistantMsg },
-  ]);
-}
-
-// ─── Full transcript for history restore ───────────────
-
-// Returns the transcript for a session the caller proved they hold the token
-// for. A session bound to an account also requires that account's JWT.
-async function getSessionTranscript(
-  sessionToken: string,
-  callerUserId: string | null,
-): Promise<Array<{ role: string; content: string }>> {
-  const { data: session } = await supabase
-    .from("chat_sessions")
-    .select("id, user_id")
-    .eq("session_token", sessionToken)
-    .maybeSingle();
-
-  if (!session) return [];
-  if (session.user_id !== null && session.user_id !== callerUserId) return [];
-
-  const { data: rows } = await supabase
-    .from("chat_messages")
-    .select("role, content")
-    .eq("session_id", session.id)
-    .order("created_at", { ascending: true });
-
-  return rows ?? [];
-}
-
-// ─── Fetch session history for multi-turn PII ──────────
-
-async function getSessionHistory(sessionToken: string): Promise<string[]> {
-  const { data: session } = await supabase
-    .from("chat_sessions")
-    .select("id")
-    .eq("session_token", sessionToken)
-    .maybeSingle();
-
-  if (!session) return [];
-
-  const { data: rows } = await supabase
-    .from("chat_messages")
-    .select("role, content")
-    .eq("session_id", session.id)
-    .order("created_at", { ascending: true });
-
-  if (!rows) return [];
-
-  // Only user messages matter for PII assembly detection
-  return rows
-    .filter((r: { role: string }) => r.role === "user")
-    .map((r: { content: string }) => r.content);
-}
-
-// ─── Main Handler ──────────────────────────────────────
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
-
-  const traceCtx: TraceContext = createTraceContext("");
-  const traceStart = Date.now();
-
-  try {
-    const body: RequestBody = await req.json();
-    const { message, sessionToken, history = [], action = "chat" } = body;
-
-    const callerUserId = await getCallerUserId(req);
-
-    // History restore. The browser can no longer read chat_sessions or
-    // chat_messages directly (migrations 015/016), so it asks here and must
-    // present the session token it already holds.
-    if (action === "history") {
-      const messages = sessionToken
-        ? await getSessionTranscript(sessionToken, callerUserId)
-        : [];
-      return new Response(
-        JSON.stringify({ messages }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Ensure session early so we can fetch history for multi-turn PII
-    const token = await ensureSession(sessionToken, callerUserId);
-    traceCtx.sessionId = token;
-
-    // Fetch authoritative session history from DB for multi-turn PII
-    const dbHistory = await getSessionHistory(token);
-
-    // ── Stage 1: Input Guardrails (GR-IN-01 through GR-IN-06) ──
-    const guardStart = Date.now();
-    const guardSpanId = crypto.randomUUID();
-
-    // GR-IN-01: empty message
-    if (!message || message.trim().length === 0) {
-      const guardEnd = Date.now();
-      addSpan(traceCtx, {
-        id: guardSpanId,
-        traceId: traceCtx.traceId,
-        name: "input_guardrail",
-        startTime: new Date(guardStart).toISOString(),
-        endTime: new Date(guardEnd).toISOString(),
-        input: { message: "[EMPTY]" },
-        output: { passed: false, reason: "empty_message" },
-        level: "WARNING",
-      });
-      addTag(traceCtx, "guardrail:empty_message");
-      addTag(traceCtx, "blocked");
-
-      // OBS-PII-01/02: redact even in guardrail failure traces
-      addTrace(traceCtx, {
-        id: traceCtx.traceId,
-        name: "chat_turn",
-        sessionId: token,
-        metadata: { prompt_version: PROMPT_VERSION },
-        tags: [],
-      });
-      // Fire-and-forget trace flush
-      flush(traceCtx);
-
-      return new Response(
-        JSON.stringify({
-          reply: "Your message appears to be empty. Please type a question and try again.",
-          banks: [],
-          followUps: [],
-          sessionToken: token,
-          blocked: true,
-          blockReason: "empty_message",
-        } satisfies FunctionResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // GR-IN-02: length limit
-    if (message.length > MAX_MESSAGE_LENGTH) {
-      const guardEnd = Date.now();
-      addSpan(traceCtx, {
-        id: guardSpanId,
-        traceId: traceCtx.traceId,
-        name: "input_guardrail",
-        startTime: new Date(guardStart).toISOString(),
-        endTime: new Date(guardEnd).toISOString(),
-        input: { length: message.length },
-        output: { passed: false, reason: "length_exceeded" },
-        level: "WARNING",
-      });
-      addTag(traceCtx, "guardrail:length_exceeded");
-      addTag(traceCtx, "blocked");
-
-      addTrace(traceCtx, {
-        id: traceCtx.traceId,
-        name: "chat_turn",
-        sessionId: token,
-        metadata: { prompt_version: PROMPT_VERSION },
-        tags: [],
-      });
-      flush(traceCtx);
-
-      return new Response(
-        JSON.stringify({
-          reply: "Your message is too long. Please keep it under 2000 characters.",
-          banks: [],
-          followUps: [],
-          sessionToken: token,
-          blocked: true,
-          blockReason: "length_exceeded",
-        } satisfies FunctionResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // GR-IN-04: per-message sensitive PII (SIN/SSN/card/government ID)
-    const sensitivePii = detectSensitivePii(message);
-    if (sensitivePii.length > 0) {
-      const guardEnd = Date.now();
-      // OBS-PII-01/02/03: redact before tracing — never log raw PII
-      const piiLabels = sensitivePii.map((p) => `[PII_DETECTED:${p.label}]`);
-      addSpan(traceCtx, {
-        id: guardSpanId,
-        traceId: traceCtx.traceId,
-        name: "input_guardrail",
-        startTime: new Date(guardStart).toISOString(),
-        endTime: new Date(guardEnd).toISOString(),
-        input: { message: redactPii(message) },
-        output: { passed: false, reason: "sensitive_pii", pii_types: piiLabels },
-        level: "WARNING",
-      });
-      addTag(traceCtx, "guardrail:sensitive_pii");
-      addTag(traceCtx, "blocked");
-
-      addTrace(traceCtx, {
-        id: traceCtx.traceId,
-        name: "chat_turn",
-        sessionId: token,
-        metadata: { prompt_version: PROMPT_VERSION },
-        tags: [],
-      });
-      flush(traceCtx);
-
-      return new Response(
-        JSON.stringify({
-          reply: "For your security, please don't share sensitive identification numbers (like SIN, SSN, or card numbers) in this chat. Please remove any personal identification numbers and try again. If you need to share details for a quote, use the \"Get Quotes\" button to submit through our secure form.",
-          banks: [],
-          followUps: [],
-          sessionToken: token,
-          blocked: true,
-          blockReason: "sensitive_pii",
-        } satisfies FunctionResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // GR-IN-03: jailbreak detection
-    if (checkJailbreak(message)) {
-      const guardEnd = Date.now();
-      addSpan(traceCtx, {
-        id: guardSpanId,
-        traceId: traceCtx.traceId,
-        name: "input_guardrail",
-        startTime: new Date(guardStart).toISOString(),
-        endTime: new Date(guardEnd).toISOString(),
-        input: { message: redactPii(message) },
-        output: { passed: false, reason: "jailbreak_attempt" },
-        level: "WARNING",
-      });
-      addTag(traceCtx, "guardrail:jailbreak");
-      addTag(traceCtx, "blocked");
-
-      addTrace(traceCtx, {
-        id: traceCtx.traceId,
-        name: "chat_turn",
-        sessionId: token,
-        metadata: { prompt_version: PROMPT_VERSION },
-        tags: [],
-      });
-      flush(traceCtx);
-
-      return new Response(
-        JSON.stringify({
-          reply: "I'm here to help with financial questions. I can't process that type of request.",
-          banks: [],
-          followUps: [],
-          sessionToken: token,
-          blocked: true,
-          blockReason: "jailbreak_attempt",
-        } satisfies FunctionResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // GR-IN-05: multi-turn PII assembly detection
-    // Uses authoritative DB history + current message
-    const assembly = checkMultiTurnAssembly(message, dbHistory);
-    if (assembly.blocked) {
-      const guardEnd = Date.now();
-      addSpan(traceCtx, {
-        id: guardSpanId,
-        traceId: traceCtx.traceId,
-        name: "input_guardrail",
-        startTime: new Date(guardStart).toISOString(),
-        endTime: new Date(guardEnd).toISOString(),
-        input: { message: redactPii(message) },
-        output: { passed: false, reason: "multi_turn_pii_assembly", categories: assembly.categories },
-        level: "WARNING",
-      });
-      addTag(traceCtx, "guardrail:multi_turn_pii_assembly");
-      addTag(traceCtx, "blocked");
-
-      addTrace(traceCtx, {
-        id: traceCtx.traceId,
-        name: "chat_turn",
-        sessionId: token,
-        metadata: { prompt_version: PROMPT_VERSION },
-        tags: [],
-      });
-      flush(traceCtx);
-
-      return new Response(
-        JSON.stringify({
-          reply: assembly.reason,
-          banks: [],
-          followUps: [],
-          sessionToken: token,
-          blocked: true,
-          blockReason: "multi_turn_pii_assembly",
-        } satisfies FunctionResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Guardrails passed — log the span
-    const guardEnd = Date.now();
-    addSpan(traceCtx, {
-      id: guardSpanId,
-      traceId: traceCtx.traceId,
-      name: "input_guardrail",
-      startTime: new Date(guardStart).toISOString(),
-      endTime: new Date(guardEnd).toISOString(),
-      input: { message: redactPii(message) },
-      output: { passed: true, latency_ms: guardEnd - guardStart },
-    });
-
-    // ── Stage 2: Retrieval (RAG) ──
-    const retrievalStart = Date.now();
-    const retrievalSpanId = crypto.randomUUID();
-    const productType = detectProductType(message);
-    let bankRankings: BankRanking[] = [];
-    let rateContext: string | null = null;
-
-    if (productType) {
-      const { data: rates } = await supabase
-        .from("rates")
-        .select(`
-          product_type,
-          term,
-          rate_percent,
-          banks!inner(name),
-          consultants!left(id, name, title, avatar_url)
-        `)
-        .eq("product_type", productType);
-
-      if (rates && rates.length > 0) {
-        const flatRates: RateWithConsultant[] = rates.map((r: any) => ({
-          bank_name: r.banks.name,
-          product_type: r.product_type,
-          term: r.term,
-          rate_percent: Number(r.rate_percent),
-          consultant_id: r.consultants?.id ?? null,
-          consultant_name: r.consultants?.name ?? null,
-          consultant_title: r.consultants?.title ?? null,
-          consultant_avatar_url: r.consultants?.avatar_url ?? null,
-        }));
-        bankRankings = rankBanks(flatRates, productType);
-        rateContext = buildRateContext(
-          productType,
-          flatRates.map((r) => ({ bank_name: r.bank_name, term: r.term, rate_percent: r.rate_percent }))
-        );
-      }
-    }
-
-    const retrievalEnd = Date.now();
-    // OBS-TRACE-03: retrieved RAG chunks attached to the trace
-    addSpan(traceCtx, {
-      id: retrievalSpanId,
-      traceId: traceCtx.traceId,
-      name: "retrieval",
-      startTime: new Date(retrievalStart).toISOString(),
-      endTime: new Date(retrievalEnd).toISOString(),
-      input: { product_type: productType },
-      output: {
-        chunks_count: bankRankings.length,
-        rate_context: rateContext ? "[REDACTED_RATES]" : null,
-        banks: bankRankings.map((b) => ({ name: b.name, rate: b.rate })),
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
-    });
-    if (productType) addTag(traceCtx, `rag:${productType}`);
-
-    // ── Stage 3: Generation (LLM) ──
-    const genStart = Date.now();
-    let reply = await callLLM(message, history, rateContext);
-    const genEnd = Date.now();
-
-    // OBS-TRACE-04: model name, model version, and prompt version attached
-    addGeneration(traceCtx, {
-      id: crypto.randomUUID(),
-      traceId: traceCtx.traceId,
-      parentId: retrievalSpanId,
-      name: "generation",
-      startTime: new Date(genStart).toISOString(),
-      endTime: new Date(genEnd).toISOString(),
-      model: MODEL_NAME,
-      modelParameters: { temperature: 0.3, max_tokens: 500 },
-      input: { message: redactPii(message), prompt_version: PROMPT_VERSION },
-      output: reply ? { response: redactPii(reply) } : { response: "[FALLBACK]" },
-      metadata: { model_version: MODEL_VERSION, prompt_version: PROMPT_VERSION },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        max_tokens: 500,
+        temperature: 0.3,
+      }),
     });
 
-    if (!reply) {
-      reply = "I'm sorry, I wasn't able to generate a response right now. Please try again in a moment.";
+    const openaiData = await openaiRes.json();
+    let reply = openaiData.choices?.[0]?.message?.content ?? "I'm sorry, I wasn't able to generate a response right now.";
+
+    // 4. Output Guardrail Check
+    const outputCheck = validateOutput(reply);
+    if (!outputCheck.valid) {
+      reply = "I apologize, but I'm having trouble generating a safe response. Please try rephrasing your question.";
     }
 
-    // ── Stage 4: Output Guardrails ──
-    const outputGuardStart = Date.now();
-    const outputGuard = runOutputGuardrails(reply);
-    const outputGuardEnd = Date.now();
-
-    addSpan(traceCtx, {
-      id: crypto.randomUUID(),
-      traceId: traceCtx.traceId,
-      name: "output_guardrail",
-      startTime: new Date(outputGuardStart).toISOString(),
-      endTime: new Date(outputGuardEnd).toISOString(),
-      input: { response: redactPii(reply) },
-      output: outputGuard.passed
-        ? { passed: true, latency_ms: outputGuardEnd - outputGuardStart }
-        : { passed: false, reason: outputGuard.reason },
-      level: outputGuard.passed ? "DEFAULT" : "WARNING",
+    // 5. Rank & Deduplicate Sidebar Matches (Max 3 unique banks)
+    const lowerMsg = message.toLowerCase();
+    const isMortgageOrLoan = lowerMsg.includes("mortgage") || lowerMsg.includes("loan");
+    
+    const sorted = [...flatRates].sort((a, b) => {
+      const diff = isMortgageOrLoan ? a.rate_percent - b.rate_percent : b.rate_percent - a.rate_percent;
+      if (diff !== 0) return diff;
+      return a.bank_name.localeCompare(b.bank_name);
     });
 
-    if (!outputGuard.passed) {
-      reply = "I apologize, but I'm having trouble generating a response right now. Please try rephrasing your question.";
-      addTag(traceCtx, "guardrail:output_blocked");
-    }
+    const seenBanks = new Set<string>();
+    const bankRankings = sorted
+      .filter((r) => {
+        if (seenBanks.has(r.bank_name)) return false;
+        seenBanks.add(r.bank_name);
+        return true;
+      })
+      .slice(0, 3)
+      .map((r, idx) => ({
+        name: r.bank_name,
+        productType: r.product_type,
+        term: r.term,
+        rate: Number(r.rate_percent),
+        rank: idx + 1,
+        isBest: idx === 0,
+        consultantId: r.consultant_id,
+        consultantName: r.consultant_name,
+        consultantTitle: r.consultant_title,
+        consultantAvatarUrl: r.consultant_avatar_url,
+      }));
 
-    // ── Stage 5: Follow-up suggestions ──
-    const followUps = generateFollowUps(productType);
-
-    // ── Persist session + messages ──
-    await saveMessages(token, message, reply);
-
-    // ── Finalize trace ──
-    // OBS-TRACE-01: one trace per conversation turn, linked to persistent session ID
-    // OBS-TRACE-05: end-to-end latency
-    const traceEnd = Date.now();
-    addTrace(traceCtx, {
-      id: traceCtx.traceId,
-      name: "chat_turn",
-      sessionId: token,
-      metadata: {
-        prompt_version: PROMPT_VERSION,
-        model: MODEL_NAME,
-        model_version: MODEL_VERSION,
-        end_to_end_ms: traceEnd - traceStart,
-        guardrail_ms: guardEnd - guardStart,
-        retrieval_ms: retrievalEnd - retrievalStart,
-        generation_ms: genEnd - genStart,
-      },
-      tags: [],
-    });
-
-    // OBS-ARCH-02: fire-and-forget, never blocks
-    flush(traceCtx);
-
-    // ── Return response ──
     return new Response(
       JSON.stringify({
         reply,
         banks: bankRankings,
-        followUps,
-        sessionToken: token,
-      } satisfies FunctionResponse),
+        followUps: ["What are their fees?", "Can I schedule a call?", "Compare interest rates"],
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    // OBS-ARCH-02: even on error, attempt to flush trace (best-effort)
-    addTrace(traceCtx, {
-      id: traceCtx.traceId,
-      name: "chat_turn",
-      metadata: { error: "unhandled_exception", prompt_version: PROMPT_VERSION },
-      tags: [],
-    });
-    addTag(traceCtx, "error");
-    flush(traceCtx);
-
     return new Response(
       JSON.stringify({
         reply: "I'm experiencing a temporary issue. Please try again in a moment.",
         banks: [],
         followUps: [],
-        sessionToken: "",
-        blocked: true,
-        blockReason: "Service temporarily unavailable.",
-      } satisfies FunctionResponse),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
