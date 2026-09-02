@@ -202,11 +202,11 @@ async function callLLM(
 Formatting & Response Rules:
 - For general financial education (e.g., "How do RRSPs work?"):
   • Rely on your broad knowledge to provide the answer.
-  • Format your response as exactly 2 to 3 bullet points.
+  • Format your response as a Markdown bulleted list (every item MUST start with a "- ").
   • Highlight critical concepts using **bold text**.
 - For product definitions (e.g., "What is a GIC?", "What is a mortgage rate?"):
   • Handle minor user typos gracefully (e.g., "morgage" -> mortgage).
-  • First, explain the concept in 2 to 3 bullet points using general knowledge.
+  • First, explain the concept in a Markdown bulleted list (starting with "- ") using general knowledge.
   • Then, append a Markdown comparison table below the explanation showcasing the current rates.
 - For direct rate inquiries AND product definitions, you MUST format the data as a Markdown table exactly like this:
   | Institution | Term | Rate |
