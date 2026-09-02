@@ -360,7 +360,26 @@ export function HeroSection() {
               Top Matches
             </h3>
 
-            {banks.length > 0 ? (
+            {isLoading ? (
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="flex items-center gap-3 p-4 rounded-lg border bg-surface border-border-subtle animate-pulse"
+                  >
+                    <div className="w-11 h-11 rounded-lg bg-muted shrink-0" />
+                    <div className="flex-grow min-w-0 space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                    <div className="w-10 h-6 bg-muted rounded shrink-0" />
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Analyzing market rates & matching experts...
+                </p>
+              </div>
+            ) : banks.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {banks.map((bank) => (
                   <div
