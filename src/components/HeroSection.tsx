@@ -257,7 +257,7 @@ export function HeroSection() {
                   >
                     {msg.role === "bot" ? (
                       <ReactMarkdown
-                        className="chat-markdown prose prose-sm max-w-none text-gray-800"
+                        className="text-gray-800 text-sm leading-relaxed [&>table]:w-full [&>table]:border-collapse [&>table]:my-4 [&>table>thead>tr>th]:border-b-2 [&>table>thead>tr>th]:border-gray-300 [&>table>thead>tr>th]:p-2 [&>table>thead>tr>th]:text-left [&>table>tbody>tr>td]:border-b [&>table>tbody>tr>td]:border-gray-200 [&>table>tbody>tr>td]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:my-3 [&>ul>li]:mb-1 [&>p]:mb-3"
                         remarkPlugins={[remarkGfm]}
                       >
                         {msg.content}
