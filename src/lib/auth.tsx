@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/` },
     });
     if (error) return { error: "We couldn't start sign-in. Please try again." };
     return { error: null };
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/reset-password`,
     });
     // Same answer whether or not the address has an account.
     if (error) return { error: null };
