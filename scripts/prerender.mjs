@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, statSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -15,6 +15,8 @@ function fail(msg) {
 }
 
 async function prerender() {
+  console.log("[prerender] Starting prerender for routes:", ROUTES.join(", "));
+
   const ssrEntry = resolve(ssrDir, "entry-server.js");
   if (!existsSync(ssrEntry)) {
     fail(`SSR bundle not found at ${ssrEntry}. Did the SSR build run?`);
@@ -36,13 +38,15 @@ async function prerender() {
     fail(`Template does not contain '<div id="root"></div>'. Cannot inject content.`);
   }
 
-  // Strip the template's default title and meta description so Helmet's
-  // per-route versions are the only ones present.
   const template = rawTemplate
     .replace(/<title>[^<]*<\/title>\s*/, "")
     .replace(/<meta name="description" content="[^"]*"\s*\/?>[\s]*/, "");
 
+  const writtenFiles = [];
+
   for (const route of ROUTES) {
+    console.log(`[prerender] Rendering route: ${route}`);
+
     let result;
     try {
       result = render(route);
@@ -56,44 +60,70 @@ async function prerender() {
       fail(`render("${route}") returned empty HTML. SSR produced no content.`);
     }
 
+    if (!headTags || headTags.trim().length === 0) {
+      fail(`render("${route}") produced no head tags. SEO metadata would be missing.`);
+    }
+
+    console.log(`[prerender]   HTML length: ${html.length} chars, head tags length: ${headTags.length} chars`);
+
     let page = template;
 
-    // Inject rendered HTML into root div
     page = page.replace(
       '<div id="root"></div>',
       `<div id="root">${html}</div>`
     );
 
-    // Inject head tags before </head>
-    if (headTags && headTags.trim().length > 0) {
-      page = page.replace("</head>", `    ${headTags}\n  </head>`);
-    } else {
-      fail(`render("${route}") produced no head tags. SEO metadata would be missing.`);
-    }
+    page = page.replace("</head>", `    ${headTags}\n  </head>`);
 
-    // Verify critical content was injected
     if (page.includes('<div id="root"></div>')) {
       fail(`Route "${route}": root div is still empty after injection.`);
     }
 
-    // Write output
     const outPath =
       route === "/"
         ? resolve(distDir, "index.html")
         : resolve(distDir, route.slice(1), "index.html");
 
     if (route !== "/") {
-      mkdirSync(dirname(outPath), { recursive: true });
+      const outDir = dirname(outPath);
+      mkdirSync(outDir, { recursive: true });
+      console.log(`[prerender]   Created directory: ${outDir}`);
     }
 
     writeFileSync(outPath, page);
-    console.log(`  Prerendered: ${route} -> ${outPath}`);
+    writtenFiles.push({ route, outPath, expectedSize: page.length });
+    console.log(`[prerender]   Wrote: ${outPath} (${page.length} bytes)`);
+  }
+
+  // Post-write verification: read every file back and confirm it has content
+  console.log("\n[prerender] Verifying written files...");
+  for (const { route, outPath, expectedSize } of writtenFiles) {
+    if (!existsSync(outPath)) {
+      fail(`Post-write check: ${outPath} does not exist after writing!`);
+    }
+
+    const stat = statSync(outPath);
+    if (stat.size === 0) {
+      fail(`Post-write check: ${outPath} is 0 bytes!`);
+    }
+
+    const content = readFileSync(outPath, "utf-8");
+
+    if (content.includes('<div id="root"></div>')) {
+      fail(`Post-write check: ${outPath} still has empty root div!`);
+    }
+
+    if (!content.includes('data-rh="true"')) {
+      fail(`Post-write check: ${outPath} is missing Helmet-injected head tags!`);
+    }
+
+    console.log(`[prerender]   VERIFIED: ${route} -> ${outPath} (${stat.size} bytes on disk)`);
   }
 
   // Clean up SSR build
   rmSync(ssrDir, { recursive: true, force: true });
-  console.log("  Cleaned up dist-ssr/");
-  console.log(`  Prerendering complete: ${ROUTES.length} routes written.`);
+  console.log("\n[prerender] Cleaned up dist-ssr/");
+  console.log(`[prerender] SUCCESS: ${ROUTES.length} routes prerendered and verified.\n`);
 }
 
 prerender().catch((err) => {

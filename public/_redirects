@@ -11,3 +11,8 @@
 
 # WordPress artifacts — block, not redirect
 /xmlrpc.php        /404.html  404
+
+# SPA fallback — serves index.html for any route without a static file.
+# Netlify checks for a matching static file first, so prerendered pages
+# (e.g. /services/index.html, /blog/index.html) are served as-is.
+/*                 /index.html  200
