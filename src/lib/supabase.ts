@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const isServer = typeof window === "undefined";
+
+const supabaseUrl = isServer ? "https://placeholder.supabase.co" : (import.meta.env.VITE_SUPABASE_URL as string);
+const supabaseAnonKey = isServer ? "placeholder" : (import.meta.env.VITE_SUPABASE_ANON_KEY as string);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: true, autoRefreshToken: true },
+  auth: { persistSession: !isServer, autoRefreshToken: !isServer },
 });

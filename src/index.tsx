@@ -1,14 +1,18 @@
 import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { App } from "./App";
+import { AppRoutes } from "./App";
 
 const rootEl = document.getElementById("root");
 if (rootEl) {
-  ReactDOM.createRoot(rootEl).render(
+  ReactDOM.hydrateRoot(
+    rootEl,
     <HelmetProvider>
-      <App />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </HelmetProvider>
   );
 }

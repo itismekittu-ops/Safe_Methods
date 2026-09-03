@@ -6,13 +6,14 @@ interface SEOProps {
   description: string;
   path: string;
   image?: string;
+  fullTitle?: string;
 }
 
 const SITE_URL = "https://safemethods.com";
 
-export function SEO({ title, description, path, image }: SEOProps) {
+export function SEO({ title, description, path, image, fullTitle: fullTitleOverride }: SEOProps) {
   const fullUrl = `${SITE_URL}${path}`;
-  const fullTitle = `${title} | Safe Methods`;
+  const fullTitle = fullTitleOverride ?? `${title} | Safe Methods`;
   const ogImage = image ?? `${SITE_URL}/og-default.jpg`;
 
   return (
