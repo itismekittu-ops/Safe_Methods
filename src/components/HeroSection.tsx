@@ -43,6 +43,13 @@ export function HeroSection() {
   const [banks, setBanks] = useState<BankMatch[]>([]);
   const [followUps, setFollowUps] = useState<string[]>([]);
   const [quotesOpen, setQuotesOpen] = useState(false);
+  const [detectedTopic, setDetectedTopic] = useState<"loan" | "investment">("loan");
+
+  const DEFAULT_BANKS: BankMatch[] = [
+    { name: "RBC", productType: "general", term: null, rate: 0, rank: 1, isBest: true, consultantId: null, consultantName: "Victor Gaur", consultantTitle: "Principal Financial Advisor", consultantAvatarUrl: null },
+    { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
+    { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
+  ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -146,6 +153,17 @@ export function HeroSection() {
 
         if (data.banks && Array.isArray(data.banks) && data.banks.length > 0) {
           setBanks(data.banks);
+        } else if (banks.length === 0) {
+          setBanks(DEFAULT_BANKS);
+        }
+
+        const combinedText = (text + " " + (data.reply || "")).toLowerCase();
+        const investmentKeywords = /\b(gic|investment|invest|stocks?|mutual fund|etf|rrsp|tfsa|portfolio|dividend|bond|savings? rate|compound|market-linked)\b/;
+        const loanKeywords = /\b(mortgage|loan|credit|debt|borrow|lending|consolidat|refinanc|interest rate|amortiz|line of credit|heloc)\b/;
+        if (investmentKeywords.test(combinedText)) {
+          setDetectedTopic("investment");
+        } else if (loanKeywords.test(combinedText)) {
+          setDetectedTopic("loan");
         }
 
         if (data.followUps && Array.isArray(data.followUps)) {
@@ -167,7 +185,7 @@ export function HeroSection() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, sessionToken]
+    [isLoading, messages, sessionToken, banks, DEFAULT_BANKS]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -379,9 +397,9 @@ export function HeroSection() {
                   Analyzing market rates & matching experts...
                 </p>
               </div>
-            ) : banks.length > 0 ? (
+            ) : (
               <div className="flex flex-col gap-3">
-                {banks.map((bank) => (
+                {(banks.length > 0 ? banks : DEFAULT_BANKS).map((bank) => (
                   <div
                     key={bank.rank}
                     className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
@@ -390,7 +408,6 @@ export function HeroSection() {
                         : "bg-surface border-border-subtle"
                     }`}
                   >
-                    {/* Bank icon */}
                     <div
                       className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
                         bank.isBest
@@ -410,7 +427,6 @@ export function HeroSection() {
                       )}
                     </div>
 
-                    {/* Consultant name + bank */}
                     <div className="flex-grow min-w-0">
                       <p className="font-semibold text-sm text-foreground truncate">
                         {bank.consultantName ?? bank.name}
@@ -421,15 +437,18 @@ export function HeroSection() {
                       </p>
                     </div>
 
-                    {/* Rate value */}
                     <div className="text-right shrink-0">
-                      <span
-                        className={`font-heading text-lg font-bold ${
-                          bank.isBest ? "text-accent" : "text-foreground"
-                        }`}
-                      >
-                        {bank.rate}%
-                      </span>
+                      {bank.rate > 0 ? (
+                        <span
+                          className={`font-heading text-lg font-bold ${
+                            bank.isBest ? "text-accent" : "text-foreground"
+                          }`}
+                        >
+                          {bank.rate}%
+                        </span>
+                      ) : (
+                        <span className="font-heading text-lg font-bold text-muted-foreground">&mdash;</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -449,53 +468,6 @@ export function HeroSection() {
                   Get Quotes
                 </Button>
               </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {[
-                  { name: "RBC", consultant: "Victor Gaur", title: "Principal Financial Advisor" },
-                  { name: "TD", consultant: "Sarah Mitchell", title: "Senior Investment Advisor" },
-                  { name: "BMO", consultant: "David Chen", title: "Wealth Management Specialist" },
-                ].map((bank, idx) => (
-                  <div
-                    key={bank.name}
-                    className={`flex items-center gap-3 p-4 rounded-lg border ${
-                      idx === 0
-                        ? "bg-accent/10 border-accent/40 shadow-soft"
-                        : "bg-surface border-border-subtle"
-                    }`}
-                  >
-                    <div
-                      className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
-                        idx === 0
-                          ? "bg-accent/20 border border-accent/50"
-                          : "bg-muted border border-border-subtle"
-                      }`}
-                    >
-                      <BuildingIcon
-                        className={`w-5 h-5 ${
-                          idx === 0 ? "text-primary" : "text-muted-foreground"
-                        }`}
-                      />
-                      {idx === 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
-                          <CheckIcon className="w-3 h-3" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <p className="font-semibold text-sm text-foreground truncate">
-                        {bank.consultant}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {bank.name} · {bank.title}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="font-heading text-lg font-bold text-muted-foreground">—</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </div>
@@ -504,9 +476,9 @@ export function HeroSection() {
       <GetQuotesModal
         open={quotesOpen}
         onClose={() => setQuotesOpen(false)}
-        banks={banks.map((b): BankMatchRef => ({
+        banks={(banks.length > 0 ? banks : DEFAULT_BANKS).map((b): BankMatchRef => ({
           name: b.name,
-          productType: b.productType,
+          productType: detectedTopic === "investment" ? "gic" : b.productType,
           rate: b.rate,
           rank: b.rank,
           consultantId: b.consultantId,
