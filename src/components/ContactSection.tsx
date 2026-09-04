@@ -33,11 +33,16 @@ export function ContactSection() {
 
     setIsSubmitting(true);
 
+    const payloadName = name.trim();
+    const payloadEmail = email.trim();
+    const payloadPhone = phone.trim();
+    const payloadMessage = message.trim();
+
     try {
       const { error: insertError } = await supabase.from("leads").insert({
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim() || null,
+        name: payloadName,
+        email: payloadEmail,
+        phone: payloadPhone || null,
         source: "contact_form",
       });
 
@@ -49,7 +54,6 @@ export function ContactSection() {
       setPhone("");
       setMessage("");
 
-      // Best-effort CRM sync -- must not block the confirmation UI.
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
       fetch(`${supabaseUrl}/functions/v1/sync-hubspot-lead`, {
@@ -60,11 +64,11 @@ export function ContactSection() {
           apikey: anonKey,
         },
         body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim() || "",
+          name: payloadName,
+          email: payloadEmail,
+          phone: payloadPhone || "",
           request_type: "contact_inquiry",
-          message: message.trim(),
+          message: payloadMessage,
         }),
       }).catch(() => {});
     } catch {

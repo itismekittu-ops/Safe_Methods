@@ -31,13 +31,18 @@ interface RequestBody {
   name?: string;
   phone?: string;
   request_type?: string;
+  requestType?: string;
   message?: string;
   quote_id?: string;
   loan_amount?: number | null;
+  loanAmount?: number | null;
   monthly_income?: number | null;
+  monthlyIncome?: number | null;
   investment_amount?: number | null;
+  investmentAmount?: number | null;
   tenure?: string | null;
   selected_institutions?: string[] | string;
+  selectedInstitutions?: string[] | string;
 }
 
 function splitName(fullName: string): { firstname: string; lastname: string } {
@@ -186,11 +191,11 @@ Deno.serve(async (req: Request) => {
     // If name is missing, fall back to looking up the most recent quote_request.
     let contactName = typeof body.name === "string" ? body.name.trim() : "";
     let phone = typeof body.phone === "string" ? body.phone : "";
-    let requestType = typeof body.request_type === "string" ? body.request_type : "general_inquiry";
-    let institutions = normalizeInstitutions(body.selected_institutions);
-    let loanAmount = body.loan_amount ? String(body.loan_amount) : "";
-    let monthlyIncome = body.monthly_income ? String(body.monthly_income) : "";
-    let investmentAmount = body.investment_amount ? String(body.investment_amount) : "";
+    let requestType = body.request_type || body.requestType || "general_inquiry";
+    let institutions = normalizeInstitutions(body.selected_institutions || body.selectedInstitutions);
+    let loanAmount = body.loan_amount || body.loanAmount;
+    let monthlyIncome = body.monthly_income || body.monthlyIncome;
+    let investmentAmount = body.investment_amount || body.investmentAmount;
     const quoteId = typeof body.quote_id === "string" ? body.quote_id : "";
     const messageText = typeof body.message === "string" ? body.message : "";
 
@@ -208,11 +213,11 @@ Deno.serve(async (req: Request) => {
       if (quote && quote.consent_given) {
         contactName = quote.name ?? "";
         phone = phone || (quote.phone ?? "");
-        requestType = quote.request_type ?? requestType;
+        requestType = requestType !== "general_inquiry" ? requestType : (quote.request_type ?? requestType);
         institutions = institutions || (Array.isArray(quote.selected_institutions) ? quote.selected_institutions.join(", ") : "");
-        loanAmount = loanAmount || (quote.loan_amount ? String(quote.loan_amount) : "");
-        monthlyIncome = monthlyIncome || (quote.monthly_income ? String(quote.monthly_income) : "");
-        investmentAmount = investmentAmount || (quote.investment_amount ? String(quote.investment_amount) : "");
+        loanAmount = loanAmount || quote.loan_amount || null;
+        monthlyIncome = monthlyIncome || quote.monthly_income || null;
+        investmentAmount = investmentAmount || quote.investment_amount || null;
       }
     }
 
@@ -223,40 +228,30 @@ Deno.serve(async (req: Request) => {
     const availableProps = await ensureCustomProperties();
     const { firstname, lastname } = splitName(contactName);
 
-    // Build the message field: for contact inquiries use the actual message,
-    // for quote requests build a structured summary.
+    const loanAmtStr = loanAmount ? String(loanAmount).replace(/[^0-9.]/g, "") : "";
+    const monthlyIncStr = monthlyIncome ? String(monthlyIncome).replace(/[^0-9.]/g, "") : "";
+    const investAmtStr = investmentAmount ? String(investmentAmount).replace(/[^0-9.]/g, "") : "";
+
     let messageValue = messageText;
     if (!messageValue && requestType !== "contact_inquiry") {
-      const amt = loanAmount || investmentAmount || "0";
-      messageValue = `Quote Request [Ref: ${quoteId || "N/A"}]: ${requestType.toUpperCase()} | Amount: $${amt} | FIs: ${institutions || "None"}`;
+      const amt = loanAmtStr || investAmtStr || "0";
+      messageValue = `Quote Request [Ref: ${quoteId || "N/A"}]: ${String(requestType).toUpperCase()} | Amount: ${amt} | FIs: ${institutions || "None"}`;
     }
 
     const properties: Record<string, string> = {
       email,
-      firstname,
-      lastname,
+      firstname: firstname || contactName || "Lead",
+      lastname: lastname || "",
       phone: phone || "",
+      request_type: String(requestType),
+      requested_institutions: institutions,
     };
 
-    if (availableProps.has("request_type")) {
-      properties.request_type = requestType || "";
-    }
-    if (availableProps.has("loan_amount")) {
-      properties.loan_amount = loanAmount;
-    }
-    if (availableProps.has("monthly_income")) {
-      properties.monthly_income = monthlyIncome;
-    }
-    if (availableProps.has("investment_amount")) {
-      properties.investment_amount = investmentAmount;
-    }
-    if (availableProps.has("requested_institutions")) {
-      properties.requested_institutions = institutions;
-    }
+    if (loanAmtStr) properties.loan_amount = loanAmtStr;
+    if (monthlyIncStr) properties.monthly_income = monthlyIncStr;
+    if (investAmtStr) properties.investment_amount = investAmtStr;
 
-    if (messageValue) {
-      properties.message = messageValue;
-    }
+    properties.message = messageValue || "";
 
     const existingId = await findContactByEmail(email);
 
