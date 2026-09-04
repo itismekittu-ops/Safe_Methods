@@ -178,18 +178,31 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ success: true, alreadySubmitted: true });
     }
 
-    const { error: insertError } = await supabase
+    const { data: insertedRow, error: insertError } = await supabase
       .from("quote_requests")
-      .insert(insertPayload);
+      .insert(insertPayload)
+      .select("id")
+      .single();
 
-    if (insertError) {
-      console.error("submit-quote insert failed:", insertError.message);
+    if (insertError || !insertedRow) {
+      console.error("submit-quote insert failed:", insertError?.message);
       return jsonResponse({ error: "We couldn't submit your request. Please try again." }, 500);
     }
 
     // Downstream delivery, best-effort and non-blocking for the user.
     await callInternal("send-quote-confirmation", { email });
-    await callInternal("sync-hubspot-lead", { email });
+    await callInternal("sync-hubspot-lead", {
+      email,
+      name,
+      phone: phone ?? "",
+      quote_id: insertedRow.id,
+      request_type: requestType,
+      loan_amount: insertPayload.loan_amount ?? null,
+      monthly_income: insertPayload.monthly_income ?? null,
+      investment_amount: insertPayload.investment_amount ?? null,
+      tenure: insertPayload.tenure ?? null,
+      selected_institutions: selectedInstitutions,
+    });
 
     return jsonResponse({ success: true, alreadySubmitted: false });
   } catch {

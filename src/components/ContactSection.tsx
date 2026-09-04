@@ -48,6 +48,25 @@ export function ContactSection() {
       setEmail("");
       setPhone("");
       setMessage("");
+
+      // Best-effort CRM sync -- must not block the confirmation UI.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+      fetch(`${supabaseUrl}/functions/v1/sync-hubspot-lead`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${anonKey}`,
+          apikey: anonKey,
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim() || "",
+          request_type: "contact_inquiry",
+          message: message.trim(),
+        }),
+      }).catch(() => {});
     } catch {
       setError("Something went wrong sending your message. Please try again.");
     } finally {
