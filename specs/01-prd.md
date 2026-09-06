@@ -193,6 +193,11 @@ Allows visitors to submit a single contact form to request official quotes from 
 * Incomplete or invalid submissions must be blocked from reaching the CRM.
 * Duplicate submissions within a single session are prevented.
 * Confirmation UI popups and transactional confirmation emails trigger immediately upon valid submission.
+* Quote submissions must invoke the backend `submit-quote` Edge Function, minting an internal `reference_id` (format: `SM-${YYYY}-${8_HEX}`) that is strictly hidden from customer-facing UI and customer emails.
+* Submitting a quote request immediately triggers an automated transactional welcome/confirmation email dispatched via Zoho SMTP (`smtppro.zoho.in:587`), setting the 5-day expectation and providing educational links without exposing technical reference IDs.
+* Anonymized lead briefs are dispatched via secure, single-use tokens to all matched bank consultants with a strict 5-day SLA response window.
+* Inbound consultant quotations must enter an administrative review queue (`pending_admin_review`) and are strictly forbidden from being relayed directly to the customer without prior admin approval.
+* Approved quotations are staged and delivered in a consolidated, side-by-side comparison offer sheet in a single email to the user once all 3 consultants have responded and been approved, OR automatically upon reaching the 5-day SLA deadline.
 
 #### Non-Functional Requirements
 * External data sharing is strictly limited to user-consented institutions.
