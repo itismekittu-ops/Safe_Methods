@@ -13,6 +13,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const INTERNAL_SECRET =
   Deno.env.get("INTERNAL_FUNCTION_SECRET") || SERVICE_ROLE_KEY;
+const ADMIN_EMAILS = ["info@safemethods.org"];
 
 const ZOHO_SMTP_HOST = "smtppro.zoho.in";
 const ZOHO_SMTP_PORT = 587;
@@ -44,6 +45,30 @@ function secretMatches(presented: string): boolean {
     diff |= presented.charCodeAt(i) ^ INTERNAL_SECRET.charCodeAt(i);
   }
   return diff === 0;
+}
+
+async function verifyAdminOrService(req: Request): Promise<boolean> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const internalHeader = req.headers.get("x-internal-secret") ?? "";
+
+  if (authHeader === `Bearer ${SERVICE_ROLE_KEY}`) return true;
+  if (secretMatches(internalHeader)) return true;
+
+  if (authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const authClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+    const {
+      data: { user },
+      error,
+    } = await authClient.auth.getUser(token);
+    if (!error && user && ADMIN_EMAILS.includes(user.email ?? "")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -245,57 +270,74 @@ Disclaimer: Rates shown are as submitted by each institution's advisor and may b
 Safe Methods - Mississauga, Ontario, Canada`;
 }
 
-interface DispatchPayload {
-  quote_request_id?: string;
-  force?: boolean;
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  // Only callable by admin (with service role) or internal functions
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const internalHeader = req.headers.get("x-internal-secret") ?? "";
-
-  const isServiceRole = authHeader === `Bearer ${SERVICE_ROLE_KEY}`;
-  const isInternal = secretMatches(internalHeader);
-
-  if (!isServiceRole && !isInternal) {
+  const authorized = await verifyAdminOrService(req);
+  if (!authorized) {
     return jsonResponse({ error: "Not found" }, 404);
   }
 
   try {
-    const body: DispatchPayload = await req.json();
-    const quoteRequestId = body.quote_request_id;
+    const body = await req.json().catch(() => ({}));
+    const targetId =
+      body.quote_request_id ||
+      body.quoteRequestId ||
+      body.id ||
+      body.reference_id;
     const force = body.force === true;
 
-    if (!quoteRequestId) {
-      return jsonResponse(
-        { error: "quote_request_id is required." },
-        400
-      );
-    }
+    // Resolve the quote request by UUID or reference_id
+    let qr: Record<string, unknown> | null = null;
+    let qrError: unknown = null;
 
-    // Fetch the quote request
-    const { data: qr, error: qrError } = await supabase
-      .from("quote_requests")
-      .select(
-        "id, reference_id, name, email, request_type, loan_amount, monthly_income, investment_amount, tenure, selected_institutions, sla_deadline, aggregated_quotes_sent"
-      )
-      .eq("id", quoteRequestId)
-      .maybeSingle();
+    if (targetId) {
+      const isRefId =
+        typeof targetId === "string" && targetId.startsWith("SM-");
+      const column = isRefId ? "reference_id" : "id";
+
+      const result = await supabase
+        .from("quote_requests")
+        .select(
+          "id, reference_id, name, email, request_type, loan_amount, monthly_income, investment_amount, tenure, selected_institutions, sla_deadline, aggregated_quotes_sent"
+        )
+        .eq(column, targetId)
+        .maybeSingle();
+
+      qr = result.data;
+      qrError = result.error;
+    } else {
+      const result = await supabase
+        .from("quote_requests")
+        .select(
+          "id, reference_id, name, email, request_type, loan_amount, monthly_income, investment_amount, tenure, selected_institutions, sla_deadline, aggregated_quotes_sent"
+        )
+        .eq("aggregated_quotes_sent", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      qr = result.data;
+      qrError = result.error;
+    }
 
     if (qrError || !qr) {
       return jsonResponse({ error: "Quote request not found." }, 404);
     }
 
     if (qr.aggregated_quotes_sent) {
-      return jsonResponse({
-        error: "Aggregated quotes have already been sent for this request.",
-      }, 409);
+      return jsonResponse(
+        {
+          error:
+            "Aggregated quotes have already been sent for this request.",
+        },
+        409
+      );
     }
+
+    const quoteRequestId = qr.id as string;
 
     // Fetch all bids for this quote request
     const { data: allBids } = await supabase
@@ -306,41 +348,51 @@ Deno.serve(async (req: Request) => {
       .eq("quote_request_id", quoteRequestId);
 
     if (!allBids || allBids.length === 0) {
-      return jsonResponse({ error: "No bids found for this request." }, 404);
+      return jsonResponse(
+        { error: "No bids found for this request." },
+        404
+      );
     }
 
-    const approvedBids = allBids.filter((b) => b.status === "approved");
+    const approvedBids = allBids.filter(
+      (b) => b.status === "approved"
+    );
     const pendingBids = allBids.filter(
       (b) => b.status === "pending_consultant_submission"
     );
     const allApproved =
       approvedBids.length === allBids.length && approvedBids.length > 0;
     const slaExpired =
-      qr.sla_deadline && new Date(qr.sla_deadline) <= new Date();
+      qr.sla_deadline &&
+      new Date(qr.sla_deadline as string) <= new Date();
 
-    // Determine if we should dispatch (F3-US15, F3-US17)
     const shouldDispatch = force || allApproved || slaExpired;
 
     if (!shouldDispatch) {
-      return jsonResponse({
-        error:
-          "Not ready to dispatch. Not all bids are approved and the SLA deadline has not passed.",
-        approved: approvedBids.length,
-        total: allBids.length,
-        sla_deadline: qr.sla_deadline,
-      }, 400);
+      return jsonResponse(
+        {
+          error:
+            "Not ready to dispatch. Not all bids are approved and the SLA deadline has not passed.",
+          approved: approvedBids.length,
+          total: allBids.length,
+          sla_deadline: qr.sla_deadline,
+        },
+        400
+      );
     }
 
     // Expire any pending bids (BR-ROUT-04)
     if (pendingBids.length > 0) {
-      const pendingIds = pendingBids.map((b) => b.id);
       await supabase
         .from("consultant_bids")
         .update({ status: "expired" })
-        .in("id", pendingIds);
+        .in(
+          "id",
+          pendingBids.map((b) => b.id)
+        );
     }
 
-    // Also expire pending_admin_review bids if dispatching at SLA deadline
+    // Also expire pending_admin_review bids when force-dispatching
     if (slaExpired || force) {
       const reviewBids = allBids.filter(
         (b) => b.status === "pending_admin_review"
@@ -357,7 +409,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (approvedBids.length === 0) {
-      // Mark as sent even with zero approved bids so SLA is honored
       await supabase
         .from("quote_requests")
         .update({
@@ -368,7 +419,8 @@ Deno.serve(async (req: Request) => {
 
       return jsonResponse({
         success: true,
-        message: "No approved bids to send. Quote request marked as complete.",
+        message:
+          "No approved bids to send. Quote request marked as complete.",
         dispatched: 0,
       });
     }
@@ -389,9 +441,14 @@ Deno.serve(async (req: Request) => {
         tenure_months: bid.tenure_months,
         advisor_notes: bid.advisor_notes,
         consultant_name:
-          (c as Record<string, unknown>)?.name as string ?? "Advisor",
+          ((c as Record<string, unknown>)?.name as string) ?? "Advisor",
         bank_name:
-          ((c as Record<string, unknown>)?.banks as Record<string, unknown>)?.name as string ?? "Institution",
+          (
+            (c as Record<string, unknown>)?.banks as Record<
+              string,
+              unknown
+            >
+          )?.name as string ?? "Institution",
       });
     }
 
@@ -403,12 +460,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // Build and send the consolidated offer sheet (BR-ROUT-03)
-    const html = buildOfferSheetHtml(qr as QuoteRequest, enrichedBids);
-    const text = buildOfferSheetText(qr as QuoteRequest, enrichedBids);
-    const subject =
-      "Your Safe Methods Offer Comparison Is Ready";
+    const html = buildOfferSheetHtml(
+      qr as unknown as QuoteRequest,
+      enrichedBids
+    );
+    const text = buildOfferSheetText(
+      qr as unknown as QuoteRequest,
+      enrichedBids
+    );
+    const subject = "Your Safe Methods Offer Comparison Is Ready";
 
-    await sendEmail(qr.email, subject, html, text);
+    await sendEmail(qr.email as string, subject, html, text);
 
     // Mark the quote request as dispatched
     await supabase

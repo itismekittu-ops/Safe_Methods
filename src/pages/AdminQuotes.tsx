@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CheckCircleIcon,
@@ -63,6 +63,9 @@ const STATUS_BADGE: Record<string, { variant: "accent" | "neutral" | "success" |
 export function AdminQuotes() {
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const hasFetchedRef = useRef(false);
 
   const [quotes, setQuotes] = useState<QuoteGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,28 +75,24 @@ export function AdminQuotes() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const serviceRoleKey = ""; // Admin uses authenticated session; dispatch goes through edge fn
-
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/login", { replace: true });
     }
   }, [authLoading, session, navigate]);
 
-  const fetchQuotes = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
+  const fetchQuotes = useCallback(async (showSpinner = true) => {
+    const s = sessionRef.current;
+    if (!s) return;
+    if (showSpinner) setLoading(true);
     setError(null);
 
     try {
-      const token = session.access_token;
-
-      // Fetch quote requests with their bids via the service-role proxy
       const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-quotes-data`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${s.access_token}`,
           apikey: ANON_KEY,
         },
         body: JSON.stringify({ action: "list" }),
@@ -108,19 +107,23 @@ export function AdminQuotes() {
         setQuotes(data.quotes);
       }
     } catch {
-      // Fallback: direct fetch via anon key (service role handles via edge fn)
       setError("Unable to load quote data. Please ensure you have admin access.");
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, []);
 
+  // Fetch once on mount when session is ready
   useEffect(() => {
-    if (session) fetchQuotes();
+    if (session && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchQuotes(true);
+    }
   }, [session, fetchQuotes]);
 
   async function handleBidAction(bidId: string, action: "approve" | "reject") {
-    if (!session) return;
+    const s = sessionRef.current;
+    if (!s) return;
     setActionLoading(bidId);
     setActionMessage(null);
 
@@ -129,7 +132,7 @@ export function AdminQuotes() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${s.access_token}`,
           apikey: ANON_KEY,
         },
         body: JSON.stringify({ action, bid_id: bidId }),
@@ -141,7 +144,7 @@ export function AdminQuotes() {
       }
 
       setActionMessage({ type: "success", text: `Bid ${action}d successfully.` });
-      await fetchQuotes();
+      await fetchQuotes(false);
     } catch (err) {
       setActionMessage({ type: "error", text: (err as Error).message });
     } finally {
@@ -149,9 +152,12 @@ export function AdminQuotes() {
     }
   }
 
-  async function handleDispatch(quoteRequestId: string, force: boolean) {
-    if (!session) return;
-    setActionLoading(`dispatch-${quoteRequestId}`);
+  async function handleDispatch(e: React.MouseEvent, q: QuoteGroup) {
+    e.preventDefault();
+    e.stopPropagation();
+    const s = sessionRef.current;
+    if (!s) return;
+    setActionLoading(`dispatch-${q.id}`);
     setActionMessage(null);
 
     try {
@@ -159,10 +165,14 @@ export function AdminQuotes() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${s.access_token}`,
           apikey: ANON_KEY,
         },
-        body: JSON.stringify({ quote_request_id: quoteRequestId, force }),
+        body: JSON.stringify({
+          quote_request_id: q.id,
+          reference_id: q.reference_id,
+          force: true,
+        }),
       });
 
       const result = await response.json();
@@ -174,7 +184,7 @@ export function AdminQuotes() {
         type: "success",
         text: `Offers dispatched to customer (${result.dispatched} bid${result.dispatched !== 1 ? "s" : ""}).`,
       });
-      await fetchQuotes();
+      await fetchQuotes(false);
     } catch (err) {
       setActionMessage({ type: "error", text: (err as Error).message });
     } finally {
@@ -207,7 +217,7 @@ export function AdminQuotes() {
             <h1 className="font-heading text-3xl text-foreground">Quote Administration</h1>
             <p className="text-muted-foreground text-sm mt-1">Review consultant bids and dispatch offers to customers</p>
           </div>
-          <Button variant="secondary" size="sm" onClick={fetchQuotes} disabled={loading}>
+          <Button type="button" variant="secondary" size="sm" onClick={() => fetchQuotes(true)} disabled={loading}>
             <RefreshCwIcon className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -230,6 +240,7 @@ export function AdminQuotes() {
         <div className="flex gap-2 mb-6 flex-wrap">
           {(["all", "pending", "ready", "dispatched"] as StatusFilter[]).map((f) => (
             <button
+              type="button"
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
@@ -291,6 +302,7 @@ export function AdminQuotes() {
               <div key={q.id} className="bg-surface border border-border-subtle rounded-xl mb-4 overflow-hidden shadow-soft">
                 {/* Quote header */}
                 <button
+                  type="button"
                   onClick={() => setExpandedQuote(isExpanded ? null : q.id)}
                   className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/30 transition-colors"
                 >
@@ -443,7 +455,8 @@ export function AdminQuotes() {
                                 {bid.status === "pending_admin_review" && !q.aggregated_quotes_sent && (
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button
-                                      onClick={() => handleBidAction(bid.id, "approve")}
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleBidAction(bid.id, "approve"); }}
                                       disabled={isActioning}
                                       className="p-2 rounded-md border border-success/30 text-success hover:bg-success/10 transition-colors disabled:opacity-50"
                                       title="Approve bid"
@@ -455,7 +468,8 @@ export function AdminQuotes() {
                                       )}
                                     </button>
                                     <button
-                                      onClick={() => handleBidAction(bid.id, "reject")}
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleBidAction(bid.id, "reject"); }}
                                       disabled={isActioning}
                                       className="p-2 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
                                       title="Reject bid"
@@ -486,10 +500,11 @@ export function AdminQuotes() {
                             </p>
                           </div>
                           <Button
+                            type="button"
                             variant="primary"
                             size="sm"
                             disabled={!canDispatch || actionLoading === `dispatch-${q.id}`}
-                            onClick={() => handleDispatch(q.id, true)}
+                            onClick={(e) => handleDispatch(e, q)}
                           >
                             {actionLoading === `dispatch-${q.id}` ? (
                               <span className="flex items-center gap-2">
