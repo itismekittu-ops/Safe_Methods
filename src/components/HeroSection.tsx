@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon } from "lucide-react";
+import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon, CalendarIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { GetQuotesModal } from "./GetQuotesModal";
@@ -467,6 +467,18 @@ export function HeroSection() {
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   Get Quotes
                 </Button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                  Book a Consultant
+                </button>
               </div>
             )}
           </div>

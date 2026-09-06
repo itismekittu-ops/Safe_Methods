@@ -1,5 +1,14 @@
 import React from 'react';
+import { CalendarIcon } from 'lucide-react';
 import { Button } from './Button';
+
+function openCalendly() {
+  const url =
+    (import.meta as Record<string, Record<string, string>>).env?.VITE_CALENDLY_URL ||
+    'https://calendly.com/safemethods';
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 export function CtaSection() {
   return (
     <section className="w-full bg-primary text-primary-foreground py-20 md:py-28">
@@ -14,11 +23,13 @@ export function CtaSection() {
         <Button
           variant="secondary"
           size="lg"
-          className="!bg-accent !text-accent-foreground !border-accent hover:!bg-accent/90">
-          
+          className="!bg-accent !text-accent-foreground !border-accent hover:!bg-accent/90"
+          onClick={openCalendly}
+        >
+          <CalendarIcon className="w-4 h-4 mr-2" />
           Book a Consultation
         </Button>
       </div>
-    </section>);
-
+    </section>
+  );
 }
