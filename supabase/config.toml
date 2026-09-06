@@ -9,3 +9,12 @@ verify_jwt = false
 
 [functions.submit-quote]
 verify_jwt = false
+
+[functions.submit-consultant-bid]
+verify_jwt = false
+
+[functions.dispatch-aggregated-quotes]
+verify_jwt = false
+
+[functions.admin-quotes-data]
+verify_jwt = false

@@ -9,6 +9,8 @@ import { Auth } from './pages/Auth';
 import { Account } from './pages/Account';
 import { ResetPassword } from './pages/ResetPassword';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { ConsultantPortal } from './pages/ConsultantPortal';
+import { AdminQuotes } from './pages/AdminQuotes';
 
 export function AppRoutes() {
   return (
@@ -22,7 +24,9 @@ export function AppRoutes() {
           <Route path="/account" element={<Account />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/admin/quotes" element={<AdminQuotes />} />
         </Route>
+        <Route path="/consultant-portal" element={<ConsultantPortal />} />
       </Routes>
     </AuthProvider>
   );
