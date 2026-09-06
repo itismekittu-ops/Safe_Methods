@@ -295,6 +295,44 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** I can retry submission without retyping data.
 * **Dependencies:** F3-US6
 
+#### (F3-US13) Consultant Rate Bid Submission
+* **As a** matched bank consultant,
+* **WHEN I** receive an anonymized lead brief email,
+* **I want to** access a secure portal via token (`/consultant-portal?token=...`) to submit my proposed rate, product name, tenure, and notes without seeing the customer's personal contact details,
+* **So that** I can provide competitive terms while adhering to customer privacy standards (BR-PRIV-01).
+* **Dependencies:** F3-US4, BR-PRIV-01
+
+#### (F3-US14) Administrative Quote Filtering & Review
+* **As** Safe Methods Administration,
+* **WHEN** a consultant submits a proposed rate bid,
+* **I want to** receive an instant alert at `info@safemethods.org` and view the bid in a protected admin review dashboard (`/admin/quotes`),
+* **AND** have the option to approve or reject the bid before it reaches the customer,
+* **So that** only qualified, competitive, and rule-compliant offers are presented to visitors.
+* **Dependencies:** F3-US13
+
+#### (F3-US15) Consolidated 5-Day SLA Dispatch
+* **As** Safe Methods,
+* **WHEN** all 3 consultants' bids are approved, OR when the quote request reaches its 5-day SLA deadline (`sla_deadline <= now()`),
+* **I want** the system to automatically aggregate all approved bids into a single, branded, side-by-side comparison offer sheet email and deliver it to the customer via Zoho SMTP,
+* **AND** mark any unresponsive consultant bid as `expired`,
+* **So that** our 5-day SLA promise is honored programmatically without manual dispatch overhead.
+* **Dependencies:** F3-US7, F3-US14
+
+#### (F3-US16) Direct "Book a Consultant" Calendly Ingestion
+* **As a** visitor,
+* **WHEN I** click the "Book a Consultant" button in the hero or services section,
+* **I want to** be redirected to Calendly (or open an embedded modal) to schedule a 10-minute consultation call,
+* **AND** have my booking details automatically synchronized to HubSpot CRM as a qualified lead (even if I did not interact with SafeBot or submit the quote form),
+* **So that** I can easily book time with an advisor and my relationship is properly tracked.
+* **Dependencies:** Calendly Integration, HubSpot CRM
+
+#### (F3-US17) Premature Admin Dispatch Override
+* **As** Safe Methods Administration,
+* **WHEN** reviewing bids in the admin dashboard,
+* **I want** an option to click *"Send Approved Quotes to Customer Now"*,
+* **So that** I can deliver finalized offers early if fewer than 3 consultants have responded and the customer needs immediate turnaround.
+* **Dependencies:** F3-US14, F3-US15
+
 ---
 
 ## FEATURE 4: (F4) Guardrails, LLM Evals & LLM Observability
