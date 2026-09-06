@@ -42,7 +42,9 @@ The system architecture shall strictly adhere to the following principles:
 * **`chat_sessions`**: `(id, user_id [nullable], created_at)`
 * **`chat_messages`**: `(id, session_id, role, content, created_at)`
 * **`rates`**: `(id, institution, product_type, term, rate_percent, updated_at)`
-* **`quote_requests`**: `(id, name, email, phone, request_type [loan/investment], loan_amount, monthly_income, investment_amount, tenure, selected_institutions[], consent_given, consent_timestamp, created_at, status)`
+* **`quote_requests`**: `(id, reference_id [TEXT UNIQUE, internal only], name, email, phone, request_type [loan/investment], loan_amount, monthly_income, investment_amount, tenure, selected_institutions[], consent_given, consent_timestamp, sla_deadline [TIMESTAMPTZ], aggregated_quotes_sent [BOOLEAN], aggregated_quotes_sent_at [TIMESTAMPTZ], status, created_at)`
+* **`consultant_bids`**: `(id, quote_request_id [UUID FK], consultant_id [UUID FK], bank_id [UUID FK], access_token [TEXT UNIQUE], token_expires_at [TIMESTAMPTZ], proposed_rate [NUMERIC(5,2)], product_name [TEXT], tenure_months [INT], advisor_notes [TEXT], status [consultant_bid_status: 'pending_consultant_submission' | 'pending_admin_review' | 'approved' | 'rejected' | 'expired'], submitted_at [TIMESTAMPTZ], reviewed_at [TIMESTAMPTZ], admin_notes [TEXT], created_at [TIMESTAMPTZ])`
+* **`consultations`**: `(id, name, email, phone, calendly_event_id, event_start_time, status, created_at)`
 
 ---
 
