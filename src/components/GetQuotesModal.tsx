@@ -167,12 +167,19 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
 
       if (!response.ok) throw new Error("submission_failed");
 
+      const result = await response.json();
+
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
-      setSuccess(true);
-      setTimeout(() => {
-        onClose();
-        setSuccess(false);
-      }, 5000);
+
+      if (result.alreadySubmitted) {
+        setAlreadySubmitted(true);
+      } else {
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+          setSuccess(false);
+        }, 5000);
+      }
     } catch {
       // Internal failure detail is deliberately not surfaced or logged here.
       setSubmitError("Something went wrong submitting your request. Please try again.");
