@@ -25,3 +25,16 @@ Under **BR-PRIV-01**, the following sensitive data categories are strictly forbi
 * **Payment & Account Data:** Credit/debit card numbers, bank routing/account numbers, and investment portfolio details[cite: 5].
 * **Authentication Data:** PINs, passwords, and security question answers[cite: 5].
 * **Biometric Data:** Fingerprints, retina scans, and facial geometry used for banking authentication[cite: 5].
+
+---
+
+## 3. Consultant Lead Routing & SLA Rules
+
+| ID | Business Rule | Reference |
+| :--- | :--- | :--- |
+| **BR-ROUT-01** | **Anonymized Consultant Outreach:** Consultant dispatch notifications and portal views must never disclose customer contact details (`Name`, `Email`, `Phone`). Only financial parameters (`loan_amount`, `monthly_income`, `investment_amount`, `tenure`) and the anonymous internal reference token may be shared. | BR-PRIV-01, PRD F3-US13 |
+| **BR-ROUT-02** | **Administrative Quality Gate:** No consultant quote may be delivered directly to a customer without prior administrative approval (`status = 'approved'`). Raw consultant submissions must hold in `pending_admin_review`. | PRD F3-US14 |
+| **BR-ROUT-03** | **Consolidated Offer Sheet Delivery:** Customers must not receive piecemeal emails per consultant. Approved bids are aggregated into a single side-by-side comparison offer sheet delivered in one email either upon 3 approvals or at the 5-day deadline. | PRD F3-US7, F3-US15 |
+| **BR-ROUT-04** | **Strict 5-Day SLA Expiration:** Any consultant bid remaining in `pending_consultant_submission` upon `quote_requests.sla_deadline <= now()` is automatically transitioned to `expired`. The system triggers delivery of whatever bids have been approved up to that point. | PRD F3-US15 |
+| **BR-ROUT-05** | **Zero Customer ID Exposure:** Reference IDs must remain strictly internal system identifiers. They must never be displayed in user-facing confirmation modals or customer emails. | PRD F3-US7, F3-US9 |
+| **BR-ROUT-06** | **Direct Consultation Ingestion:** Users booking consultations via Calendly must be immediately synchronized to HubSpot CRM as leads with `source = 'Calendly Direct Booking'` regardless of previous site activity. | PRD F3-US16 |
