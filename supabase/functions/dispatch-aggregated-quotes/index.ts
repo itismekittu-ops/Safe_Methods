@@ -22,6 +22,7 @@ const ZOHO_SMTP_PASS = Deno.env.get("ZOHO_SMTP_PASS") ?? "";
 const ZOHO_FROM_EMAIL =
   Deno.env.get("ZOHO_FROM_EMAIL") || ZOHO_SMTP_USER || "info@safemethods.org";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://safemethods.org";
+const HUBSPOT_ACCESS_TOKEN = Deno.env.get("HUBSPOT_ACCESS_TOKEN") ?? "";
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
@@ -270,6 +271,108 @@ Disclaimer: Rates shown are as submitted by each institution's advisor and may b
 Safe Methods - Mississauga, Ontario, Canada`;
 }
 
+async function logDispatchToHubSpot(
+  email: string,
+  bids: ApprovedBid[]
+): Promise<void> {
+  if (!HUBSPOT_ACCESS_TOKEN) return;
+
+  try {
+    // Find the HubSpot contact by email
+    const searchResp = await fetch(
+      "https://api.hubapi.com/crm/v3/objects/contacts/search",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          filterGroups: [
+            {
+              filters: [
+                { propertyName: "email", operator: "EQ", value: email },
+              ],
+            },
+          ],
+          properties: ["email"],
+          limit: 1,
+        }),
+      }
+    );
+
+    if (!searchResp.ok) {
+      console.warn(
+        `HubSpot contact search failed (${searchResp.status})`
+      );
+      return;
+    }
+
+    const searchData = await searchResp.json();
+    const contactId: string | undefined =
+      searchData.results?.[0]?.id;
+
+    if (!contactId) {
+      console.warn(
+        `HubSpot contact not found for ${email}, skipping note`
+      );
+      return;
+    }
+
+    // Build the note body
+    const bidLines = bids
+      .map(
+        (b) =>
+          `- ${b.bank_name} (${b.consultant_name}): ${b.proposed_rate}%${b.tenure_months ? ` (${b.tenure_months} mo)` : ""}`
+      )
+      .join("\n");
+
+    const noteBody =
+      `Dispatched Offer Comparison:\n${bidLines}\nStatus: Sent to customer via Zoho SMTP`;
+
+    // Create the note
+    const noteResp = await fetch(
+      "https://api.hubapi.com/crm/v3/objects/notes",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          properties: {
+            hs_note_body: noteBody,
+            hs_timestamp: new Date().toISOString(),
+          },
+          associations: [
+            {
+              to: { id: contactId },
+              types: [
+                {
+                  associationCategory: "HUBSPOT_DEFINED",
+                  associationTypeId: 202,
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!noteResp.ok) {
+      const errText = await noteResp.text().catch(() => "");
+      console.warn(
+        `HubSpot note creation failed (${noteResp.status}): ${errText.slice(0, 300)}`
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "HubSpot engagement logging failed:",
+      (err as Error).message
+    );
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -480,6 +583,9 @@ Deno.serve(async (req: Request) => {
         aggregated_quotes_sent_at: new Date().toISOString(),
       })
       .eq("id", quoteRequestId);
+
+    // Log the dispatched offers to HubSpot as an engagement note
+    await logDispatchToHubSpot(qr.email as string, enrichedBids);
 
     return jsonResponse({
       success: true,
