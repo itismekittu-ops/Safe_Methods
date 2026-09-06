@@ -253,11 +253,11 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** incomplete or junk records never pollute the CRM.
 * **Dependencies:** F3-US2, F3-US5
 
-#### (F3-US7) Immediate Confirmation Modal
+#### (F3-US7) Immediate Confirmation Modal (Clean UX)
 * **As a** visitor,
 * **WHEN I** submit a valid quote form,
-* **I want** a confirmation modal stating *"You will receive offers from all selected advisors/banks within 5 business days"* that auto-dismisses after 5 seconds,
-* **So that** I get immediate feedback without lingering UI obstructions.
+* **I want** a confirmation modal stating *"You will receive offers from all selected advisors/banks within 5 business days"* that auto-dismisses after 5 seconds without exposing technical tracking codes or reference IDs,
+* **So that** I receive clear timeline expectations without UI friction.
 * **Dependencies:** F3-US6
 
 #### (F3-US8) Contextual Blog Recommendations Post-Submission
@@ -267,11 +267,11 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** I can review relevant resources while waiting for quotes.
 * **Dependencies:** F3-US6, F1-US7
 
-#### (F3-US9) Transactional Email Confirmation
+#### (F3-US9) Transactional Welcome & Confirmation Email
 * **As a** visitor,
 * **WHEN my** quote request succeeds,
-* **I want to** receive an automated email summarizing my submission, linking relevant educational content, and offering a free 10–15 minute consult link,
-* **So that** I have a permanent record in my inbox.
+* **I want to** immediately receive an automated branded welcome email via Zoho SMTP summarizing my submission, confirming that offers will arrive within 5 business days, linking relevant educational content, and offering a free 10–15 minute consult link (without showing raw internal reference IDs),
+* **So that** I have instant confirmation and permanent records in my inbox.
 * **Dependencies:** F3-US6
 
 #### (F3-US10) Structured CRM Payload Ingestion
