@@ -503,6 +503,13 @@ Provides users with direct control to view, export, or permanently delete person
 * **So that** I can exercise control over my personal footprint on the platform.
 * **Dependencies:** F5-US1
 
+#### (F5-US4) Access Transparent Privacy Policy
+* **As a** visitor,
+* **WHEN I** navigate to `/privacy` or click the "Privacy Policy" link in the global footer,
+* **I want to** review a comprehensive, plain-language privacy disclosure detailing data ownership, third-party CRM ingestion (HubSpot), PII exclusion rules, and data retention limits,
+* **So that** I understand how my information is handled before submitting any financial inquiry.
+* **Dependencies:** F3 (Quote Requests), F5 (Data Subject Rights)
+
 ---
 
 ## Third-Party Integrations
