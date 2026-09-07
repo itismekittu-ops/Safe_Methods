@@ -16,9 +16,10 @@ This is a **single-page marketing site**, not a multi-page site with separate Ab
 
 | Route | What it is |
 | :--- | :--- |
-| `/` | Homepage — contains Hero, Services overview, SafeBot demo, CTA, Blog preview, and **Contact** as sections/anchors (nav links use `scrollToSection()`, not real navigation to a `/contact` URL) |
-| `/services` | Currently renders **one hardcoded service** ("Debt Management"), not a listing or category page |
-| `/blog` | Currently renders **one hardcoded post**, not a listing page |
+| `/` | Homepage — contains Hero, Services overview, SafeBot demo, CTA, Blog preview, and Contact section |
+| `/services` | Service detail page |
+| `/blog` | Insights article page |
+| `/privacy` | Public Privacy Policy and statutory data disclosure page |
 | `/login`, `/account`, `/reset-password` | Authenticated/account routes — out of scope for public AEO/SEO work |
 
 **Implications for this document:**
