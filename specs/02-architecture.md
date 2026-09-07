@@ -84,6 +84,7 @@ The system architecture shall strictly adhere to the following principles:
 * **Sensitive PII Protection:** Personally Identifiable Information (PII) and Sensitive Personal Information must be strictly protected across all workflows.
 * **Redaction for Observability:** Sensitive PII must be redacted/masked (e.g., `[PII_DETECTED]`) prior to sending traces to Langfuse.
 * **Minimal Exposure:** Sensitive PII user information must never be exposed to third-party AI LLM providers unless required for query execution.
+* **Public Privacy Architecture:** A dedicated static/prerendered `/privacy` route must remain publicly accessible without authentication, reflecting real-time compliance standards (PIPEDA, Law 25) and explicitly detailing the platform's non-monetization of user data.
 
 ---
 
