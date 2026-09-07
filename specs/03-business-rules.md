@@ -17,6 +17,7 @@
 | ID | Business Rule |
 | :--- | :--- |
 | **BR-PRIV-01** | **Sensitive PII Ban:** Sensitive PII must **NEVER** be persisted in application databases, written to observability logs, or shared with external partners or third-party institutions under any circumstance. |
+| **BR-PRIV-02** | **Privacy Policy Reachability:** A direct, working link to `/privacy` must be visible across all global navigation footers and modal consent notices prior to data capture. The policy must clearly define the user's right to access, export, and delete records per BR-CUST-01. |
 
 ### Restricted Categories (Canonical PII Definition)
 Under **BR-PRIV-01**, the following sensitive data categories are strictly forbidden from storage or external transmission[cite: 5]:
