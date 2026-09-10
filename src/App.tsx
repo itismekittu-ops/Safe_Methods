@@ -11,10 +11,15 @@ import { ResetPassword } from './pages/ResetPassword';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { ConsultantPortal } from './pages/ConsultantPortal';
 import { AdminQuotes } from './pages/AdminQuotes';
+function AdminRoute({
+  children
 
-function AdminRoute({ children }: { children: React.ReactElement }) {
-  const { user, loading } = useAuth();
 
+}: {children: React.ReactElement;}) {
+  const {
+    user,
+    loading
+  } = useAuth();
   if (loading) {
     return null;
   }
@@ -28,13 +33,10 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
   if (user.email !== 'info@safemethods.org') {
     return <Navigate to="/account" replace />;
   }
-
   return children;
 }
-
 export function AppRoutes() {
-  return (
-    <AuthProvider>
+  return <AuthProvider>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
@@ -44,21 +46,14 @@ export function AppRoutes() {
           <Route path="/account" element={<Account />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route
-            path="/admin/quotes"
-            element={
-              <AdminRoute>
+          <Route path="/admin/quotes" element={<AdminRoute>
                 <AdminQuotes />
-              </AdminRoute>
-            }
-          />
+              </AdminRoute>} />
         </Route>
         <Route path="/consultant-portal" element={<ConsultantPortal />} />
       </Routes>
-    </AuthProvider>
-  );
+    </AuthProvider>;
 }
-
 export function App() {
   return <AppRoutes />;
 }

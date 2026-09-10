@@ -1,17 +1,12 @@
 import React from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from './Button';
-
 function openCalendly() {
-  const url =
-    (import.meta as Record<string, Record<string, string>>).env?.VITE_CALENDLY_URL ||
-    'https://calendly.com/safemethods';
+  const url = (import.meta as Record<string, Record<string, string>>).env?.VITE_CALENDLY_URL || 'https://calendly.com/safemethods';
   window.open(url, '_blank', 'noopener,noreferrer');
 }
-
 export function CtaSection() {
-  return (
-    <section className="w-full bg-primary text-primary-foreground py-20 md:py-28">
+  return <section className="w-full bg-primary text-primary-foreground py-20 md:py-28">
       <div className="container mx-auto px-4 text-center max-w-2xl">
         <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl mb-6 text-primary-foreground">
           Your Financial Clarity Starts Here
@@ -20,16 +15,10 @@ export function CtaSection() {
           Book a free consultation today and get a personalized plan within 24
           hours. Let us help you navigate your wealth with confidence.
         </p>
-        <Button
-          variant="secondary"
-          size="lg"
-          className="!bg-accent !text-accent-foreground !border-accent hover:!bg-accent/90"
-          onClick={openCalendly}
-        >
+        <Button variant="secondary" size="lg" className="!bg-accent !text-accent-foreground !border-accent hover:!bg-accent/90" onClick={openCalendly}>
           <CalendarIcon className="w-4 h-4 mr-2" />
           Book a Consultation
         </Button>
       </div>
-    </section>
-  );
+    </section>;
 }

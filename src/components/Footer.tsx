@@ -3,8 +3,7 @@ import { TwitterIcon, LinkedinIcon, FacebookIcon } from 'lucide-react';
 import { useSectionScroll } from '../utils/useSectionScroll';
 export function Footer() {
   const scrollToSection = useSectionScroll();
-  return (
-    <footer className="bg-primary text-primary-foreground pt-16 pb-8">
+  return <footer className="bg-primary text-primary-foreground pt-16 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           <div className="lg:col-span-2">
@@ -22,25 +21,19 @@ export function Footer() {
             <h4 className="font-semibold text-accent mb-4">Company</h4>
             <ul className="space-y-3">
               <li>
-                <button
-                  onClick={() => scrollToSection('top')}
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
+                <button onClick={() => scrollToSection('top')} className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
                   
                   About
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => scrollToSection('services')}
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
+                <button onClick={() => scrollToSection('services')} className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
                   
                   Services
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => scrollToSection('blog')}
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
+                <button onClick={() => scrollToSection('blog')} className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
                   
                   Insights
                 </button>
@@ -52,25 +45,19 @@ export function Footer() {
             <h4 className="font-semibold text-accent mb-4">Support</h4>
             <ul className="space-y-3">
               <li>
-                <button
-                  onClick={() => scrollToSection('contact')}
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
+                <button onClick={() => scrollToSection('contact')} className="text-sm text-primary-foreground/70 hover:text-accent transition-colors text-left">
                   
                   Contact
                 </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors">
+                <a href="#" className="text-sm text-primary-foreground/70 hover:text-accent transition-colors">
                   
                   FAQ
                 </a>
               </li>
               <li>
-                <a
-                  href="/privacy-policy"
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors">
+                <a href="/privacy-policy" className="text-sm text-primary-foreground/70 hover:text-accent transition-colors">
                   Privacy Policy
                 </a>
               </li>
@@ -80,24 +67,15 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-accent mb-4">Connect</h4>
             <div className="flex gap-4">
-              <a
-                href="#"
-                className="text-primary-foreground/70 hover:text-accent transition-colors"
-                aria-label="Twitter">
+              <a href="#" className="text-primary-foreground/70 hover:text-accent transition-colors" aria-label="Twitter">
                 
                 <TwitterIcon className="w-5 h-5" />
               </a>
-              <a
-                href="#"
-                className="text-primary-foreground/70 hover:text-accent transition-colors"
-                aria-label="LinkedIn">
+              <a href="#" className="text-primary-foreground/70 hover:text-accent transition-colors" aria-label="LinkedIn">
                 
                 <LinkedinIcon className="w-5 h-5" />
               </a>
-              <a
-                href="#"
-                className="text-primary-foreground/70 hover:text-accent transition-colors"
-                aria-label="Facebook">
+              <a href="#" className="text-primary-foreground/70 hover:text-accent transition-colors" aria-label="Facebook">
                 
                 <FacebookIcon className="w-5 h-5" />
               </a>
@@ -111,6 +89,5 @@ export function Footer() {
           </p>
         </div>
       </div>
-    </footer>);
-
+    </footer>;
 }

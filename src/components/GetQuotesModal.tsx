@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Button } from "./Button";
 import { TextInput } from "./TextInput";
 import { Select } from "./Select";
-
 export interface BankMatchRef {
   name: string;
   productType: string;
@@ -13,18 +12,14 @@ export interface BankMatchRef {
   consultantId: string | null;
   consultantName: string | null;
 }
-
 interface GetQuotesModalProps {
   open: boolean;
   onClose: () => void;
   banks: BankMatchRef[];
   sessionToken: string | null;
 }
-
 type RequestMode = "loan" | "investment";
-
 type Topic = "mortgage" | "personal_loan" | "gic" | "investment" | "general";
-
 interface BlogRec {
   title: string;
   description: string;
@@ -32,30 +27,73 @@ interface BlogRec {
   image: string;
   slug: string;
 }
-
 const BLOG_RECS: Record<Topic, BlogRec[]> = {
-  mortgage: [
-    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
-    { title: "How to Improve Your Credit Score Fast", description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.", category: "Credit", image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400", slug: "credit-score" },
-  ],
-  personal_loan: [
-    { title: "How to Improve Your Credit Score Fast", description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.", category: "Credit", image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400", slug: "credit-score" },
-    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
-  ],
-  gic: [
-    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
-    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
-  ],
-  investment: [
-    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
-    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
-  ],
-  general: [
-    { title: "5 Steps to Build an Emergency Fund", description: "A practical approach to securing a financial safety net without compromising your current lifestyle.", category: "Saving", image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400", slug: "emergency-fund" },
-    { title: "Investing 101 for Beginners", description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.", category: "Investing", image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400", slug: "investing-101" },
-  ],
+  mortgage: [{
+    title: "5 Steps to Build an Emergency Fund",
+    description: "A practical approach to securing a financial safety net without compromising your current lifestyle.",
+    category: "Saving",
+    image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "emergency-fund"
+  }, {
+    title: "How to Improve Your Credit Score Fast",
+    description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.",
+    category: "Credit",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "credit-score"
+  }],
+  personal_loan: [{
+    title: "How to Improve Your Credit Score Fast",
+    description: "Actionable strategies to optimize your credit utilization and resolve outstanding discrepancies.",
+    category: "Credit",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "credit-score"
+  }, {
+    title: "5 Steps to Build an Emergency Fund",
+    description: "A practical approach to securing a financial safety net without compromising your current lifestyle.",
+    category: "Saving",
+    image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "emergency-fund"
+  }],
+  gic: [{
+    title: "Investing 101 for Beginners",
+    description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.",
+    category: "Investing",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "investing-101"
+  }, {
+    title: "5 Steps to Build an Emergency Fund",
+    description: "A practical approach to securing a financial safety net without compromising your current lifestyle.",
+    category: "Saving",
+    image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "emergency-fund"
+  }],
+  investment: [{
+    title: "Investing 101 for Beginners",
+    description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.",
+    category: "Investing",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "investing-101"
+  }, {
+    title: "5 Steps to Build an Emergency Fund",
+    description: "A practical approach to securing a financial safety net without compromising your current lifestyle.",
+    category: "Saving",
+    image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "emergency-fund"
+  }],
+  general: [{
+    title: "5 Steps to Build an Emergency Fund",
+    description: "A practical approach to securing a financial safety net without compromising your current lifestyle.",
+    category: "Saving",
+    image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "emergency-fund"
+  }, {
+    title: "Investing 101 for Beginners",
+    description: "Demystifying the markets: foundational principles for building a resilient investment portfolio.",
+    category: "Investing",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600&h=400",
+    slug: "investing-101"
+  }]
 };
-
 function topicFromProductType(pt: string | undefined): Topic {
   if (pt === "mortgage") return "mortgage";
   if (pt === "personal_loan") return "personal_loan";
@@ -63,11 +101,14 @@ function topicFromProductType(pt: string | undefined): Topic {
   if (pt === "investment") return "investment";
   return "general";
 }
-
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[\d\s()+\-]{7,}$/;
-
-export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotesModalProps) {
+export function GetQuotesModal({
+  open,
+  onClose,
+  banks,
+  sessionToken
+}: GetQuotesModalProps) {
   const [mode, setMode] = useState<RequestMode>("loan");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -82,7 +123,6 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   const [success, setSuccess] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!open) return;
     const key = `safebot_quote_submitted_${sessionToken ?? "anon"}`;
@@ -90,7 +130,6 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       setAlreadySubmitted(true);
     }
   }, [open, sessionToken]);
-
   useEffect(() => {
     if (!open) return;
     const productType = banks[0]?.productType ?? "";
@@ -100,36 +139,27 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       setMode("loan");
     }
   }, [open, banks]);
-
   if (!open) return null;
-
   const selectedBanks = banks.map((b) => b.name);
-
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = "Name is required.";
-    if (!email.trim()) e.email = "Email is required.";
-    else if (!emailRegex.test(email)) e.email = "Please enter a valid email address.";
+    if (!email.trim()) e.email = "Email is required.";else if (!emailRegex.test(email)) e.email = "Please enter a valid email address.";
     if (phone.trim() && !phoneRegex.test(phone)) e.phone = "Please enter a valid phone number.";
     if (mode === "loan") {
-      if (!loanAmount.trim()) e.loanAmount = "Loan amount is required.";
-      else if (isNaN(Number(loanAmount)) || Number(loanAmount) <= 0) e.loanAmount = "Enter a valid amount.";
-      if (!monthlyIncome.trim()) e.monthlyIncome = "Monthly income is required.";
-      else if (isNaN(Number(monthlyIncome)) || Number(monthlyIncome) <= 0) e.monthlyIncome = "Enter a valid amount.";
+      if (!loanAmount.trim()) e.loanAmount = "Loan amount is required.";else if (isNaN(Number(loanAmount)) || Number(loanAmount) <= 0) e.loanAmount = "Enter a valid amount.";
+      if (!monthlyIncome.trim()) e.monthlyIncome = "Monthly income is required.";else if (isNaN(Number(monthlyIncome)) || Number(monthlyIncome) <= 0) e.monthlyIncome = "Enter a valid amount.";
     } else {
-      if (!investmentAmount.trim()) e.investmentAmount = "Investment amount is required.";
-      else if (isNaN(Number(investmentAmount)) || Number(investmentAmount) <= 0) e.investmentAmount = "Enter a valid amount.";
+      if (!investmentAmount.trim()) e.investmentAmount = "Investment amount is required.";else if (isNaN(Number(investmentAmount)) || Number(investmentAmount) <= 0) e.investmentAmount = "Enter a valid amount.";
     }
     if (!consent) e.consent = "You must provide consent to submit.";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
     if (!validate()) return;
-
     setSubmitting(true);
     try {
       // The browser no longer writes to the database directly. The server
@@ -137,13 +167,12 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       // repeat-submission window and triggers the email and CRM steps.
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
       const response = await fetch(`${supabaseUrl}/functions/v1/submit-quote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${anonKey}`,
-          apikey: anonKey,
+          apikey: anonKey
         },
         body: JSON.stringify({
           name: name.trim(),
@@ -161,16 +190,12 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
           selected_institutions: selectedBanks,
           selectedInstitutions: selectedBanks,
           consent: true,
-          sessionToken: sessionToken ?? undefined,
-        }),
+          sessionToken: sessionToken ?? undefined
+        })
       });
-
       if (!response.ok) throw new Error("submission_failed");
-
       const result = await response.json();
-
       sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
-
       if (result.alreadySubmitted) {
         setAlreadySubmitted(true);
       } else {
@@ -187,23 +212,13 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       setSubmitting(false);
     }
   };
-
   const handleClose = () => {
     if (submitting) return;
     onClose();
   };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={handleClose}
-    >
-      <div
-        className="bg-surface border border-border-subtle rounded-xl shadow-raised w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {success ? (
-          <div className="p-8 text-center">
+  return <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleClose}>
+      <div className="bg-surface border border-border-subtle rounded-xl shadow-raised w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        {success ? <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-success/10 border border-success/30 flex items-center justify-center mx-auto mb-6">
               <CheckCircleIcon className="w-8 h-8 text-success" />
             </div>
@@ -214,37 +229,27 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
 
             {/* Contextual blog recommendations (F3-US8) */}
             {(() => {
-              const topic = topicFromProductType(banks[0]?.productType);
-              const recs = BLOG_RECS[topic] ?? BLOG_RECS.general;
-              return (
-                <div className="mt-6 text-left">
+          const topic = topicFromProductType(banks[0]?.productType);
+          const recs = BLOG_RECS[topic] ?? BLOG_RECS.general;
+          return <div className="mt-6 text-left">
                   <p className="text-sm font-medium text-foreground mb-3">
                     While you wait, explore these related resources:
                   </p>
                   <div className="space-y-3">
-                    {recs.map((rec) => (
-                      <Link
-                        key={rec.slug}
-                        to="/blog"
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border-subtle bg-background hover:border-border hover:bg-muted transition-colors group"
-                      >
+                    {recs.map((rec) => <Link key={rec.slug} to="/blog" className="flex items-center gap-3 p-3 rounded-lg border border-border-subtle bg-background hover:border-border hover:bg-muted transition-colors group">
                         <img src={rec.image} alt={rec.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
                         <div className="min-w-0 flex-grow">
                           <p className="text-sm font-medium text-foreground truncate">{rec.title}</p>
                           <p className="text-xs text-muted-foreground line-clamp-2">{rec.description}</p>
                         </div>
                         <ArrowRightIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </Link>
-                    ))}
+                      </Link>)}
                   </div>
-                </div>
-              );
-            })()}
+                </div>;
+        })()}
 
             <p className="text-xs text-muted-foreground mt-6">This window will close automatically...</p>
-          </div>
-        ) : alreadySubmitted ? (
-          <div className="p-8 text-center">
+          </div> : alreadySubmitted ? <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-6">
               <ShieldCheckIcon className="w-8 h-8 text-accent" />
             </div>
@@ -254,16 +259,10 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
               processing it and you'll receive offers within 5 business days.
             </p>
             <Button variant="secondary" onClick={onClose}>Close</Button>
-          </div>
-        ) : (
-          <>
+          </div> : <>
             <div className="flex items-center justify-between p-6 border-b border-border-subtle">
               <h2 className="font-heading text-2xl text-foreground">Get Quotes</h2>
-              <button
-                onClick={handleClose}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                aria-label="Close"
-              >
+              <button onClick={handleClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors" aria-label="Close">
                 <XIcon className="w-5 h-5" />
               </button>
             </div>
@@ -273,97 +272,41 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
               <div>
                 <p className="text-sm font-medium text-foreground mb-2">Your request will be sent to:</p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedBanks.length > 0 ? (
-                    selectedBanks.map((b) => (
-                      <span key={b} className="text-xs px-3 py-1.5 bg-muted border border-border-subtle rounded-md text-foreground">
+                  {selectedBanks.length > 0 ? selectedBanks.map((b) => <span key={b} className="text-xs px-3 py-1.5 bg-muted border border-border-subtle rounded-md text-foreground">
                         {b}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-muted-foreground">No banks matched yet — ask a question first.</span>
-                  )}
+                      </span>) : <span className="text-xs text-muted-foreground">No banks matched yet — ask a question first.</span>}
                 </div>
               </div>
 
               {/* Loan / Investment toggle */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setMode("loan")}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                    mode === "loan" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
-                >
+                <button type="button" onClick={() => setMode("loan")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${mode === "loan" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"}`}>
                   Loan
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setMode("investment")}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                    mode === "investment" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
-                >
+                <button type="button" onClick={() => setMode("investment")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${mode === "investment" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"}`}>
                   Investment
                 </button>
               </div>
 
               {/* Contact fields */}
-              <TextInput
-                label="Name"
-                placeholder="Jane Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <TextInput label="Name" placeholder="Jane Doe" value={name} onChange={(e) => setName(e.target.value)} />
               {errors.name && <p className="text-xs text-destructive -mt-2">{errors.name}</p>}
 
-              <TextInput
-                label="Email"
-                type="email"
-                placeholder="jane@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <TextInput label="Email" type="email" placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               {errors.email && <p className="text-xs text-destructive -mt-2">{errors.email}</p>}
 
-              <TextInput
-                label="Phone (optional)"
-                type="tel"
-                placeholder="888-841-7755"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+              <TextInput label="Phone (optional)" type="tel" placeholder="888-841-7755" value={phone} onChange={(e) => setPhone(e.target.value)} />
               {errors.phone && <p className="text-xs text-destructive -mt-2">{errors.phone}</p>}
 
               {/* Dynamic fields */}
-              {mode === "loan" ? (
-                <>
-                  <TextInput
-                    label="Loan Amount"
-                    type="number"
-                    placeholder="50000"
-                    value={loanAmount}
-                    onChange={(e) => setLoanAmount(e.target.value)}
-                  />
+              {mode === "loan" ? <>
+                  <TextInput label="Loan Amount" type="number" placeholder="50000" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} />
                   {errors.loanAmount && <p className="text-xs text-destructive -mt-2">{errors.loanAmount}</p>}
 
-                  <TextInput
-                    label="Monthly Income"
-                    type="number"
-                    placeholder="5000"
-                    value={monthlyIncome}
-                    onChange={(e) => setMonthlyIncome(e.target.value)}
-                  />
+                  <TextInput label="Monthly Income" type="number" placeholder="5000" value={monthlyIncome} onChange={(e) => setMonthlyIncome(e.target.value)} />
                   {errors.monthlyIncome && <p className="text-xs text-destructive -mt-2">{errors.monthlyIncome}</p>}
-                </>
-              ) : (
-                <>
-                  <TextInput
-                    label="Investment Amount"
-                    type="number"
-                    placeholder="25000"
-                    value={investmentAmount}
-                    onChange={(e) => setInvestmentAmount(e.target.value)}
-                  />
+                </> : <>
+                  <TextInput label="Investment Amount" type="number" placeholder="25000" value={investmentAmount} onChange={(e) => setInvestmentAmount(e.target.value)} />
                   {errors.investmentAmount && <p className="text-xs text-destructive -mt-2">{errors.investmentAmount}</p>}
 
                   <Select label="Term" value={tenure} onChange={(e) => setTenure(e.target.value)}>
@@ -372,18 +315,12 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                     <option value="5-year">5 Years</option>
                     <option value="10-year">10 Years</option>
                   </Select>
-                </>
-              )}
+                </>}
 
               {/* Consent */}
               <div className="pt-2">
                 <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-1 w-4 h-4 rounded border-border-subtle text-accent focus:ring-accent/30"
-                  />
+                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 w-4 h-4 rounded border-border-subtle text-accent focus:ring-accent/30" />
                   <span className="text-sm text-muted-foreground leading-relaxed">
                     I authorize Safe Methods to share my contact details with the
                     listed institutions for the purpose of providing quotes. I
@@ -393,31 +330,18 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                 {errors.consent && <p className="text-xs text-destructive mt-1">{errors.consent}</p>}
               </div>
 
-              {submitError && (
-                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
+              {submitError && <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
                   {submitError}
-                </p>
-              )}
+                </p>}
 
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full bg-accent text-primary hover:bg-accent/90 border-transparent"
-                disabled={submitting || !consent || selectedBanks.length === 0}
-              >
-                {submitting ? (
-                  <>
+              <Button type="submit" variant="primary" className="w-full bg-accent text-primary hover:bg-accent/90 border-transparent" disabled={submitting || !consent || selectedBanks.length === 0}>
+                {submitting ? <>
                     <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
                     Submitting...
-                  </>
-                ) : (
-                  "Submit Quote Request"
-                )}
+                  </> : "Submit Quote Request"}
               </Button>
             </form>
-          </>
-        )}
+          </>}
       </div>
-    </div>
-  );
+    </div>;
 }

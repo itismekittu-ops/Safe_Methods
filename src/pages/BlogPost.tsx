@@ -6,20 +6,12 @@ import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 export function BlogPost() {
-  return (
-    <main>
-      <SEO
-        title="Navigating Generational Wealth Transfer in Uncertain Markets"
-        description="How high-net-worth families can prepare the next generation to manage significant wealth through governance, communication, and strategic planning."
-        path="/blog"
-      />
+  return <main>
+      <SEO title="Navigating Generational Wealth Transfer in Uncertain Markets" description="How high-net-worth families can prepare the next generation to manage significant wealth through governance, communication, and strategic planning." path="/blog" />
       <article>
         {/* Hero Image */}
         <div className="w-full h-[380px] md:h-[480px] bg-muted">
-          <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
-            alt="Looking up at a modern corporate skyscraper with clear blue sky"
-            className="w-full h-full object-cover" />
+          <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop" alt="Looking up at a modern corporate skyscraper with clear blue sky" className="w-full h-full object-cover" />
           
         </div>
 
@@ -38,10 +30,7 @@ export function BlogPost() {
                 </h1>
 
                 <div className="flex items-center gap-4 border-y border-border-subtle py-6">
-                  <Avatar
-                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=256&auto=format&fit=crop"
-                    name="Arthur Pendelton"
-                    size="md" />
+                  <Avatar src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=256&auto=format&fit=crop" name="Arthur Pendelton" size="md" />
                   
                   <div>
                     <div className="font-medium text-foreground">
@@ -121,9 +110,7 @@ export function BlogPost() {
                     Related Service
                   </h3>
                   <div className="mb-6">
-                    <a
-                      href="#"
-                      className="text-lg font-medium text-primary hover:text-accent transition-colors flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-accent rounded-sm w-fit">
+                    <a href="#" className="text-lg font-medium text-primary hover:text-accent transition-colors flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-accent rounded-sm w-fit">
                       
                       Estate Planning & Trusts
                       <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -152,9 +139,7 @@ export function BlogPost() {
             <h2 className="font-heading text-3xl md:text-4xl text-foreground">
               Related Articles
             </h2>
-            <a
-              href="#"
-              className="hidden md:flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
+            <a href="#" className="hidden md:flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
               
               View all insights <ArrowRightIcon className="w-4 h-4" />
             </a>
@@ -164,10 +149,7 @@ export function BlogPost() {
             {/* Card 1 */}
             <Card className="flex flex-col h-full overflow-hidden border border-border-subtle bg-background hover:shadow-raised transition-shadow duration-300">
               <div className="h-48 w-full bg-muted">
-                <img
-                  src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop"
-                  alt="Luxurious estate exterior"
-                  className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop" alt="Luxurious estate exterior" className="w-full h-full object-cover" />
                 
               </div>
               <div className="p-6 flex flex-col flex-grow">
@@ -175,9 +157,7 @@ export function BlogPost() {
                   <Badge variant="neutral">Real Estate</Badge>
                 </div>
                 <h3 className="font-heading text-xl text-foreground mb-3 leading-snug">
-                  <a
-                    href="#"
-                    className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
+                  <a href="#" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
                     
                     Assessing Prime Real Estate in a High-Rate Environment
                   </a>
@@ -196,10 +176,7 @@ export function BlogPost() {
             {/* Card 2 */}
             <Card className="flex flex-col h-full overflow-hidden border border-border-subtle bg-background hover:shadow-raised transition-shadow duration-300">
               <div className="h-48 w-full bg-muted">
-                <img
-                  src="https://images.unsplash.com/photo-1556761175-5973dc0f32d7?q=80&w=1632&auto=format&fit=crop"
-                  alt="Professional reviewing documents at a desk"
-                  className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32d7?q=80&w=1632&auto=format&fit=crop" alt="Professional reviewing documents at a desk" className="w-full h-full object-cover" />
                 
               </div>
               <div className="p-6 flex flex-col flex-grow">
@@ -207,9 +184,7 @@ export function BlogPost() {
                   <Badge variant="neutral">Tax Strategy</Badge>
                 </div>
                 <h3 className="font-heading text-xl text-foreground mb-3 leading-snug">
-                  <a
-                    href="#"
-                    className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
+                  <a href="#" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
                     
                     Year-End Tax Optimization Strategies for 2023
                   </a>
@@ -228,10 +203,7 @@ export function BlogPost() {
             {/* Card 3 */}
             <Card className="flex flex-col h-full overflow-hidden border border-border-subtle bg-background hover:shadow-raised transition-shadow duration-300">
               <div className="h-48 w-full bg-muted">
-                <img
-                  src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop"
-                  alt="Executive boardroom table"
-                  className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop" alt="Executive boardroom table" className="w-full h-full object-cover" />
                 
               </div>
               <div className="p-6 flex flex-col flex-grow">
@@ -239,9 +211,7 @@ export function BlogPost() {
                   <Badge variant="neutral">Philanthropy</Badge>
                 </div>
                 <h3 className="font-heading text-xl text-foreground mb-3 leading-snug">
-                  <a
-                    href="#"
-                    className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
+                  <a href="#" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-sm">
                     
                     Structuring Charitable Foundations for Maximum Impact
                   </a>
@@ -265,6 +235,5 @@ export function BlogPost() {
           </div>
         </div>
       </section>
-    </main>);
-
+    </main>;
 }

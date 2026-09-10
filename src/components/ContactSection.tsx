@@ -5,55 +5,46 @@ import { TextArea } from "./TextArea";
 import { Select } from "./Select";
 import { Button } from "./Button";
 import { supabase } from "../lib/supabase";
-
 export function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     if (!name.trim() || !email.trim() || !message.trim()) {
       setError("Please fill in all required fields.");
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.");
       return;
     }
-
     setIsSubmitting(true);
-
     const payloadName = name.trim();
     const payloadEmail = email.trim();
     const payloadPhone = phone.trim();
     const payloadMessage = message.trim();
-
     try {
-      const { error: insertError } = await supabase.from("leads").insert({
+      const {
+        error: insertError
+      } = await supabase.from("leads").insert({
         name: payloadName,
         email: payloadEmail,
         phone: payloadPhone || null,
-        source: "contact_form",
+        source: "contact_form"
       });
-
       if (insertError) throw insertError;
-
       setSubmitted(true);
       setName("");
       setEmail("");
       setPhone("");
       setMessage("");
-
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
       fetch(`${supabaseUrl}/functions/v1/sync-hubspot-lead`, {
@@ -61,15 +52,15 @@ export function ContactSection() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${anonKey}`,
-          apikey: anonKey,
+          apikey: anonKey
         },
         body: JSON.stringify({
           name: payloadName,
           email: payloadEmail,
           phone: payloadPhone || "",
           request_type: "contact_inquiry",
-          message: payloadMessage,
-        }),
+          message: payloadMessage
+        })
       }).catch(() => {});
     } catch {
       setError("Something went wrong sending your message. Please try again.");
@@ -77,13 +68,8 @@ export function ContactSection() {
       setIsSubmitting(false);
     }
   };
-
   if (submitted) {
-    return (
-      <section
-        id="contact"
-        className="container mx-auto px-4 py-16 md:py-24 bg-surface border-t border-border-subtle"
-      >
+    return <section id="contact" className="container mx-auto px-4 py-16 md:py-24 bg-surface border-t border-border-subtle">
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-16 h-16 rounded-full bg-success/10 border border-success/30 flex items-center justify-center mx-auto mb-6">
             <CheckCircleIcon className="w-8 h-8 text-success" />
@@ -98,15 +84,9 @@ export function ContactSection() {
             Send Another Message
           </Button>
         </div>
-      </section>
-    );
+      </section>;
   }
-
-  return (
-    <section
-      id="contact"
-      className="container mx-auto px-4 py-16 md:py-24 bg-surface border-t border-border-subtle"
-    >
+  return <section id="contact" className="container mx-auto px-4 py-16 md:py-24 bg-surface border-t border-border-subtle">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
         {/* Left Column */}
         <div>
@@ -160,21 +140,8 @@ export function ContactSection() {
         <div className="bg-background p-8 rounded-lg border border-border-subtle shadow-soft">
           <h3 className="font-heading text-2xl text-foreground mb-6">Send us a message</h3>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <TextInput
-              label="Name"
-              placeholder="Jane Doe"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextInput
-              label="Email"
-              type="email"
-              placeholder="jane@example.com"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <TextInput label="Name" placeholder="Jane Doe" required value={name} onChange={(e) => setName(e.target.value)} />
+            <TextInput label="Email" type="email" placeholder="jane@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
 
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-foreground">Phone</label>
@@ -187,31 +154,16 @@ export function ContactSection() {
                   </Select>
                 </div>
                 <div className="w-2/3">
-                  <TextInput
-                    type="tel"
-                    placeholder="888-841-7755"
-                    aria-label="Phone Number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                  <TextInput type="tel" placeholder="888-841-7755" aria-label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
               </div>
             </div>
 
-            <TextArea
-              label="Message"
-              placeholder="How can we assist you?"
-              rows={4}
-              required
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
+            <TextArea label="Message" placeholder="How can we assist you?" rows={4} required value={message} onChange={(e) => setMessage(e.target.value)} />
 
-            {error && (
-              <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
+            {error && <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-4 py-3">
                 {error}
-              </p>
-            )}
+              </p>}
 
             <Button type="submit" variant="primary" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Sending..." : "Send Message"}
@@ -219,6 +171,5 @@ export function ContactSection() {
           </form>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }

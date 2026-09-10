@@ -1,6 +1,5 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-
 interface SEOProps {
   title: string;
   description: string;
@@ -8,16 +7,18 @@ interface SEOProps {
   image?: string;
   fullTitle?: string;
 }
-
 const SITE_URL = "https://safemethods.com";
-
-export function SEO({ title, description, path, image, fullTitle: fullTitleOverride }: SEOProps) {
+export function SEO({
+  title,
+  description,
+  path,
+  image,
+  fullTitle: fullTitleOverride
+}: SEOProps) {
   const fullUrl = `${SITE_URL}${path}`;
   const fullTitle = fullTitleOverride ?? `${title} | Safe Methods`;
   const ogImage = image ?? `${SITE_URL}/og-default.jpg`;
-
-  return (
-    <Helmet>
+  return <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={fullUrl} />
@@ -30,6 +31,5 @@ export function SEO({ title, description, path, image, fullTitle: fullTitleOverr
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
-    </Helmet>
-  );
+    </Helmet>;
 }
