@@ -1,5 +1,6 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import ReactGA from 'react-ga4';
 import { AuthProvider, useAuth } from './lib/auth';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -32,7 +33,18 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
   return children;
 }
 
+function usePageTracking() {
+  const location = useLocation();
+  useEffect(() => {
+    const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
+    if (gaId) {
+      ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
+    }
+  }, [location]);
+}
+
 export function AppRoutes() {
+  usePageTracking();
   return (
     <AuthProvider>
       <Routes>
