@@ -1,8 +1,14 @@
 import React from 'react';
 import { SEO } from '../components/SEO';
+
 export function PrivacyPolicy() {
-  return <main>
-      <SEO title="Privacy Policy" description="Safe Methods Privacy Policy — how we collect, use, and protect your personal information when you visit safemethods.com." path="/privacy-policy" />
+  return (
+    <main>
+      <SEO
+        title="Privacy Policy"
+        description="Safe Methods Privacy Policy — how we collect, use, and protect your personal information when you visit safemethods.com."
+        path="/privacy-policy"
+      />
       <section className="bg-primary text-primary-foreground py-20 md:py-28 px-4 md:px-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/10 to-transparent pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -130,5 +136,6 @@ export function PrivacyPolicy() {
           </p>
         </div>
       </section>
-    </main>;
+    </main>
+  );
 }

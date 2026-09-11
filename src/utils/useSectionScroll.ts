@@ -8,23 +8,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export function useSectionScroll() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const scrollToSection = (sectionId: string) => {
     const doScroll = () => {
       if (sectionId === 'top') {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       const el = document.getElementById(sectionId);
       if (el) {
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
+
     if (location.pathname !== '/') {
       navigate('/');
       // Allow the homepage to mount before scrolling.
@@ -33,5 +29,6 @@ export function useSectionScroll() {
       doScroll();
     }
   };
+
   return scrollToSection;
 }

@@ -1,166 +1,112 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<{
-    error: string | null;
-  }>;
-  signIn: (email: string, password: string) => Promise<{
-    error: string | null;
-  }>;
-  signInWithGoogle: () => Promise<{
-    error: string | null;
-  }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{
-    error: string | null;
-  }>;
-  updatePassword: (password: string) => Promise<{
-    error: string | null;
-  }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
 }
+
 const AuthContext = createContext<AuthContextValue | null>(null);
+
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-export function AuthProvider({
-  children
 
-
-}: {children: React.ReactNode;}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data
-    }) => {
+    supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
     });
-    const {
-      data: listener
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       (async () => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setLoading(false);
       })();
     });
+
     return () => {
       listener.subscription.unsubscribe();
     };
   }, []);
+
   const signUp = useCallback(async (email: string, password: string, name: string) => {
-    const {
-      data,
-      error
-    } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: name
-        }
-      }
+      options: { data: { full_name: name } },
     });
     if (error) {
       // An already-registered address must not be distinguishable from a new
       // one, otherwise the signup form becomes an account-existence oracle.
-      const message = /already|registered|exists/i.test(error.message) ? "Check your email to finish setting up your account." : "We couldn't complete your signup. Please check your details and try again.";
-      return {
-        error: message
-      };
+      const message = /already|registered|exists/i.test(error.message)
+        ? "Check your email to finish setting up your account."
+        : "We couldn't complete your signup. Please check your details and try again.";
+      return { error: message };
     }
     if (data.user && !data.session) {
-      return {
-        error: "Check your email to finish setting up your account."
-      };
+      return { error: "Check your email to finish setting up your account." };
     }
-    return {
-      error: null
-    };
+    return { error: null };
   }, []);
+
   const signIn = useCallback(async (email: string, password: string) => {
-    const {
-      error
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     // One message for every failure, so a wrong password and an unknown
     // address are indistinguishable.
-    if (error) return {
-      error: "Incorrect email or password."
-    };
-    return {
-      error: null
-    };
+    if (error) return { error: "Incorrect email or password." };
+    return { error: null };
   }, []);
+
   const signInWithGoogle = useCallback(async () => {
-    const {
-      error
-    } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/`
-      }
+      options: { redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/` },
     });
-    if (error) return {
-      error: "We couldn't start sign-in. Please try again."
-    };
-    return {
-      error: null
-    };
+    if (error) return { error: "We couldn't start sign-in. Please try again." };
+    return { error: null };
   }, []);
+
   const signOut = useCallback(async () => {
     sessionStorage.removeItem("safebot_session_token");
     await supabase.auth.signOut();
   }, []);
+
   const resetPassword = useCallback(async (email: string) => {
-    const {
-      error
-    } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/reset-password`,
     });
     // Same answer whether or not the address has an account.
-    if (error) return {
-      error: null
-    };
-    return {
-      error: null
-    };
+    if (error) return { error: null };
+    return { error: null };
   }, []);
+
   const updatePassword = useCallback(async (password: string) => {
-    const {
-      error
-    } = await supabase.auth.updateUser({
-      password
-    });
-    if (error) return {
-      error: "We couldn't update your password. Please try again."
-    };
-    return {
-      error: null
-    };
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return { error: "We couldn't update your password. Please try again." };
+    return { error: null };
   }, []);
-  return <AuthContext.Provider value={{
-    user,
-    session,
-    loading,
-    signUp,
-    signIn,
-    signInWithGoogle,
-    signOut,
-    resetPassword,
-    updatePassword
-  }}>
+
+  return (
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signOut, resetPassword, updatePassword }}>
       {children}
-    </AuthContext.Provider>;
+    </AuthContext.Provider>
+  );
 }

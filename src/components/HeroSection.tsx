@@ -5,26 +5,18 @@ import remarkGfm from "remark-gfm";
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
-const SUGGESTIONS = [{
-  category: "Lending/Credit",
-  question: "How do I get the best mortgage rate?"
-}, {
-  category: "Mutual Funds/Stocks",
-  question: "How do I start investing in mutual funds?"
-}, {
-  category: "Debt Management",
-  question: "How do I consolidate my debt effectively?"
-}, {
-  category: "Personal Budgeting",
-  question: "How do I create a monthly budget?"
-}, {
-  category: "Finance",
-  question: "What are the current GIC rates?"
-}, {
-  category: "Investment Planning",
-  question: "Should I pay off debt or invest first?"
-}];
+
+const SUGGESTIONS = [
+  { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
+  { category: "Mutual Funds/Stocks", question: "How do I start investing in mutual funds?" },
+  { category: "Debt Management", question: "How do I consolidate my debt effectively?" },
+  { category: "Personal Budgeting", question: "How do I create a monthly budget?" },
+  { category: "Finance", question: "What are the current GIC rates?" },
+  { category: "Investment Planning", question: "Should I pay off debt or invest first?" },
+];
+
 const SESSION_KEY = "safebot_session_token";
+
 interface BankMatch {
   name: string;
   productType: string;
@@ -37,10 +29,12 @@ interface BankMatch {
   consultantTitle: string | null;
   consultantAvatarUrl: string | null;
 }
+
 interface ChatMessage {
   role: "user" | "bot";
   content: string;
 }
+
 export function HeroSection() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -50,46 +44,18 @@ export function HeroSection() {
   const [followUps, setFollowUps] = useState<string[]>([]);
   const [quotesOpen, setQuotesOpen] = useState(false);
   const [detectedTopic, setDetectedTopic] = useState<"loan" | "investment">("loan");
-  const DEFAULT_BANKS: BankMatch[] = [{
-    name: "RBC",
-    productType: "general",
-    term: null,
-    rate: 0,
-    rank: 1,
-    isBest: true,
-    consultantId: null,
-    consultantName: "Victor Gaur",
-    consultantTitle: "Principal Financial Advisor",
-    consultantAvatarUrl: null
-  }, {
-    name: "TD",
-    productType: "general",
-    term: null,
-    rate: 0,
-    rank: 2,
-    isBest: false,
-    consultantId: null,
-    consultantName: "Sarah Mitchell",
-    consultantTitle: "Senior Investment Advisor",
-    consultantAvatarUrl: null
-  }, {
-    name: "BMO",
-    productType: "general",
-    term: null,
-    rate: 0,
-    rank: 3,
-    isBest: false,
-    consultantId: null,
-    consultantName: "David Chen",
-    consultantTitle: "Wealth Management Specialist",
-    consultantAvatarUrl: null
-  }];
+
+  const DEFAULT_BANKS: BankMatch[] = [
+    { name: "RBC", productType: "general", term: null, rate: 0, rank: 1, isBest: true, consultantId: null, consultantName: "Victor Gaur", consultantTitle: "Principal Financial Advisor", consultantAvatarUrl: null },
+    { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
+    { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
+  ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth"
-    });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -99,6 +65,7 @@ export function HeroSection() {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return;
     setSessionToken(stored);
+
     (async () => {
       try {
         // Chat history is served by the server, which requires the session
@@ -111,115 +78,128 @@ export function HeroSection() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${anonKey}`,
-            apikey: anonKey
+            apikey: anonKey,
           },
-          body: JSON.stringify({
-            action: "history",
-            sessionToken: stored,
-            message: ""
-          })
+          body: JSON.stringify({ action: "history", sessionToken: stored, message: "" }),
         });
+
         if (!resp.ok) return;
-        const {
-          messages: rows
-        } = (await resp.json()) as {
-          messages?: Array<{
-            role: string;
-            content: string;
-          }>;
+        const { messages: rows } = (await resp.json()) as {
+          messages?: Array<{ role: string; content: string }>;
         };
+
         if (rows && rows.length > 0) {
-          setMessages(rows.map((r) => ({
-            role: r.role === "user" ? "user" as const : "bot" as const,
-            content: r.content
-          })));
+          setMessages(
+            rows.map((r) => ({
+              role: r.role === "user" ? "user" as const : "bot" as const,
+              content: r.content,
+            }))
+          );
         }
       } catch {
-
         // Silently ignore — user starts with a fresh chat
-      }})();
+      }
+    })();
   }, []);
-  const handleSend = useCallback(async (text: string) => {
-    if (!text.trim() || isLoading) return;
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: text
-    };
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
-    setInputValue("");
-    setIsLoading(true);
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-      const apiUrl = `${supabaseUrl}/functions/v1/safebot-chat`;
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${anonKey}`,
-          apikey: anonKey
-        },
-        body: JSON.stringify({
-          message: text,
-          sessionToken: sessionToken,
-          history: currentMessages.map((m) => ({
-            role: m.role === "user" ? "user" : "assistant",
-            content: m.content
-          }))
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
-      }
-      const data = await response.json();
-      if (!data || typeof data.reply !== "string") {
-        throw new Error("Invalid response from server");
-      }
-      if (data.sessionToken) {
-        setSessionToken(data.sessionToken);
-        sessionStorage.setItem(SESSION_KEY, data.sessionToken);
-      }
-      setMessages((prev) => [...prev, {
-        role: "bot",
-        content: data.reply
-      }]);
-      if (data.banks && Array.isArray(data.banks) && data.banks.length > 0) {
-        setBanks(data.banks);
-      } else if (banks.length === 0) {
-        setBanks(DEFAULT_BANKS);
-      }
-      const combinedText = (text + " " + (data.reply || "")).toLowerCase();
-      const investmentKeywords = /\b(gic|investment|invest|stocks?|mutual fund|etf|rrsp|tfsa|portfolio|dividend|bond|savings? rate|compound|market-linked)\b/;
-      const loanKeywords = /\b(mortgage|loan|credit|debt|borrow|lending|consolidat|refinanc|interest rate|amortiz|line of credit|heloc)\b/;
-      if (investmentKeywords.test(combinedText)) {
-        setDetectedTopic("investment");
-      } else if (loanKeywords.test(combinedText)) {
-        setDetectedTopic("loan");
-      }
-      if (data.followUps && Array.isArray(data.followUps)) {
-        setFollowUps(data.followUps);
-      } else {
+
+  const handleSend = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isLoading) return;
+
+      const userMessage: ChatMessage = { role: "user", content: text };
+      const currentMessages = [...messages, userMessage];
+      setMessages(currentMessages);
+      setInputValue("");
+      setIsLoading(true);
+
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+        const apiUrl = `${supabaseUrl}/functions/v1/safebot-chat`;
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${anonKey}`,
+            apikey: anonKey,
+          },
+          body: JSON.stringify({
+            message: text,
+            sessionToken: sessionToken,
+            history: currentMessages.map((m) => ({
+              role: m.role === "user" ? "user" : "assistant",
+              content: m.content,
+            })),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        if (!data || typeof data.reply !== "string") {
+          throw new Error("Invalid response from server");
+        }
+
+        if (data.sessionToken) {
+          setSessionToken(data.sessionToken);
+          sessionStorage.setItem(SESSION_KEY, data.sessionToken);
+        }
+
+        setMessages((prev) => [...prev, { role: "bot", content: data.reply }]);
+
+        if (data.banks && Array.isArray(data.banks) && data.banks.length > 0) {
+          setBanks(data.banks);
+        } else if (banks.length === 0) {
+          setBanks(DEFAULT_BANKS);
+        }
+
+        const combinedText = (text + " " + (data.reply || "")).toLowerCase();
+        const investmentKeywords = /\b(gic|investment|invest|stocks?|mutual fund|etf|rrsp|tfsa|portfolio|dividend|bond|savings? rate|compound|market-linked)\b/;
+        const loanKeywords = /\b(mortgage|loan|credit|debt|borrow|lending|consolidat|refinanc|interest rate|amortiz|line of credit|heloc)\b/;
+        if (investmentKeywords.test(combinedText)) {
+          setDetectedTopic("investment");
+        } else if (loanKeywords.test(combinedText)) {
+          setDetectedTopic("loan");
+        }
+
+        if (data.followUps && Array.isArray(data.followUps)) {
+          setFollowUps(data.followUps);
+        } else {
+          setFollowUps([]);
+        }
+      } catch (err) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            content:
+              "I'm experiencing a temporary issue connecting to my knowledge base. Please try again in a moment.",
+          },
+        ]);
         setFollowUps([]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      setMessages((prev) => [...prev, {
-        role: "bot",
-        content: "I'm experiencing a temporary issue connecting to my knowledge base. Please try again in a moment."
-      }]);
-      setFollowUps([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, messages, sessionToken, banks, DEFAULT_BANKS]);
+    },
+    [isLoading, messages, sessionToken, banks, DEFAULT_BANKS]
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSend(inputValue);
     }
   };
+
   const isEmpty = messages.length === 0;
-  return <section className="container mx-auto px-4 py-12 md:py-20 lg:py-24 min-h-[80vh] flex flex-col">
-      {isEmpty ? <div className="max-w-4xl mx-auto w-full flex flex-col items-center text-center mt-4 md:mt-8 flex-grow">
+
+  return (
+    <section className="container mx-auto px-4 py-12 md:py-20 lg:py-24 min-h-[80vh] flex flex-col">
+      {isEmpty ? (
+        <div className="max-w-4xl mx-auto w-full flex flex-col items-center text-center mt-4 md:mt-8 flex-grow">
           <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-6">
             Comparable Financial Advice.
           </h1>
@@ -229,24 +209,45 @@ export function HeroSection() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-12 text-left">
-            {SUGGESTIONS.map((item, idx) => <button key={idx} onClick={() => handleSend(item.question)} className="bg-surface border border-border-subtle hover:border-border transition-colors p-5 rounded-2xl flex flex-col gap-2 text-left group shadow-sm hover:shadow-soft">
+            {SUGGESTIONS.map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(item.question)}
+                className="bg-surface border border-border-subtle hover:border-border transition-colors p-5 rounded-2xl flex flex-col gap-2 text-left group shadow-sm hover:shadow-soft"
+              >
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
                   {item.category}
                 </span>
                 <span className="text-foreground font-medium">{item.question}</span>
-              </button>)}
+              </button>
+            ))}
           </div>
 
           {/* Input Area for Empty State */}
           <div className="w-full max-w-3xl mt-auto pt-4">
             <div className="relative flex items-center">
-              <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} disabled={isLoading} placeholder="Ask anything about your financial goals..." className="w-full pl-6 pr-14 py-4 bg-surface border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60" style={{
-            borderRadius: "9999px"
-          }} />
-              <button onClick={() => handleSend(inputValue)} disabled={!inputValue.trim() || isLoading} className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors" style={{
-            borderRadius: "9999px"
-          }} aria-label="Send message">
-                {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4 ml-0.5" />}
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading}
+                placeholder="Ask anything about your financial goals..."
+                className="w-full pl-6 pr-14 py-4 bg-surface border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                style={{ borderRadius: "9999px" }}
+              />
+              <button
+                onClick={() => handleSend(inputValue)}
+                disabled={!inputValue.trim() || isLoading}
+                className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                style={{ borderRadius: "9999px" }}
+                aria-label="Send message"
+              >
+                {isLoading ? (
+                  <LoaderIcon className="w-4 h-4 animate-spin" />
+                ) : (
+                  <SendIcon className="w-4 h-4 ml-0.5" />
+                )}
               </button>
             </div>
             <p className="text-center text-xs text-muted-foreground mt-4">
@@ -254,86 +255,114 @@ export function HeroSection() {
               information.
             </p>
           </div>
-        </div> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
           {/* Left Column: Chat */}
           <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft h-[600px]">
             <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-6">
-              {messages.map((msg, idx) => <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] p-4 rounded-2xl ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"}`}>
-                    {msg.role === "bot" ? <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-gray-800 text-sm leading-relaxed" components={{
-                table: ({
-                  node,
-                  ...props
-                }) => <div className="overflow-x-auto my-4">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[85%] p-4 rounded-2xl ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-tr-sm"
+                        : "bg-muted text-foreground rounded-tl-sm"
+                    }`}
+                  >
+                    {msg.role === "bot" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="text-gray-800 text-sm leading-relaxed"
+                        components={{
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
                               <table className="w-full border-collapse border border-gray-300 text-sm" {...props} />
-                            </div>,
-                thead: ({
-                  node,
-                  ...props
-                }) => <thead className="bg-gray-100" {...props} />,
-                th: ({
-                  node,
-                  ...props
-                }) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800" {...props} />,
-                td: ({
-                  node,
-                  ...props
-                }) => <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />,
-                ul: ({
-                  node,
-                  ...props
-                }) => <ul className="list-disc pl-6 my-3 space-y-1 text-gray-800" {...props} />,
-                ol: ({
-                  node,
-                  ...props
-                }) => <ol className="list-decimal pl-6 my-3 space-y-1 text-gray-800" {...props} />,
-                li: ({
-                  node,
-                  ...props
-                }) => <li className="leading-relaxed" {...props} />,
-                p: ({
-                  node,
-                  ...props
-                }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                strong: ({
-                  node,
-                  ...props
-                }) => <strong className="font-semibold text-gray-900" {...props} />
-              }}>
+                            </div>
+                          ),
+                          thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                          th: ({ node, ...props }) => (
+                            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800" {...props} />
+                          ),
+                          td: ({ node, ...props }) => (
+                            <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />
+                          ),
+                          ul: ({ node, ...props }) => (
+                            <ul className="list-disc pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol className="list-decimal pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />
+                        }}
+                      >
                         {msg.content}
-                      </ReactMarkdown> : <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
+                    )}
                   </div>
-                </div>)}
-              {isLoading && <div className="flex justify-start">
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
                   <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-4">
                     <div className="flex items-center gap-2">
                       <LoaderIcon className="w-4 h-4 animate-spin text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">SafeBot is analyzing...</span>
                     </div>
                   </div>
-                </div>}
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Follow-up chips */}
-            {followUps.length > 0 && !isLoading && <div className="px-6 pb-3 flex flex-wrap gap-2">
-                {followUps.map((chip, idx) => <button key={idx} onClick={() => handleSend(chip)} className="text-xs px-4 py-1.5 border border-border-subtle bg-background hover:bg-muted text-foreground transition-colors" style={{
-            borderRadius: "9999px"
-          }}>
+            {followUps.length > 0 && !isLoading && (
+              <div className="px-6 pb-3 flex flex-wrap gap-2">
+                {followUps.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSend(chip)}
+                    className="text-xs px-4 py-1.5 border border-border-subtle bg-background hover:bg-muted text-foreground transition-colors"
+                    style={{ borderRadius: "9999px" }}
+                  >
                     {chip}
-                  </button>)}
-              </div>}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Input Area for Active State */}
             <div className="p-4 bg-surface border-t border-border-subtle">
               <div className="relative flex items-center">
-                <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} disabled={isLoading} placeholder="Ask a follow-up question..." className="w-full pl-6 pr-14 py-3 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm disabled:opacity-60" style={{
-              borderRadius: "9999px"
-            }} />
-                <button onClick={() => handleSend(inputValue)} disabled={!inputValue.trim() || isLoading} className="absolute right-1.5 w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors" style={{
-              borderRadius: "9999px"
-            }} aria-label="Send message">
-                  {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4 ml-0.5" />}
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  placeholder="Ask a follow-up question..."
+                  className="w-full pl-6 pr-14 py-3 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm disabled:opacity-60"
+                  style={{ borderRadius: "9999px" }}
+                />
+                <button
+                  onClick={() => handleSend(inputValue)}
+                  disabled={!inputValue.trim() || isLoading}
+                  className="absolute right-1.5 w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                  style={{ borderRadius: "9999px" }}
+                  aria-label="Send message"
+                >
+                  {isLoading ? (
+                    <LoaderIcon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <SendIcon className="w-4 h-4 ml-0.5" />
+                  )}
                 </button>
               </div>
               <p className="text-center text-xs text-muted-foreground mt-3">
@@ -349,25 +378,53 @@ export function HeroSection() {
               Top Matches
             </h3>
 
-            {isLoading ? <div className="flex flex-col gap-3">
-                {[1, 2, 3].map((n) => <div key={n} className="flex items-center gap-3 p-4 rounded-lg border bg-surface border-border-subtle animate-pulse">
+            {isLoading ? (
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="flex items-center gap-3 p-4 rounded-lg border bg-surface border-border-subtle animate-pulse"
+                  >
                     <div className="w-11 h-11 rounded-lg bg-muted shrink-0" />
                     <div className="flex-grow min-w-0 space-y-2">
                       <div className="h-4 bg-muted rounded w-3/4" />
                       <div className="h-3 bg-muted rounded w-1/2" />
                     </div>
                     <div className="w-10 h-6 bg-muted rounded shrink-0" />
-                  </div>)}
+                  </div>
+                ))}
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Analyzing market rates & matching experts...
                 </p>
-              </div> : <div className="flex flex-col gap-3">
-                {(banks.length > 0 ? banks : DEFAULT_BANKS).map((bank) => <div key={bank.rank} className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${bank.isBest ? "bg-accent/10 border-accent/40 shadow-soft" : "bg-surface border-border-subtle"}`}>
-                    <div className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${bank.isBest ? "bg-accent/20 border border-accent/50" : "bg-muted border border-border-subtle"}`}>
-                      <BuildingIcon className={`w-5 h-5 ${bank.isBest ? "text-primary" : "text-muted-foreground"}`} />
-                      {bank.isBest && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {(banks.length > 0 ? banks : DEFAULT_BANKS).map((bank) => (
+                  <div
+                    key={bank.rank}
+                    className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
+                      bank.isBest
+                        ? "bg-accent/10 border-accent/40 shadow-soft"
+                        : "bg-surface border-border-subtle"
+                    }`}
+                  >
+                    <div
+                      className={`relative w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
+                        bank.isBest
+                          ? "bg-accent/20 border border-accent/50"
+                          : "bg-muted border border-border-subtle"
+                      }`}
+                    >
+                      <BuildingIcon
+                        className={`w-5 h-5 ${
+                          bank.isBest ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      />
+                      {bank.isBest && (
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
                           <CheckIcon className="w-3 h-3" />
-                        </span>}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex-grow min-w-0">
@@ -381,11 +438,20 @@ export function HeroSection() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      {bank.rate > 0 ? <span className={`font-heading text-lg font-bold ${bank.isBest ? "text-accent" : "text-foreground"}`}>
+                      {bank.rate > 0 ? (
+                        <span
+                          className={`font-heading text-lg font-bold ${
+                            bank.isBest ? "text-accent" : "text-foreground"
+                          }`}
+                        >
                           {bank.rate}%
-                        </span> : <span className="font-heading text-lg font-bold text-muted-foreground">&mdash;</span>}
+                        </span>
+                      ) : (
+                        <span className="font-heading text-lg font-bold text-muted-foreground">&mdash;</span>
+                      )}
                     </div>
-                  </div>)}
+                  </div>
+                ))}
 
                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed text-center">
                   Prices are indicative and subject to change. For best results
@@ -393,29 +459,45 @@ export function HeroSection() {
                   personalized offer.
                 </p>
 
-                <Button variant="primary" className="w-full mt-4 bg-accent text-primary hover:bg-accent/90 border-transparent" onClick={() => setQuotesOpen(true)}>
+                <Button
+                  variant="primary"
+                  className="w-full mt-4 bg-accent text-primary hover:bg-accent/90 border-transparent"
+                  onClick={() => setQuotesOpen(true)}
+                >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   Get Quotes
                 </Button>
 
-                <button type="button" onClick={() => {
-            const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
-            window.open(url, "_blank", "noopener,noreferrer");
-          }} className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
+                >
                   <CalendarIcon className="w-4 h-4" />
                   Book a Consultant
                 </button>
-              </div>}
+              </div>
+            )}
           </div>
-        </div>}
+        </div>
+      )}
 
-      <GetQuotesModal open={quotesOpen} onClose={() => setQuotesOpen(false)} banks={(banks.length > 0 ? banks : DEFAULT_BANKS).map((b): BankMatchRef => ({
-      name: b.name,
-      productType: detectedTopic === "investment" ? "gic" : b.productType,
-      rate: b.rate,
-      rank: b.rank,
-      consultantId: b.consultantId,
-      consultantName: b.consultantName
-    }))} sessionToken={sessionToken} />
-    </section>;
+      <GetQuotesModal
+        open={quotesOpen}
+        onClose={() => setQuotesOpen(false)}
+        banks={(banks.length > 0 ? banks : DEFAULT_BANKS).map((b): BankMatchRef => ({
+          name: b.name,
+          productType: detectedTopic === "investment" ? "gic" : b.productType,
+          rate: b.rate,
+          rank: b.rank,
+          consultantId: b.consultantId,
+          consultantName: b.consultantName,
+        }))}
+        sessionToken={sessionToken}
+      />
+    </section>
+  );
 }
