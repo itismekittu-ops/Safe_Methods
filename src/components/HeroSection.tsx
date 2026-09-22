@@ -274,6 +274,7 @@ export function HeroSection() {
                     }`}
                   >
                     {msg.role === "bot" ? (
+                      <>
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         className="text-gray-800 text-sm leading-relaxed"
@@ -303,6 +304,19 @@ export function HeroSection() {
                       >
                         {msg.content}
                       </ReactMarkdown>
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-sm font-semibold text-[#0f4c5c] mt-3">You best options are on the right side bar</p>
+                        <p className="text-xs font-medium text-amber-700 mt-0.5">You can get &quot;Free&quot; no-obligation quotes in you Inbox</p>
+                        <button
+                          type="button"
+                          onClick={() => setQuotesOpen(true)}
+                          className="mt-2.5 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-accent text-primary shadow-soft hover:scale-105 transition-all animate-pulse"
+                        >
+                          <FileTextIcon className="w-3.5 h-3.5" />
+                          Get Quotes
+                        </button>
+                      </div>
+                      </>
                     ) : (
                       <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
                     )}
