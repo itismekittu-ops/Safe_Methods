@@ -118,15 +118,16 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Inline Call-to-Action & Secondary Quote Trigger
+#### (F1-US14) Inline Callout & Quote Trigger in Chat Stream
 * **As a** visitor receiving an answer from SafeBot,
 * **WHEN** SafeBot renders its assistant message response,
-* **I want to** see an inline CTA callout block directly underneath the assistant's message bubble containing:
+* **I want to** see an inline CTA callout displayed outside and directly beneath the assistant's message bubble in the open chat canvas,
+* **AND** this callout block shall be centered horizontally containing:
   1. Primary line: `"You best options are on the right side bar"`
   2. Subtitle line: `"You can get "Free" no-obligation quotes in you Inbox"`
   3. An animated `"Get Quotes"` button directly beneath both lines,
-* **AND** the typography color of both lines shall be visually distinct from the assistant's regular chat response text (using contrasting emerald/amber tones),
-* **AND** clicking the inline `"Get Quotes"` button shall execute the exact same multi-bank quote modal (`GetQuotesModal.tsx`) workflow with the ranked bank matches from the active conversation,
+* **AND** the typography color of both lines shall be visually distinct from the assistant's regular chat markdown text (using contrasting emerald and amber tones),
+* **AND** clicking the inline `"Get Quotes"` button shall execute the exact same multi-bank quote modal (`GetQuotesModal.tsx`) workflow (`setQuotesOpen(true)`),
 * **AND** the 3 demo suggestion follow-up chips shall remain below this callout block, functioning without modification,
 * **So that** I have a direct, contextual path to request competitive bank quotes from within the chat stream.
 * **Dependencies:** F1-US1, F1-US6, F3-US1
