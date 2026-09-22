@@ -307,20 +307,6 @@ export function HeroSection() {
                       <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
                     )}
                   </div>
-                  {msg.role === "bot" && idx === messages.length - 1 && !isLoading && (
-                    <div className="w-full flex flex-col items-center justify-center text-center my-4 px-4">
-                      <p className="text-sm font-semibold text-[#0f4c5c] tracking-tight">You best options are on the right side bar</p>
-                      <p className="text-xs font-medium text-amber-700 mt-0.5">You can get &quot;Free&quot; no-obligation quotes in you Inbox</p>
-                      <button
-                        type="button"
-                        onClick={() => setQuotesOpen(true)}
-                        className="mt-2.5 inline-flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold rounded-lg bg-accent text-primary shadow-soft hover:bg-accent/90 hover:scale-105 active:scale-95 transition-all duration-200 animate-pulse cursor-pointer"
-                      >
-                        <FileTextIcon className="w-3.5 h-3.5" />
-                        Get Quotes
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
               {isLoading && (
@@ -335,6 +321,21 @@ export function HeroSection() {
               )}
               <div ref={messagesEndRef} />
             </div>
+
+            {!isEmpty && !isLoading && messages[messages.length - 1]?.role === "bot" && (
+              <div className="w-full flex flex-col items-center justify-center text-center my-4 px-4">
+                <p className="text-sm font-semibold text-[#0f4c5c] tracking-tight">You best options are on the right side bar</p>
+                <p className="text-xs font-medium text-amber-700 mt-0.5">You can get &quot;Free&quot; no-obligation quotes in you Inbox</p>
+                <button
+                  type="button"
+                  onClick={() => setQuotesOpen(true)}
+                  className="mt-2.5 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-lg bg-[#0f4c5c] text-white shadow-sm hover:bg-[#0c3c49] hover:scale-105 active:scale-95 transition-all duration-200 animate-pulse cursor-pointer"
+                >
+                  <FileTextIcon className="w-3.5 h-3.5" />
+                  Get Quotes
+                </button>
+              </div>
+            )}
 
             {/* Follow-up chips */}
             {followUps.length > 0 && !isLoading && (
