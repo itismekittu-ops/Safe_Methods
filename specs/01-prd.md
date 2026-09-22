@@ -122,11 +122,11 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **As a** visitor receiving an answer from SafeBot,
 * **WHEN** SafeBot renders its assistant message response,
 * **I want to** see an inline CTA callout displayed outside and directly beneath the assistant's message bubble in the open chat canvas,
-* **AND** this callout block shall be centered horizontally containing:
+* **AND** this callout block shall span the full width of the chat pane and be centered horizontally directly below the response:
   1. Primary line: `"You best options are on the right side bar"`
   2. Subtitle line: `"You can get "Free" no-obligation quotes in you Inbox"`
   3. An animated `"Get Quotes"` button directly beneath both lines,
-* **AND** the typography color of both lines shall be visually distinct from the assistant's regular chat markdown text (using contrasting emerald and amber tones),
+* **AND** the button shall use the platform's primary emerald accent styling (`bg-primary text-primary-foreground` or `#0f4c5c`) with an active pulse animation,
 * **AND** clicking the inline `"Get Quotes"` button shall execute the exact same multi-bank quote modal (`GetQuotesModal.tsx`) workflow (`setQuotesOpen(true)`),
 * **AND** the 3 demo suggestion follow-up chips shall remain below this callout block, functioning without modification,
 * **So that** I have a direct, contextual path to request competitive bank quotes from within the chat stream.
