@@ -526,6 +526,32 @@ Provides users with direct control to view, export, or permanently delete person
 
 ---
 
+## FEATURE 6: (F6) Homepage FAQ & Answer Engine Optimization
+
+### Description & Purpose
+Replaces `SafeBotDemo.tsx` and `CtaSection.tsx` on the homepage with an accessible, SEO/AEO-optimized FAQ accordion section. This provides crawlable plain-text answers to high-intent visitor questions while optimizing for AI Answer Engines (AEO).
+
+---
+
+### User Stories under Feature 6
+
+#### (F6-US1) Accessible Interactive FAQ Accordion
+* **As a** prospective customer visiting `safemethods.com`,
+* **WHEN I** scroll below the SafeBot chat hero section,
+* **I want to** view an accordion FAQ section answering key questions regarding platform costs, advisor impartiality, multi-bank quote turnaround times, and data privacy,
+* **AND** clicking a question shall toggle its answer smoothly while preserving keyboard accessibility (`aria-expanded`),
+* **So that** I get clear, transparent facts before requesting quotes or engaging with advisors.
+* **Dependencies:** 00-constitution.md, 05-aeo-seo-standards.md (AEO-02)
+
+#### (F6-US2) Structured FAQPage Schema Synchronization
+* **As** Safe Methods,
+* **WHEN** crawlers or AI engines index the homepage,
+* **I want** the visible FAQ questions and answers mirrored in valid `FAQPage` JSON-LD structured data,
+* **So that** our factual answers are cited accurately in search engine snippets and AI answer overviews.
+* **Dependencies:** SEO-TECH-07
+
+---
+
 ## Third-Party Integrations
 
 ### HubSpot CRM Touchpoints
