@@ -3,8 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { SEO } from '../components/SEO';
 import { HeroSection } from '../components/HeroSection';
 import { ServicesSection } from '../components/ServicesSection';
-import { SafeBotDemo } from '../components/SafeBotDemo';
-import { CtaSection } from '../components/CtaSection';
+import { FaqSection } from '../components/FaqSection';
 import { BlogSection } from '../components/BlogSection';
 import { ContactSection } from '../components/ContactSection';
 import { ExitIntentPopup } from '../components/ExitIntentPopup';
@@ -49,8 +48,7 @@ export function Home() {
       </Helmet>
       <HeroSection />
       <ServicesSection />
-      <SafeBotDemo />
-      <CtaSection />
+      <FaqSection />
       <BlogSection />
       <ContactSection />
       <ExitIntentPopup />
