@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 const FAQS = [
   {
@@ -40,7 +40,7 @@ export function FaqSection() {
   return (
     <section id="faq" className="container mx-auto px-4 py-16 md:py-24">
       <div className="mb-10">
-        <h2 className="font-heading text-3xl md:text-4xl text-primary text-center mb-3">
+        <h2 className="font-heading text-3xl md:text-4xl text-primary text-center tracking-normal mb-3">
           Frequently Asked Questions
         </h2>
         <div className="w-16 h-0.5 bg-accent mx-auto mb-4" />
@@ -49,31 +49,29 @@ export function FaqSection() {
         </p>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto space-y-4 mt-10">
+      <div className="w-full max-w-3xl mx-auto space-y-3.5 mt-10">
         {FAQS.map((item, idx) => {
           const isOpen = openIndex === idx;
           return (
             <div
               key={idx}
-              className={`bg-surface border border-border-subtle rounded-xl p-5 md:p-6 transition-all duration-200 hover:border-accent/50 shadow-soft ${
-                isOpen ? 'border-accent/50' : ''
+              className={`bg-surface border transition-all duration-200 rounded-xl p-5 md:p-6 shadow-sm ${
+                isOpen
+                  ? 'border-border-subtle border-l-4 border-l-primary'
+                  : 'border-border-subtle hover:border-primary/40'
               }`}
             >
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : idx)}
                 aria-expanded={isOpen}
-                className="w-full flex items-center justify-between gap-4 text-left font-heading font-medium text-base md:text-lg text-foreground hover:text-primary transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between text-left font-heading font-medium text-base md:text-lg text-foreground hover:text-primary transition-colors cursor-pointer"
               >
                 <span>{item.q}</span>
-                <ChevronDownIcon
-                  className={`w-5 h-5 text-accent shrink-0 transition-transform duration-300 ${
-                    isOpen ? 'rotate-180' : ''
-                  }`}
-                />
+                <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180 text-accent font-bold' : 'text-muted-foreground'}`} />
               </button>
               {isOpen && (
-                <div className="mt-4 pt-4 border-t border-border-subtle/60 text-sm md:text-base text-muted-foreground leading-relaxed pl-1">
+                <div className="mt-3.5 pt-3.5 border-t border-border-subtle/60 text-sm md:text-base text-muted-foreground leading-relaxed pl-0.5">
                   {item.a}
                 </div>
               )}
