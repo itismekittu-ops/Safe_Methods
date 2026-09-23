@@ -492,7 +492,7 @@ export function HeroSection() {
 
                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed text-center">
                   Rates are indicative and subject to change. For best results
-                  it is recommended to connect directly with our panel of advisers for
+                  it is recommended to connect directly with our panel of advisors for
                   personalized offer.
                 </p>
 
