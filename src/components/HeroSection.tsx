@@ -59,16 +59,6 @@ export function HeroSection() {
     { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
     { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
   ];
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   // Restore session token and chat history from sessionStorage on mount (F1-US9)
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
@@ -206,7 +196,7 @@ export function HeroSection() {
   const isEmpty = messages.length === 0;
 
   return (
-    <section className="container mx-auto px-4 py-12 md:py-20 lg:py-24 min-h-[80vh] flex flex-col">
+    <section className="container mx-auto px-4 pt-3 pb-8 flex flex-col">
       {isEmpty ? (
         <div className="max-w-4xl mx-auto w-full flex flex-col items-center text-center mt-4 md:mt-8 flex-grow">
           <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-6">
@@ -268,7 +258,7 @@ export function HeroSection() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
           {/* Left Column: Chat */}
-          <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft h-[600px]">
+          <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft min-h-[540px] md:min-h-[600px]">
             <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-6">
               {messages.map((msg, idx) => (
                 <div
@@ -328,7 +318,6 @@ export function HeroSection() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             {!isEmpty && !isLoading && messages[messages.length - 1]?.role === "bot" && (

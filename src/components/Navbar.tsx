@@ -15,16 +15,36 @@ export function Navbar() {
     navigate("/");
   };
 
+  const handleHomeClick = () => {
+    if (window.location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border-subtle bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link to="/" className="font-heading text-2xl font-semibold text-primary">
+          <button
+            type="button"
+            onClick={handleHomeClick}
+            className="font-heading text-2xl font-semibold text-primary hover:text-primary/90 transition-colors cursor-pointer"
+          >
             Safe Methods
-          </Link>
+          </button>
         </div>
 
         <nav className="hidden md:flex items-center gap-8">
+          <button
+            type="button"
+            onClick={handleHomeClick}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+          >
+            Home
+          </button>
           <button
             onClick={() => scrollToSection("services")}
             className="text-sm font-medium text-foreground hover:text-primary transition-colors"
