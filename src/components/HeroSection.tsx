@@ -59,6 +59,11 @@ export function HeroSection() {
     { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
     { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
   ];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [messages]);
   // Restore session token and chat history from sessionStorage on mount (F1-US9)
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
@@ -258,8 +263,8 @@ export function HeroSection() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
           {/* Left Column: Chat */}
-          <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft min-h-[540px] md:min-h-[600px]">
-            <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-6">
+          <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft h-[600px] md:h-[680px]">
+            <div className="h-[520px] md:h-[580px] overflow-y-auto pr-2 scroll-smooth p-6 flex flex-col gap-6">
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
@@ -318,6 +323,7 @@ export function HeroSection() {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {!isEmpty && !isLoading && messages[messages.length - 1]?.role === "bot" && (
