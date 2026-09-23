@@ -385,9 +385,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                     className="mt-1 w-4 h-4 rounded border-border-subtle text-accent focus:ring-accent/30"
                   />
                   <span className="text-sm text-muted-foreground leading-relaxed">
-                    I authorize Safe Methods to share my requirements with the
-                    listed financial institutions, to receive "Free" no-obligation quotes. I
-                    understand my data will not be used for any other purpose.
+                    I authorize Safe Methods to share my requirements with financial institutions, to receive     "Free" no-obligation quotes. I understand my data will not be used for any other purpose.
                   </span>
                 </label>
                 {errors.consent && <p className="text-xs text-destructive mt-1">{errors.consent}</p>}
