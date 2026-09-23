@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon, CalendarIcon } from "lucide-react";
+import { SendIcon, BuildingIcon, CheckIcon, LoaderIcon, FileTextIcon, CalendarIcon, ArrowRightIcon, ArrowDownIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { GetQuotesModal } from "./GetQuotesModal";
@@ -45,6 +46,13 @@ export function HeroSection() {
   const [quotesOpen, setQuotesOpen] = useState(false);
   const [detectedTopic, setDetectedTopic] = useState<"loan" | "investment">("loan");
   const [highlightMatches, setHighlightMatches] = useState(false);
+  const matchesRef = useRef<HTMLDivElement>(null);
+
+  const triggerMatchFocus = () => {
+    matchesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setHighlightMatches(true);
+    window.setTimeout(() => setHighlightMatches(false), 1800);
+  };
 
   const DEFAULT_BANKS: BankMatch[] = [
     { name: "RBC", productType: "general", term: null, rate: 0, rank: 1, isBest: true, consultantId: null, consultantName: "Victor Gaur", consultantTitle: "Principal Financial Advisor", consultantAvatarUrl: null },
@@ -324,32 +332,31 @@ export function HeroSection() {
             </div>
 
             {!isEmpty && !isLoading && messages[messages.length - 1]?.role === "bot" && (
-              <div className="w-full max-w-lg mx-auto my-5 p-6 bg-[#fbf9f5] border border-[#e8dfd3] rounded-2xl flex flex-col items-center text-center shadow-sm">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="mx-auto my-5 flex w-full max-w-md flex-col items-center gap-3 rounded-lg border border-accent/60 bg-background px-6 py-4 text-center shadow-soft"
+              >
                 <button
                   type="button"
-                  onMouseEnter={() => setHighlightMatches(true)}
-                  onMouseLeave={() => setHighlightMatches(false)}
-                  onClick={() => {
-                    setHighlightMatches(true);
-                    setTimeout(() => setHighlightMatches(false), 2000);
-                  }}
-                  className="group inline-flex items-center gap-1.5 font-heading text-lg font-semibold text-[#0f4c5c] hover:text-[#0b3844] transition-colors cursor-pointer"
+                  onClick={triggerMatchFocus}
+                  className="group inline-flex items-center gap-2 font-heading text-lg font-semibold text-primary focus:outline-none focus-visible:underline cursor-pointer"
                 >
                   <span>Your best options are on the right</span>
-                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-1.5 font-bold">→</span>
+                  <ArrowRightIcon className="hidden h-4 w-4 text-accent transition-transform group-hover:translate-x-1.5 lg:block" aria-hidden="true" />
+                  <ArrowDownIcon className="h-4 w-4 text-accent transition-transform group-hover:translate-y-1.5 lg:hidden" aria-hidden="true" />
                 </button>
-                <p className="text-xs md:text-sm text-[#4a5568] mt-1.5 mb-3.5">
-                  Get <strong className="font-semibold text-[#1a202c]">free</strong>, no-obligation quotes in your inbox
+                <p className="-mt-1 text-sm font-medium text-foreground">
+                  Get <span className="font-semibold text-emerald-700">free</span>, no-obligation quotes in your inbox
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setQuotesOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0f4c5c] text-white text-xs md:text-sm font-medium rounded-lg shadow-sm hover:bg-[#0c3c49] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <FileTextIcon className="w-4 h-4" />
-                  Get Quotes
-                </button>
-              </div>
+                <Button onClick={() => setQuotesOpen(true)} className="px-6 py-2">
+                  <span className="inline-flex items-center gap-2">
+                    <FileTextIcon className="h-4 w-4" aria-hidden="true" />
+                    Get Quotes
+                  </span>
+                </Button>
+              </motion.div>
             )}
 
             {/* Follow-up chips */}
@@ -403,7 +410,12 @@ export function HeroSection() {
           </div>
 
           {/* Right Column: Top Matches */}
-          <div className={`lg:col-span-1 flex flex-col rounded-xl p-4 ${highlightMatches ? 'ring-2 ring-[#0f4c5c] border-[#0f4c5c] shadow-lg' : ''} transition-all duration-300`}>
+          <motion.div
+            ref={matchesRef}
+            animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className={`lg:col-span-1 flex flex-col rounded-xl p-4 ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background shadow-lg' : ''} transition-all duration-300`}
+          >
             <h3 className="font-heading text-2xl text-foreground mb-6">
               Top Matches
             </h3>
@@ -498,8 +510,8 @@ export function HeroSection() {
                   Get Quotes
                 </Button>
 
-                <p className="text-xs font-medium text-[#0f4c5c] text-center my-2.5 tracking-tight">
-                  Get <span className="font-bold underline decoration-accent underline-offset-2">free</span>, no-obligation quotes in your inbox
+                <p className="text-xs font-medium text-foreground text-center my-2.5">
+                  Get <span className="font-bold text-primary underline decoration-accent underline-offset-2">free</span>, no-obligation quotes in your inbox
                 </p>
 
                 <button
@@ -515,7 +527,7 @@ export function HeroSection() {
                 </button>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
 
