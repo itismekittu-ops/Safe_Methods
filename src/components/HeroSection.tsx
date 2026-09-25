@@ -6,15 +6,8 @@ import remarkGfm from "remark-gfm";
 import { GetQuotesModal } from "./GetQuotesModal";
 import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
-
-const SUGGESTIONS = [
-  { category: "Lending/Credit", question: "How do I get the best mortgage rate?" },
-  { category: "Mutual Funds/Stocks", question: "How do I start investing in mutual funds?" },
-  { category: "Debt Management", question: "How do I consolidate my debt effectively?" },
-  { category: "Personal Budgeting", question: "How do I create a monthly budget?" },
-  { category: "Finance", question: "What are the current GIC rates?" },
-  { category: "Investment Planning", question: "Should I pay off debt or invest first?" },
-];
+import { PRE_CANNED_QUESTIONS, findPreCannedMatch, formatPreCannedResponse } from "../data/preCannedQuestions";
+import type { PreCannedQA } from "../data/preCannedQuestions";
 
 const SESSION_KEY = "safebot_session_token";
 
@@ -111,6 +104,27 @@ export function HeroSection() {
       if (!text.trim() || isLoading) return;
 
       const userMessage: ChatMessage = { role: "user", content: text };
+
+      const match = findPreCannedMatch(text);
+      if (match) {
+        const botReply = formatPreCannedResponse(match);
+        setMessages((prev) => [...prev, userMessage, { role: "bot", content: botReply }]);
+        setInputValue("");
+        setFollowUps(match.followUpChips);
+
+        const matchId = match.id;
+        if (matchId === "personal_investments" || matchId === "mutual_funds") {
+          setDetectedTopic("investment");
+        } else {
+          setDetectedTopic("loan");
+        }
+
+        if (banks.length === 0) {
+          setBanks(DEFAULT_BANKS);
+        }
+        return;
+      }
+
       const currentMessages = [...messages, userMessage];
       setMessages(currentMessages);
       setInputValue("");
@@ -213,9 +227,9 @@ export function HeroSection() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-12 text-left">
-            {SUGGESTIONS.map((item, idx) => (
+            {PRE_CANNED_QUESTIONS.map((item: PreCannedQA) => (
               <button
-                key={idx}
+                key={item.id}
                 onClick={() => handleSend(item.question)}
                 className="bg-surface border border-border-subtle hover:border-border transition-colors p-5 rounded-2xl flex flex-col gap-2 text-left group shadow-sm hover:shadow-soft"
               >
