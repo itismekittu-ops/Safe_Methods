@@ -193,11 +193,6 @@ export function findPreCannedMatch(text: string): PreCannedQA | undefined {
 export function formatPreCannedResponse(qa: PreCannedQA): string {
   const lines: string[] = [];
 
-  lines.push('### ' + qa.category);
-  lines.push('');
-  lines.push('**' + qa.question + '**');
-  lines.push('');
-
   lines.push('**Overview**');
   for (const line of qa.response.introduction) {
     lines.push('- ' + line);
