@@ -16,6 +16,7 @@ The system architecture shall strictly adhere to the following principles:
 * **Dev/Prod Parity (Twelve-Factor X):** Development, staging, and production differ only in configuration values — never in logic branches. No environment-conditional code paths that skip guardrails, use mock data instead of real validation, or alter security behavior.
 * **Built-in AI Observability:** Observability, tracing, and logging built into every AI request turn.
 * **Context-Injected Grounding:** Numeric/factual data (rates, terms) is injected directly into the model's context per request from the rates table — not retrieved via vector search or RAG. General conceptual responses draw on the model's own knowledge.
+* **Two-Tier Response Pipeline (Hybrid Cache & Generation):** Pre-approved demo queries are intercepted on the client tier via a pre-canned dataset (`src/data/preCannedQuestions.ts`), returning verified responses with sub-50ms latency. Novel or un-cached queries fall back to the stateless Supabase Edge Function (`safebot-chat`) for dynamic LLM generation and Langfuse tracing.
 * **Architectural Documentation:** Every major decision must be explicitly documented.
 
 ---
@@ -66,6 +67,7 @@ The system architecture shall strictly adhere to the following principles:
 | **Page Load Time** | `< 2 seconds` | Initial frontend loading threshold. |
 | **Edge Function Memory Leaks** | `Zero tolerance` | Strict memory management in serverless functions. |
 | **$N+1$ Retrieval Queries** | `Forbidden` | Batch or optimize vector and database lookups. |
+| **Cached Demo Response** | `< 50 ms` | Client-side intercepted response. |
 
 ---
 
