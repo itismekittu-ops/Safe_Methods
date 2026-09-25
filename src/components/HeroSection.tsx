@@ -227,7 +227,7 @@ export function HeroSection() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-12 text-left">
-            {PRE_CANNED_QUESTIONS.map((item: PreCannedQA) => (
+            {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
               <button
                 key={item.id}
                 onClick={() => handleSend(item.question)}
