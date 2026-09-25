@@ -118,14 +118,19 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Client-Side Cached Q&A Interceptor for Demo Questions
-* **As a** visitor,
-* **WHEN I** click any of the 6 homepage demo topic cards or submit a matching question,
-* **I want** to receive an instant, zero-latency response served directly from the local pre-canned data store (`src/data/preCannedQuestions.ts`) without triggering dynamic LLM inference,
-* **AND** the response shall display structured sections (Introduction bullets, optional Pros/Cons, informational guidance intake prompts, and grounded product rates or advisor guidance notes), followed by category-relevant suggestion chips and the inline quote CTA card,
-* **AND IF** my query is novel or un-cached, route the request seamlessly through the dynamic Supabase Edge Function (`safebot-chat`) pipeline,
-* **So that** common questions load instantaneously with zero fabrication risk, while novel inquiries still receive dynamic AI answers.
-* **Dependencies:** F1-US1, 02-architecture.md
+#### (F1-US14) Inline Callout & Quote Trigger in Chat Stream
+* **As a** visitor receiving an answer from SafeBot,
+* **WHEN** SafeBot renders its assistant message response,
+* **I want to** see an inline CTA callout displayed outside and directly beneath the assistant's message bubble in the open chat canvas,
+* **AND** this callout block shall span the full width of the chat pane and be centered horizontally directly below the response:
+  1. Primary line: `"You best options are on the right side bar"`
+  2. Subtitle line: `"You can get "Free" no-obligation quotes in you Inbox"`
+  3. An animated `"Get Quotes"` button directly beneath both lines,
+* **AND** the button shall use the platform's primary emerald accent styling (`bg-primary text-primary-foreground` or `#0f4c5c`) with an active pulse animation,
+* **AND** clicking the inline `"Get Quotes"` button shall execute the exact same multi-bank quote modal (`GetQuotesModal.tsx`) workflow (`setQuotesOpen(true)`),
+* **AND** the 3 demo suggestion follow-up chips shall remain below this callout block, functioning without modification,
+* **So that** I have a direct, contextual path to request competitive bank quotes from within the chat stream.
+* **Dependencies:** F1-US1, F1-US6, F3-US1
 
 ---
 
