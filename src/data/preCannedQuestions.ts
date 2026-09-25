@@ -103,7 +103,10 @@ export const PRE_CANNED_QUESTIONS: PreCannedQA[] = [
         'If you need money for contingency / emergency to fall upon, then you will be better off with a Line of Credit. You only pay interest if you withdraw, and if you haven\'t withdrawn from your LOC, you don\'t pay any interest.'
       ],
       intakePrompts: [
-        'What is your specific need & duration?'
+        'What is your specific need & duration?',
+        'Unsecured personal loan for vacation (rates vary based on credit & income)',
+        'Secured Car loan / Equipment loan (collateral helps secure lower rates)',
+        'Line of credit for contingency / emergency (pay interest only on what you withdraw)'
       ],
       rates: [
         { label: 'Variable Rate Loan / Mortgage (4 years)', details: 'BMO at 3.01%' },
