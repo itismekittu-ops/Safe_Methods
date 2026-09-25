@@ -30,9 +30,9 @@ export const PRE_CANNED_QUESTIONS: PreCannedQA[] = [
         'Unsecured credit like credit cards costs far more if a balance is carried month to month.'
       ],
       intakePrompts: [
-        'What are your borrowing needs? Is it for a specific purpose for a fixed duration? → Leads to loan (variable / fixed)',
-        'Do you want to have access to money just in case for an emergency or a future need? (no end date) → Leads to unsecured personal line of credit / secured line of credit like HELOC',
-        'Can you provide some guarantee / collateral / asset as a security? → Car loan / HELOC / Mortgage'
+        'What are your borrowing needs? Is it for a specific purpose for a fixed duration?',
+        'Do you want to have access to money just in case for an emergency or a future need?',
+        'Can you provide some guarantee / collateral / asset as a security?'
       ],
       rates: [
         { label: 'Fixed mortgage (2 years)', details: 'BMO at 3.12%' },
