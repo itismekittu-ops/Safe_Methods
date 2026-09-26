@@ -21,7 +21,7 @@ interface GetQuotesModalProps {
   sessionToken: string | null;
 }
 
-type RequestMode = "loan" | "investment";
+type RequestMode = "loan" | "investment" | "mortgage";
 
 type Topic = "mortgage" | "personal_loan" | "gic" | "investment" | "general";
 
@@ -76,6 +76,9 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   const [monthlyIncome, setMonthlyIncome] = useState("");
   const [investmentAmount, setInvestmentAmount] = useState("");
   const [tenure, setTenure] = useState("5-year");
+  const [propertyValue, setPropertyValue] = useState("");
+  const [downPayment, setDownPayment] = useState("");
+  const [combinedDebtPayment, setCombinedDebtPayment] = useState("");
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -94,8 +97,10 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   useEffect(() => {
     if (!open) return;
     const productType = banks[0]?.productType ?? "";
-    if (productType === "gic" || productType === "investment") {
+    if (productType === "gic" || productType === "investment" || productType === "market_linked") {
       setMode("investment");
+    } else if (productType === "mortgage") {
+      setMode("mortgage");
     } else {
       setMode("loan");
     }
@@ -116,9 +121,16 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       else if (isNaN(Number(loanAmount)) || Number(loanAmount) <= 0) e.loanAmount = "Enter a valid amount.";
       if (!monthlyIncome.trim()) e.monthlyIncome = "Monthly income is required.";
       else if (isNaN(Number(monthlyIncome)) || Number(monthlyIncome) <= 0) e.monthlyIncome = "Enter a valid amount.";
-    } else {
+    } else if (mode === "investment") {
       if (!investmentAmount.trim()) e.investmentAmount = "Investment amount is required.";
       else if (isNaN(Number(investmentAmount)) || Number(investmentAmount) <= 0) e.investmentAmount = "Enter a valid amount.";
+    } else {
+      if (!propertyValue.trim()) e.propertyValue = "Property value is required.";
+      else if (isNaN(Number(propertyValue)) || Number(propertyValue) <= 0) e.propertyValue = "Enter a valid amount.";
+      if (!downPayment.trim()) e.downPayment = "Down payment is required.";
+      else if (isNaN(Number(downPayment)) || Number(downPayment) <= 0) e.downPayment = "Enter a valid amount.";
+      if (!combinedDebtPayment.trim()) e.combinedDebtPayment = "Combined monthly debt is required.";
+      else if (isNaN(Number(combinedDebtPayment)) || Number(combinedDebtPayment) <= 0) e.combinedDebtPayment = "Enter a valid amount.";
     }
     if (!consent) e.consent = "You must provide consent to submit.";
     setErrors(e);
@@ -155,9 +167,15 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
           loanAmount: mode === "loan" ? Number(loanAmount) : undefined,
           monthly_income: mode === "loan" ? Number(monthlyIncome) : undefined,
           monthlyIncome: mode === "loan" ? Number(monthlyIncome) : undefined,
-          investment_amount: mode === "loan" ? undefined : Number(investmentAmount),
-          investmentAmount: mode === "loan" ? undefined : Number(investmentAmount),
-          tenure: mode === "loan" ? undefined : tenure,
+          investment_amount: mode === "investment" ? Number(investmentAmount) : undefined,
+          investmentAmount: mode === "investment" ? Number(investmentAmount) : undefined,
+          tenure: mode === "investment" ? tenure : undefined,
+          property_value: mode === "mortgage" ? Number(propertyValue) : undefined,
+          propertyValue: mode === "mortgage" ? Number(propertyValue) : undefined,
+          down_payment: mode === "mortgage" ? Number(downPayment) : undefined,
+          downPayment: mode === "mortgage" ? Number(downPayment) : undefined,
+          combined_monthly_debt: mode === "mortgage" ? Number(combinedDebtPayment) : undefined,
+          combinedMonthlyDebt: mode === "mortgage" ? Number(combinedDebtPayment) : undefined,
           selected_institutions: selectedBanks,
           selectedInstitutions: selectedBanks,
           consent: true,
@@ -285,7 +303,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                 </div>
               </div>
 
-              {/* Loan / Investment toggle */}
+              {/* Loan / Investment / Mortgage toggle */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
                 <button
                   type="button"
@@ -304,6 +322,15 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                   }`}
                 >
                   Investment
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("mortgage")}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                    mode === "mortgage" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  Mortgage
                 </button>
               </div>
 
@@ -355,7 +382,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                   />
                   {errors.monthlyIncome && <p className="text-xs text-destructive -mt-2">{errors.monthlyIncome}</p>}
                 </>
-              ) : (
+              ) : mode === "investment" ? (
                 <>
                   <TextInput
                     label="Investment Amount"
@@ -372,6 +399,35 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                     <option value="5-year">5 Years</option>
                     <option value="10-year">10 Years</option>
                   </Select>
+                </>
+              ) : (
+                <>
+                  <TextInput
+                    label="Property Value"
+                    type="number"
+                    placeholder="750000"
+                    value={propertyValue}
+                    onChange={(e) => setPropertyValue(e.target.value)}
+                  />
+                  {errors.propertyValue && <p className="text-xs text-destructive -mt-2">{errors.propertyValue}</p>}
+
+                  <TextInput
+                    label="Down Payment"
+                    type="number"
+                    placeholder="150000"
+                    value={downPayment}
+                    onChange={(e) => setDownPayment(e.target.value)}
+                  />
+                  {errors.downPayment && <p className="text-xs text-destructive -mt-2">{errors.downPayment}</p>}
+
+                  <TextInput
+                    label="Combined (Joint) Monthly Salary + Monthly debt payments"
+                    type="number"
+                    placeholder="8500"
+                    value={combinedDebtPayment}
+                    onChange={(e) => setCombinedDebtPayment(e.target.value)}
+                  />
+                  {errors.combinedDebtPayment && <p className="text-xs text-destructive -mt-2">{errors.combinedDebtPayment}</p>}
                 </>
               )}
 

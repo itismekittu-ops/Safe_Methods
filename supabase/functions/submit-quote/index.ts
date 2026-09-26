@@ -46,6 +46,12 @@ interface RequestBody {
   investmentAmount?: unknown;
   investment_amount?: unknown;
   tenure?: unknown;
+  propertyValue?: unknown;
+  property_value?: unknown;
+  downPayment?: unknown;
+  down_payment?: unknown;
+  combinedMonthlyDebt?: unknown;
+  combined_monthly_debt?: unknown;
   selectedInstitutions?: unknown;
   selected_institutions?: unknown;
   consent?: unknown;
@@ -137,22 +143,36 @@ function buildCustomerWelcomeHtml(
   monthlyIncome: number | null,
   investmentAmount: number | null,
   tenure: string | null,
+  propertyValue: number | null,
+  downPayment: number | null,
+  combinedMonthlyDebt: number | null,
 ): string {
   const safeName = escapeHtml(customerName);
   const isLoan = requestType === "loan";
+  const isMortgage = requestType === "mortgage";
+  const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
   const instList = institutions.length > 0
     ? escapeHtml(institutions.join(", "))
     : "all recommended institutions";
 
-  const specifics = isLoan
-    ? [
-        loanAmount != null ? `Loan Amount: $${loanAmount.toLocaleString()}` : null,
-        monthlyIncome != null ? `Monthly Income: $${monthlyIncome.toLocaleString()}` : null,
-      ].filter(Boolean).join("<br/>")
-    : [
-        investmentAmount != null ? `Investment Amount: $${investmentAmount.toLocaleString()}` : null,
-        tenure ? `Term: ${tenure}` : null,
-      ].filter(Boolean).join("<br/>");
+  let specifics: string;
+  if (isMortgage) {
+    specifics = [
+      propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : null,
+      downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : null,
+      combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : null,
+    ].filter(Boolean).join("<br/>");
+  } else if (isLoan) {
+    specifics = [
+      loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : null,
+      monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : null,
+    ].filter(Boolean).join("<br/>");
+  } else {
+    specifics = [
+      investmentAmount != null ? `Investment Amount: ${investmentAmount.toLocaleString()}` : null,
+      tenure ? `Term: ${tenure}` : null,
+    ].filter(Boolean).join("<br/>");
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -168,7 +188,7 @@ function buildCustomerWelcomeHtml(
 
   <h3 style="color: #0f4c5c; margin-top: 24px;">Your Request Summary</h3>
   <p>
-    <strong>Type:</strong> ${isLoan ? "Loan" : "Investment"}<br/>
+    <strong>Type:</strong> ${typeLabel}<br/>
     ${specifics || ""}
   </p>
 
@@ -208,15 +228,25 @@ function buildCustomerWelcomeText(
   monthlyIncome: number | null,
   investmentAmount: number | null,
   tenure: string | null,
+  propertyValue: number | null,
+  downPayment: number | null,
+  combinedMonthlyDebt: number | null,
 ): string {
   const isLoan = requestType === "loan";
+  const isMortgage = requestType === "mortgage";
+  const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
   const instList = institutions.length > 0
     ? institutions.join(", ")
     : "all recommended institutions";
 
-  const specifics = isLoan
-    ? [loanAmount != null ? `Loan Amount: $${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: $${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n")
-    : [investmentAmount != null ? `Investment Amount: $${investmentAmount.toLocaleString()}` : "", tenure ? `Term: ${tenure}` : ""].filter(Boolean).join("\n");
+  let specifics: string;
+  if (isMortgage) {
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+  } else if (isLoan) {
+    specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
+  } else {
+    specifics = [investmentAmount != null ? `Investment Amount: ${investmentAmount.toLocaleString()}` : "", tenure ? `Term: ${tenure}` : ""].filter(Boolean).join("\n");
+  }
 
   return `Welcome! Your Quote Request Is Being Processed
 
@@ -224,7 +254,7 @@ Hi ${customerName},
 
 Thank you for choosing Safe Methods. We have received your submission and notified advisors at: ${instList}
 
-Request Type: ${isLoan ? "Loan" : "Investment"}
+Request Type: ${typeLabel}
 ${specifics}
 
 WHAT HAPPENS NEXT?
@@ -249,19 +279,33 @@ function buildConsultantBriefHtml(
   monthlyIncome: number | null,
   investmentAmount: number | null,
   tenure: string | null,
+  propertyValue: number | null,
+  downPayment: number | null,
+  combinedMonthlyDebt: number | null,
   portalUrl: string,
   expiresAt: string,
 ): string {
   const isLoan = requestType === "loan";
-  const specifics = isLoan
-    ? [
-        loanAmount != null ? `<li><strong>Loan Amount:</strong> $${loanAmount.toLocaleString()}</li>` : "",
-        monthlyIncome != null ? `<li><strong>Monthly Income:</strong> $${monthlyIncome.toLocaleString()}</li>` : "",
-      ].filter(Boolean).join("")
-    : [
-        investmentAmount != null ? `<li><strong>Investment Amount:</strong> $${investmentAmount.toLocaleString()}</li>` : "",
-        tenure ? `<li><strong>Preferred Term:</strong> ${escapeHtml(tenure)}</li>` : "",
-      ].filter(Boolean).join("");
+  const isMortgage = requestType === "mortgage";
+  const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
+  let specifics: string;
+  if (isMortgage) {
+    specifics = [
+      propertyValue != null ? `<li><strong>Property Value:</strong> ${propertyValue.toLocaleString()}</li>` : "",
+      downPayment != null ? `<li><strong>Down Payment:</strong> ${downPayment.toLocaleString()}</li>` : "",
+      combinedMonthlyDebt != null ? `<li><strong>Combined Monthly Debt:</strong> ${combinedMonthlyDebt.toLocaleString()}</li>` : "",
+    ].filter(Boolean).join("");
+  } else if (isLoan) {
+    specifics = [
+      loanAmount != null ? `<li><strong>Loan Amount:</strong> ${loanAmount.toLocaleString()}</li>` : "",
+      monthlyIncome != null ? `<li><strong>Monthly Income:</strong> ${monthlyIncome.toLocaleString()}</li>` : "",
+    ].filter(Boolean).join("");
+  } else {
+    specifics = [
+      investmentAmount != null ? `<li><strong>Investment Amount:</strong> ${investmentAmount.toLocaleString()}</li>` : "",
+      tenure ? `<li><strong>Preferred Term:</strong> ${escapeHtml(tenure)}</li>` : "",
+    ].filter(Boolean).join("");
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -273,12 +317,12 @@ function buildConsultantBriefHtml(
 
   <h2 style="color: #0f4c5c;">New Quote Request: ${escapeHtml(referenceId)}</h2>
   <p>Hi ${escapeHtml(consultantName)},</p>
-  <p>A prospective client has requested a competitive ${isLoan ? "loan" : "investment"} quote through Safe Methods. Below are the anonymized financial parameters for your review:</p>
+  <p>A prospective client has requested a competitive ${typeLabel.toLowerCase()} quote through Safe Methods. Below are the anonymized financial parameters for your review:</p>
 
   <div style="padding: 16px; background: #f4f4f4; border-radius: 8px; margin: 16px 0;">
     <p style="margin: 0 0 8px; font-weight: 600;">Request Details</p>
     <ul style="margin: 0; padding-left: 20px;">
-      <li><strong>Type:</strong> ${isLoan ? "Loan" : "Investment"}</li>
+      <li><strong>Type:</strong> ${typeLabel}</li>
       ${specifics}
     </ul>
   </div>
@@ -313,13 +357,23 @@ function buildConsultantBriefText(
   monthlyIncome: number | null,
   investmentAmount: number | null,
   tenure: string | null,
+  propertyValue: number | null,
+  downPayment: number | null,
+  combinedMonthlyDebt: number | null,
   portalUrl: string,
   expiresAt: string,
 ): string {
   const isLoan = requestType === "loan";
-  const specifics = isLoan
-    ? [loanAmount != null ? `Loan Amount: $${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: $${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n")
-    : [investmentAmount != null ? `Investment Amount: $${investmentAmount.toLocaleString()}` : "", tenure ? `Preferred Term: ${tenure}` : ""].filter(Boolean).join("\n");
+  const isMortgage = requestType === "mortgage";
+  const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
+  let specifics: string;
+  if (isMortgage) {
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+  } else if (isLoan) {
+    specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
+  } else {
+    specifics = [investmentAmount != null ? `Investment Amount: ${investmentAmount.toLocaleString()}` : "", tenure ? `Preferred Term: ${tenure}` : ""].filter(Boolean).join("\n");
+  }
 
   return `SAFE METHODS - Consultant Lead Brief
 
@@ -327,10 +381,10 @@ New Quote Request: ${referenceId}
 
 Hi ${consultantName},
 
-A prospective client has requested a competitive ${isLoan ? "loan" : "investment"} quote.
+A prospective client has requested a competitive ${typeLabel.toLowerCase()} quote.
 
 REQUEST DETAILS
-Type: ${isLoan ? "Loan" : "Investment"}
+Type: ${typeLabel}
 ${specifics}
 
 5-DAY SLA DEADLINE
@@ -388,7 +442,7 @@ Deno.serve(async (req: Request) => {
     const phone = rawPhone ? rawPhone.replace(/\s+/g, "") : null;
 
     const rawType = body.requestType ?? body.request_type;
-    const requestType = rawType === "investment" ? "investment" : "loan";
+    const requestType = rawType === "investment" ? "investment" : rawType === "mortgage" ? "mortgage" : "loan";
 
     if (body.consent !== true) {
       return jsonResponse({ error: "Consent is required to submit a request." }, 400);
@@ -426,6 +480,9 @@ Deno.serve(async (req: Request) => {
     let monthlyIncome: number | null = null;
     let investmentAmount: number | null = null;
     let tenure: string | null = null;
+    let propertyValue: number | null = null;
+    let downPayment: number | null = null;
+    let combinedMonthlyDebt: number | null = null;
 
     if (requestType === "loan") {
       loanAmount = parseAmount(body.loanAmount ?? body.loan_amount);
@@ -438,7 +495,7 @@ Deno.serve(async (req: Request) => {
       }
       insertPayload.loan_amount = loanAmount;
       insertPayload.monthly_income = monthlyIncome;
-    } else {
+    } else if (requestType === "investment") {
       investmentAmount = parseAmount(body.investmentAmount ?? body.investment_amount);
       if (investmentAmount === null) {
         return jsonResponse({ error: "Please provide a valid investment amount." }, 400);
@@ -449,6 +506,22 @@ Deno.serve(async (req: Request) => {
       tenure = rawTenure;
       insertPayload.investment_amount = investmentAmount;
       insertPayload.tenure = tenure;
+    } else {
+      propertyValue = parseAmount(body.propertyValue ?? body.property_value);
+      downPayment = parseAmount(body.downPayment ?? body.down_payment);
+      combinedMonthlyDebt = parseAmount(body.combinedMonthlyDebt ?? body.combined_monthly_debt);
+      if (propertyValue === null) {
+        return jsonResponse({ error: "Please provide a valid property value." }, 400);
+      }
+      if (downPayment === null) {
+        return jsonResponse({ error: "Please provide a valid down payment." }, 400);
+      }
+      if (combinedMonthlyDebt === null) {
+        return jsonResponse({ error: "Please provide a valid combined monthly debt amount." }, 400);
+      }
+      insertPayload.property_value = propertyValue;
+      insertPayload.down_payment = downPayment;
+      insertPayload.combined_monthly_debt = combinedMonthlyDebt;
     }
 
     if (typeof body.sessionToken === "string" && body.sessionToken) {
@@ -527,10 +600,12 @@ Deno.serve(async (req: Request) => {
     const welcomeHtml = buildCustomerWelcomeHtml(
       name, requestType, selectedInstitutions,
       loanAmount, monthlyIncome, investmentAmount, tenure,
+      propertyValue, downPayment, combinedMonthlyDebt,
     );
     const welcomeText = buildCustomerWelcomeText(
       name, requestType, selectedInstitutions,
       loanAmount, monthlyIncome, investmentAmount, tenure,
+      propertyValue, downPayment, combinedMonthlyDebt,
     );
 
     const smtpSent = await sendEmailViaSMTP(
@@ -566,11 +641,13 @@ Deno.serve(async (req: Request) => {
         const briefHtml = buildConsultantBriefHtml(
           c.name, referenceId, requestType,
           loanAmount, monthlyIncome, investmentAmount, tenure,
+          propertyValue, downPayment, combinedMonthlyDebt,
           portalUrl, slaDateStr,
         );
         const briefText = buildConsultantBriefText(
           c.name, referenceId, requestType,
           loanAmount, monthlyIncome, investmentAmount, tenure,
+          propertyValue, downPayment, combinedMonthlyDebt,
           portalUrl, slaDateStr,
         );
 
@@ -604,6 +681,9 @@ Deno.serve(async (req: Request) => {
       monthly_income: monthlyIncome,
       investment_amount: investmentAmount,
       tenure,
+      property_value: propertyValue,
+      down_payment: downPayment,
+      combined_monthly_debt: combinedMonthlyDebt,
       selected_institutions: selectedInstitutions,
     }).catch(() => {});
 
