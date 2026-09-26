@@ -8,8 +8,14 @@ import type { BankMatchRef } from "./GetQuotesModal";
 import { Button } from "./Button";
 import { PRE_CANNED_QUESTIONS, findPreCannedMatch, formatPreCannedResponse } from "../data/preCannedQuestions";
 import type { PreCannedQA } from "../data/preCannedQuestions";
+import { supabase } from "../lib/supabase";
 
 const SESSION_KEY = "safebot_session_token";
+
+type CategoryFilter = "loan" | "investment" | "mortgage";
+type RateTypeFilter = "variable" | "fixed";
+
+const TENURE_OPTIONS = ["1 year", "2 years", "3 years", "4 years", "5 years"];
 
 interface BankMatch {
   name: string;
@@ -29,6 +35,105 @@ interface ChatMessage {
   content: string;
 }
 
+interface DbRate {
+  product_type: string;
+  term: string;
+  rate_percent: string;
+  consultant_id: string | null;
+  banks: { name: string } | null;
+  consultants: { name: string; title: string } | null;
+}
+
+const DEFAULT_BANKS: BankMatch[] = [
+  { name: "RBC", productType: "general", term: null, rate: 0, rank: 1, isBest: true, consultantId: null, consultantName: "Victor Gaur", consultantTitle: "Principal Financial Advisor", consultantAvatarUrl: null },
+  { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
+  { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
+];
+
+function extractYear(term: string): number | null {
+  const match = term.match(/(\d+)\s*[-]?\s*year/i);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function tenureToYear(tenure: string): number {
+  const match = tenure.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 2;
+}
+
+function computeRankedMatches(
+  category: CategoryFilter,
+  rateType: RateTypeFilter,
+  tenure: string,
+  allRates: DbRate[]
+): BankMatch[] {
+  const targetYear = tenureToYear(tenure);
+
+  let productTypes: string[];
+  if (category === "mortgage") productTypes = ["mortgage"];
+  else if (category === "investment") productTypes = ["gic", "market_linked"];
+  else productTypes = ["mortgage"];
+
+  let filtered = allRates.filter((r) => productTypes.includes(r.product_type));
+
+  if (category === "mortgage" || category === "loan") {
+    if (rateType === "fixed") {
+      filtered = filtered.filter((r) => r.term.toLowerCase().includes("fixed"));
+    } else {
+      filtered = filtered.filter((r) => !r.term.toLowerCase().includes("fixed"));
+    }
+  }
+
+  if (filtered.length === 0) {
+    filtered = allRates.filter((r) => productTypes.includes(r.product_type));
+    if (filtered.length === 0) return [];
+  }
+
+  let matched = filtered.filter((r) => extractYear(r.term) === targetYear);
+
+  if (matched.length === 0) {
+    const withYears = filtered
+      .map((r) => ({ rate: r, year: extractYear(r.term) }))
+      .filter((x) => x.year !== null);
+
+    if (withYears.length > 0) {
+      withYears.sort((a, b) => Math.abs(a.year! - targetYear) - Math.abs(b.year! - targetYear));
+      const closestYear = withYears[0].year;
+      matched = withYears.filter((x) => x.year === closestYear).map((x) => x.rate);
+    }
+  }
+
+  if (matched.length === 0) return [];
+
+  if (category === "investment") {
+    matched.sort((a, b) => parseFloat(b.rate_percent) - parseFloat(a.rate_percent));
+  } else {
+    matched.sort((a, b) => parseFloat(a.rate_percent) - parseFloat(b.rate_percent));
+  }
+
+  const seen = new Set<string>();
+  const top: BankMatch[] = [];
+  for (const r of matched) {
+    const instName = r.banks?.name ?? "";
+    if (!instName || seen.has(instName)) continue;
+    seen.add(instName);
+    top.push({
+      name: instName,
+      productType: r.product_type,
+      term: r.term,
+      rate: parseFloat(r.rate_percent),
+      rank: top.length + 1,
+      isBest: top.length === 0,
+      consultantId: r.consultant_id,
+      consultantName: r.consultants?.name ?? null,
+      consultantTitle: r.consultants?.title ?? null,
+      consultantAvatarUrl: null,
+    });
+    if (top.length >= 3) break;
+  }
+
+  return top;
+}
+
 export function HeroSection() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -41,23 +146,57 @@ export function HeroSection() {
   const [highlightMatches, setHighlightMatches] = useState(false);
   const matchesRef = useRef<HTMLDivElement>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("loan");
+  const [selectedRateType, setSelectedRateType] = useState<RateTypeFilter>("variable");
+  const [selectedTenure, setSelectedTenure] = useState("2 years");
+  const [allRates, setAllRates] = useState<DbRate[]>([]);
+  const [ratesLoading, setRatesLoading] = useState(true);
+
   const triggerMatchFocus = () => {
     matchesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     setHighlightMatches(true);
     window.setTimeout(() => setHighlightMatches(false), 1800);
   };
 
-  const DEFAULT_BANKS: BankMatch[] = [
-    { name: "RBC", productType: "general", term: null, rate: 0, rank: 1, isBest: true, consultantId: null, consultantName: "Victor Gaur", consultantTitle: "Principal Financial Advisor", consultantAvatarUrl: null },
-    { name: "TD", productType: "general", term: null, rate: 0, rank: 2, isBest: false, consultantId: null, consultantName: "Sarah Mitchell", consultantTitle: "Senior Investment Advisor", consultantAvatarUrl: null },
-    { name: "BMO", productType: "general", term: null, rate: 0, rank: 3, isBest: false, consultantId: null, consultantName: "David Chen", consultantTitle: "Wealth Management Specialist", consultantAvatarUrl: null },
-  ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
-  // Restore session token and chat history from sessionStorage on mount (F1-US9)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('rates')
+          .select(`
+            product_type,
+            term,
+            rate_percent,
+            consultant_id,
+            banks!bank_id (name),
+            consultants!consultant_id (name, title)
+          `);
+        if (!error && data) {
+          setAllRates(data as DbRate[]);
+        }
+      } catch {
+        // ignore — will fall back to DEFAULT_BANKS
+      } finally {
+        setRatesLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (allRates.length === 0) return;
+    const ranked = computeRankedMatches(selectedCategory, selectedRateType, selectedTenure, allRates);
+    if (ranked.length > 0) {
+      setBanks(ranked);
+    }
+    setDetectedTopic(selectedCategory === "investment" ? "investment" : "loan");
+  }, [selectedCategory, selectedRateType, selectedTenure, allRates]);
+
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return;
@@ -65,9 +204,6 @@ export function HeroSection() {
 
     (async () => {
       try {
-        // Chat history is served by the server, which requires the session
-        // token this browser already holds. The transcript tables are not
-        // readable through the public API.
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
         const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
         const resp = await fetch(`${supabaseUrl}/functions/v1/safebot-chat`, {
@@ -111,16 +247,15 @@ export function HeroSection() {
         setMessages((prev) => [...prev, userMessage, { role: "bot", content: botReply }]);
         setInputValue("");
         setFollowUps(match.followUpChips);
+        setSelectedRateType("variable");
 
         const matchId = match.id;
         if (matchId === "personal_investments" || matchId === "mutual_funds") {
-          setDetectedTopic("investment");
+          setSelectedCategory("investment");
+        } else if (matchId === "mortgage") {
+          setSelectedCategory("mortgage");
         } else {
-          setDetectedTopic("loan");
-        }
-
-        if (banks.length === 0) {
-          setBanks(DEFAULT_BANKS);
+          setSelectedCategory("loan");
         }
         return;
       }
@@ -171,17 +306,21 @@ export function HeroSection() {
 
         if (data.banks && Array.isArray(data.banks) && data.banks.length > 0) {
           setBanks(data.banks);
-        } else if (banks.length === 0) {
-          setBanks(DEFAULT_BANKS);
         }
 
         const combinedText = (text + " " + (data.reply || "")).toLowerCase();
         const investmentKeywords = /\b(gic|investment|invest|stocks?|mutual fund|etf|rrsp|tfsa|portfolio|dividend|bond|savings? rate|compound|market-linked)\b/;
-        const loanKeywords = /\b(mortgage|loan|credit|debt|borrow|lending|consolidat|refinanc|interest rate|amortiz|line of credit|heloc)\b/;
+        const mortgageKeywords = /\b(mortgage|renew|refinanc|amortiz|down payment|pre-approval)\b/;
+        const loanKeywords = /\b(loan|credit|debt|borrow|lending|consolidat|interest rate|line of credit|heloc)\b/;
         if (investmentKeywords.test(combinedText)) {
           setDetectedTopic("investment");
+          setSelectedCategory("investment");
+        } else if (mortgageKeywords.test(combinedText)) {
+          setDetectedTopic("loan");
+          setSelectedCategory("mortgage");
         } else if (loanKeywords.test(combinedText)) {
           setDetectedTopic("loan");
+          setSelectedCategory("loan");
         }
 
         if (data.followUps && Array.isArray(data.followUps)) {
@@ -203,7 +342,7 @@ export function HeroSection() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, sessionToken, banks, DEFAULT_BANKS]
+    [isLoading, messages, sessionToken]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -213,6 +352,7 @@ export function HeroSection() {
   };
 
   const isEmpty = messages.length === 0;
+  const showSkeletons = isLoading || ratesLoading;
 
   return (
     <section className="container mx-auto px-4 pt-3 pb-8 flex flex-col">
@@ -241,7 +381,6 @@ export function HeroSection() {
             ))}
           </div>
 
-          {/* Input Area for Empty State */}
           <div className="w-full max-w-3xl mt-auto pt-4">
             <div className="relative flex items-center">
               <input
@@ -368,7 +507,6 @@ export function HeroSection() {
               </motion.div>
             )}
 
-            {/* Follow-up chips */}
             {followUps.length > 0 && !isLoading && (
               <div className="px-6 pb-3 flex flex-wrap gap-2">
                 {followUps.map((chip, idx) => (
@@ -384,7 +522,6 @@ export function HeroSection() {
               </div>
             )}
 
-            {/* Input Area for Active State */}
             <div className="p-4 bg-surface border-t border-border-subtle">
               <div className="relative flex items-center">
                 <input
@@ -425,11 +562,58 @@ export function HeroSection() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className={`lg:col-span-1 flex flex-col rounded-xl p-4 ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background shadow-lg' : ''} transition-all duration-300`}
           >
-            <h3 className="font-heading text-2xl text-foreground mb-6">
+            <h3 className="font-heading text-2xl text-foreground mb-4">
               Top Matches
             </h3>
 
-            {isLoading ? (
+            {/* Filter Controls */}
+            <div className="mb-4 space-y-2.5">
+              <div className="flex gap-1.5 flex-wrap">
+                {(["loan", "investment", "mortgage"] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors capitalize ${
+                      selectedCategory === cat
+                        ? "bg-accent/15 border-accent/50 text-accent font-semibold"
+                        : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-1.5">
+                {(["variable", "fixed"] as const).map((rt) => (
+                  <button
+                    key={rt}
+                    onClick={() => setSelectedRateType(rt)}
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors capitalize ${
+                      selectedRateType === rt
+                        ? "bg-primary/10 border-primary/40 text-primary font-semibold"
+                        : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
+                    }`}
+                  >
+                    {rt}
+                  </button>
+                ))}
+              </div>
+
+              <select
+                value={selectedTenure}
+                onChange={(e) => setSelectedTenure(e.target.value)}
+                className="w-full text-xs px-3 py-2 rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+              >
+                {TENURE_OPTIONS.map((t) => (
+                  <option key={t} value={t}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {showSkeletons ? (
               <div className="flex flex-col gap-3">
                 {[1, 2, 3].map((n) => (
                   <div
@@ -515,7 +699,7 @@ export function HeroSection() {
                   className="w-full mt-4 bg-accent text-primary hover:bg-accent/90 border-transparent"
                   onClick={() => setQuotesOpen(true)}
                 >
-                  <FileTextIcon className="w-4 h-4 mr-2" />
+                  <FileTextIcon className="h-4 w-4 mr-2" />
                   Get Quotes
                 </Button>
 
@@ -531,7 +715,7 @@ export function HeroSection() {
                   }}
                   className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
                 >
-                  <CalendarIcon className="w-4 h-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   Book a Consultant
                 </button>
               </div>
