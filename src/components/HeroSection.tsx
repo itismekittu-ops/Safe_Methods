@@ -68,28 +68,45 @@ function computeRankedMatches(
 ): BankMatch[] {
   const targetYear = tenureToYear(tenure);
 
-  let productTypes: string[];
-  if (category === "mortgage") productTypes = ["mortgage"];
-  else if (category === "investment") productTypes = ["gic", "market_linked"];
-  else productTypes = ["mortgage"];
+  let filtered: DbRate[];
 
-  let filtered = allRates.filter((r) => productTypes.includes(r.product_type));
-
-  if (category === "mortgage" || category === "loan") {
-    if (rateType === "fixed") {
-      filtered = filtered.filter((r) => r.term.toLowerCase().includes("fixed"));
+  if (category === "mortgage") {
+    filtered = allRates.filter((r) => r.product_type === "mortgage");
+    if (rateType === "variable") {
+      filtered = filtered.filter((r) => r.term.toLowerCase().includes("variable"));
     } else {
-      filtered = filtered.filter((r) => !r.term.toLowerCase().includes("fixed"));
+      filtered = filtered.filter((r) => r.term.toLowerCase().includes("fixed"));
+    }
+  } else if (category === "investment") {
+    if (rateType === "fixed") {
+      filtered = allRates.filter((r) => r.product_type === "gic");
+    } else {
+      filtered = allRates.filter((r) => r.product_type === "market_linked");
+    }
+  } else {
+    // loan — use mortgage as lending proxy since no dedicated loan rows exist
+    filtered = allRates.filter((r) => r.product_type === "mortgage");
+    if (rateType === "variable") {
+      filtered = filtered.filter((r) => r.term.toLowerCase().includes("variable"));
+    } else {
+      filtered = filtered.filter((r) => r.term.toLowerCase().includes("fixed"));
     }
   }
 
+  // Broaden fallback: if no rows for this rateType, use all rows for the category
   if (filtered.length === 0) {
-    filtered = allRates.filter((r) => productTypes.includes(r.product_type));
+    if (category === "investment") {
+      filtered = allRates.filter((r) => r.product_type === "gic" || r.product_type === "market_linked");
+    } else {
+      filtered = allRates.filter((r) => r.product_type === "mortgage");
+    }
     if (filtered.length === 0) return [];
   }
 
+  // Try exact year match
   let matched = filtered.filter((r) => extractYear(r.term) === targetYear);
 
+  // Fallback to nearest available year
   if (matched.length === 0) {
     const withYears = filtered
       .map((r) => ({ rate: r, year: extractYear(r.term) }))
@@ -191,9 +208,7 @@ export function HeroSection() {
   useEffect(() => {
     if (allRates.length === 0) return;
     const ranked = computeRankedMatches(selectedCategory, selectedRateType, selectedTenure, allRates);
-    if (ranked.length > 0) {
-      setBanks(ranked);
-    }
+    setBanks(ranked.length > 0 ? ranked : DEFAULT_BANKS);
     setDetectedTopic(selectedCategory === "investment" ? "investment" : "loan");
   }, [selectedCategory, selectedRateType, selectedTenure, allRates]);
 
@@ -584,33 +599,35 @@ export function HeroSection() {
                 ))}
               </div>
 
-              <div className="flex gap-1.5">
-                {(["variable", "fixed"] as const).map((rt) => (
-                  <button
-                    key={rt}
-                    onClick={() => setSelectedRateType(rt)}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors capitalize ${
-                      selectedRateType === rt
-                        ? "bg-primary/10 border-primary/40 text-primary font-semibold"
-                        : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
-                    }`}
-                  >
-                    {rt}
-                  </button>
-                ))}
-              </div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex gap-1.5">
+                  {(["variable", "fixed"] as const).map((rt) => (
+                    <button
+                      key={rt}
+                      onClick={() => setSelectedRateType(rt)}
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors capitalize ${
+                        selectedRateType === rt
+                          ? "bg-primary/10 border-primary/40 text-primary font-semibold"
+                          : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
+                      }`}
+                    >
+                      {rt}
+                    </button>
+                  ))}
+                </div>
 
-              <select
-                value={selectedTenure}
-                onChange={(e) => setSelectedTenure(e.target.value)}
-                className="w-full text-xs px-3 py-2 rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
-              >
+                <select
+                  value={selectedTenure}
+                  onChange={(e) => setSelectedTenure(e.target.value)}
+                  className="w-32 px-3 py-1.5 text-xs rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                >
                 {TENURE_OPTIONS.map((t) => (
                   <option key={t} value={t}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </option>
                 ))}
-              </select>
+                </select>
+              </div>
             </div>
 
             {showSkeletons ? (
