@@ -25,13 +25,18 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **So that** I can quickly become informed and make a confident decision.
 * **Dependencies:** EVALS
 
-#### (F1-US2) See Best-Matched Financial Products & Banks
+#### (F1-US2) See Best-Matched Financial Products & Banks & Interactive Filter Controls
 * **As a** visitor,
-* **WHEN I** ask a financial question,
-* **I want to** see which financial products/banks best meet my needs in the right sidebar (ordered verticaly best match at the top and least match at the bottom). And each row should have bank icon + consultant name + interest rate.
-* **AND IF** needed, select specific banks or advisors to request quotes or advice from,
-* **So that** I can visually compare options and understand the competitive landscape.
-* **Dependencies:** F1-US1
+* **WHEN I** ask a financial question, click a suggestion, or manually interact with the Top Matches panel controls,
+* **I want to** see which financial products, banks, and advisors best meet my needs in the right sidebar (ordered from top match to least match),
+* **AND** have interactive filter controls at the top of the panel allowing manual customization:
+  1. **Category Toggles:** Select between `Loan`, `Investment`, and `Mortgage` (defaults to `Loan` for general queries).
+  2. **Rate Structure Toggles:** Select between `Variable` and `Fixed` (defaults to `Variable`).
+  3. **Tenure Dropdown:** Select duration from `1 year`, `2 years`, `3 years`, `4 years`, or `5 years`.
+* **AND** have incoming chat queries or clicked cached chips automatically synchronize these controls (e.g., clicking a mortgage prompt toggles category to `Mortgage`), with the ranking recalculating dynamically from live database records,
+* **AND** have all rate figures queried dynamically from the live Supabase `rates` table with zero hardcoded percentage values,
+* **So that** I have full interactive control to compare products across terms and structures transparently.
+* **Dependencies:** F1-US1, Supabase `rates` table
 
 #### (F1-US3) Rationale on How Financial Products Are Ranked
 * **As a** visitor,
