@@ -8,16 +8,36 @@ const FAQS = [
     a: 'Yes. Safe Methods is completely free for consumers. We do not charge fees to compare rates or receive quotes from certified advisors.',
   },
   {
-    q: 'How are the bank rates and rankings determined?',
-    a: 'Rankings are generated strictly from verified posted interest rates and product terms. We never accept paid placement or sponsored ranking boosts.',
-  },
-  {
     q: 'How does the multi-bank quote process work?',
     a: 'When you submit a quote request, verified advisors from top institutions submit competitive bids. We compile them into a unified, side-by-side comparison sent to your inbox.',
   },
   {
     q: 'Is my personal data shared with every bank?',
     a: 'No. Your contact details are strictly limited to the institutions you explicitly select and consent to. We never sell your data.',
+  },
+  {
+    q: 'Should I pay off debt or invest first?',
+    a: 'A useful rule of thumb is to compare the interest rate on your debt with the return you can expect from investing. High-interest debt usually deserves priority because its cost is certain while investment returns are not.',
+  },
+{
+    q: 'How does my credit score affect the loan rate I get?',
+    a: 'Your credit score summarizes how reliably you have repaid debt, and lenders use it to decide whether to approve you and at what rate. In Canada scores range from 300 to 900, and a higher score generally unlocks lower rates.',
+  },
+{
+    q: 'How can I improve my credit score fast?',
+    a: 'The biggest drivers of your score are payment history and how much of your available credit you use. Small, consistent habits usually move your score faster and more safely than any shortcut.',
+  },
+{
+    q: 'How much can I afford to borrow?',
+    a: 'Lenders look at your income, your existing debts, and your credit history to decide how much they will lend. What you can borrow and what you can comfortably repay are not always the same amount.',
+  },
+{
+    q: 'Should I choose a fixed or variable mortgage?',
+    a: 'A fixed rate stays the same for the whole term, while a variable rate can move up or down with market conditions. The right choice depends on how much payment certainty you need and how much rate risk you can accept.',
+  },
+{
+    q: 'What is better: a loan / line of credit / credit card ?',
+    a: 'A personal loan gives you a lump sum with fixed payments, while a credit card gives you revolving credit you repay at your own pace. The better choice depends on how much you need, how fast you can repay, and the rate you qualify for.',
   },
 ];
 
