@@ -216,26 +216,16 @@ Deno.serve(async (req: Request) => {
 
     const { firstname, lastname } = splitName(contactName);
 
-    let messageValue = messageText;
-    if (!messageValue && requestType !== "contact_inquiry") {
-      messageValue = `Quote Request [Ref: ${quoteId || "N/A"}]: ${String(requestType).toUpperCase()} | FIs: ${institutions || "None"}`;
-    }
-
-    // Only send standard HubSpot properties + request_type to avoid 400
-    // errors from custom fields not pre-configured in HubSpot Settings.
-    // All detailed financial data goes into a timeline engagement note.
+    // Only send guaranteed-standard HubSpot contact properties to avoid
+    // HTTP 400 (PROPERTY_DOES_NOT_EXIST) from custom fields that are not
+    // manually pre-configured in HubSpot Settings. All financial and
+    // category data goes into a timeline engagement note instead.
     const properties: Record<string, string> = {
       email,
       firstname: firstname || contactName || "Lead",
       lastname: lastname || "",
       phone: phone || "",
     };
-
-    if (requestType && requestType !== "general_inquiry") {
-      properties.request_type = String(requestType);
-    }
-
-    properties.message = messageValue || "";
 
     const existingId = await findContactByEmail(email);
     let contactId: string | null = null;
@@ -246,8 +236,17 @@ Deno.serve(async (req: Request) => {
       if (!updated) console.error("HubSpot contact update failed for contact", existingId);
     } else {
       const createResult = await createContact(properties);
-      if (!createResult.ok) console.error("HubSpot contact creation failed");
-      contactId = createResult.id;
+      if (!createResult.ok) {
+        console.error("HubSpot contact creation failed, attempting minimal fallback");
+        const fallback = await createContact({ email, firstname: firstname || "Lead" });
+        if (fallback.ok && fallback.id) {
+          contactId = fallback.id;
+        } else {
+          console.error("HubSpot minimal fallback contact creation also failed");
+        }
+      } else {
+        contactId = createResult.id;
+      }
     }
 
     if (contactId) {
