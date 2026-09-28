@@ -23,7 +23,6 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-const RESUBMIT_WINDOW_MINUTES = 60;
 const MAX_NAME_LENGTH = 120;
 const MAX_INSTITUTIONS = 10;
 const MAX_AMOUNT = 1_000_000_000;
@@ -402,7 +401,7 @@ This is an automated lead brief. Do not reply to this email.`;
 
 async function callInternal(slug: string, payload: Record<string, unknown>) {
   try {
-    await fetch(`${SUPABASE_URL}/functions/v1/${slug}`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${slug}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -412,8 +411,10 @@ async function callInternal(slug: string, payload: Record<string, unknown>) {
       },
       body: JSON.stringify(payload),
     });
-  } catch {
-    // Best-effort
+    // Crucial: await text response stream so the serverless runtime doesn't terminate early
+    await res.text();
+  } catch (err) {
+    console.error(`callInternal ${slug} failed:`, err);
   }
 }
 
@@ -533,19 +534,7 @@ Deno.serve(async (req: Request) => {
       if (session) insertPayload.session_id = session.id;
     }
 
-    const cutoff = new Date(Date.now() - RESUBMIT_WINDOW_MINUTES * 60 * 1000).toISOString();
-    const { data: recent } = await supabase
-      .from("quote_requests")
-      .select("id")
-      .eq("email", email)
-      .gte("created_at", cutoff)
-      .limit(1)
-      .maybeSingle();
-
-    if (recent) {
-      return jsonResponse({ success: true, alreadySubmitted: true });
-    }
-
+    // Append-only multi-submission workflow: 60-minute session block removed per F3-US11 & BR-CUST-03
     const { data: insertedRow, error: insertError } = await supabase
       .from("quote_requests")
       .insert(insertPayload)
@@ -560,7 +549,6 @@ Deno.serve(async (req: Request) => {
     const quoteRequestId = insertedRow.id;
 
     // ── Stage consultant_bids (BR-ROUT-01) ──
-    // Look up all consultants whose bank was selected (or all if none specified)
     let consultantQuery = supabase
       .from("consultants")
       .select("id, name, email, bank_id, banks!inner(name)")
@@ -596,7 +584,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── Send welcome email to customer (F3-US9, BR-ROUT-05: no reference_id) ──
+    // ── Send welcome email to customer ──
     const welcomeHtml = buildCustomerWelcomeHtml(
       name, requestType, selectedInstitutions,
       loanAmount, monthlyIncome, investmentAmount, tenure,
@@ -625,7 +613,7 @@ Deno.serve(async (req: Request) => {
       }).then(() => {}, () => {});
     }
 
-    // ── Send anonymized briefs to consultants (BR-ROUT-01: no PII) ──
+    // ── Send anonymized briefs to consultants ──
     const slaDateStr = slaDeadline.toLocaleDateString("en-CA", {
       weekday: "long", year: "numeric", month: "long", day: "numeric",
     });
@@ -670,7 +658,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── CRM sync (awaited so the edge runtime doesn't terminate before the note is posted) ──
+    // ── CRM sync (fully awaited so Edge runtime stays open until Note is written) ──
     try {
       await callInternal("sync-hubspot-lead", {
         email,
