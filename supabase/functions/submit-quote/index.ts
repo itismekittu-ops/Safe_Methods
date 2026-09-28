@@ -676,6 +676,7 @@ Deno.serve(async (req: Request) => {
       name,
       phone: phone ?? "",
       quote_id: quoteRequestId,
+      reference_id: referenceId,
       request_type: requestType,
       loan_amount: loanAmount,
       monthly_income: monthlyIncome,

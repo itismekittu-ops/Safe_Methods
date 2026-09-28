@@ -34,6 +34,7 @@ interface RequestBody {
   requestType?: string;
   message?: string;
   quote_id?: string;
+  reference_id?: string;
   loan_amount?: number | null;
   loanAmount?: number | null;
   monthly_income?: number | null;
@@ -41,6 +42,12 @@ interface RequestBody {
   investment_amount?: number | null;
   investmentAmount?: number | null;
   tenure?: string | null;
+  property_value?: number | null;
+  propertyValue?: number | null;
+  down_payment?: number | null;
+  downPayment?: number | null;
+  combined_monthly_debt?: number | null;
+  combinedMonthlyDebt?: number | null;
   selected_institutions?: string[] | string;
   selectedInstitutions?: string[] | string;
 }
@@ -60,6 +67,9 @@ async function ensureCustomProperties(): Promise<Set<string>> {
     { name: "loan_amount", label: "Loan Amount", type: "string", fieldType: "text", groupName: "contactinformation" },
     { name: "monthly_income", label: "Monthly Income", type: "string", fieldType: "text", groupName: "contactinformation" },
     { name: "investment_amount", label: "Investment Amount", type: "string", fieldType: "text", groupName: "contactinformation" },
+    { name: "property_value", label: "Property Value", type: "string", fieldType: "text", groupName: "contactinformation" },
+    { name: "down_payment", label: "Down Payment", type: "string", fieldType: "text", groupName: "contactinformation" },
+    { name: "combined_monthly_debt", label: "Combined Monthly Debt", type: "string", fieldType: "text", groupName: "contactinformation" },
   ];
 
   for (const prop of customProps) {
@@ -196,8 +206,13 @@ Deno.serve(async (req: Request) => {
     let loanAmount = body.loan_amount || body.loanAmount;
     let monthlyIncome = body.monthly_income || body.monthlyIncome;
     let investmentAmount = body.investment_amount || body.investmentAmount;
+    let propertyValue = body.property_value || body.propertyValue;
+    let downPayment = body.down_payment || body.downPayment;
+    let combinedMonthlyDebt = body.combined_monthly_debt || body.combinedMonthlyDebt;
     const quoteId = typeof body.quote_id === "string" ? body.quote_id : "";
+    const referenceId = typeof body.reference_id === "string" ? body.reference_id : "";
     const messageText = typeof body.message === "string" ? body.message : "";
+    let tenure = body.tenure || null;
 
     // If called with only an email (legacy path), try to enrich from the DB.
     if (!contactName) {
@@ -218,6 +233,9 @@ Deno.serve(async (req: Request) => {
         loanAmount = loanAmount || quote.loan_amount || null;
         monthlyIncome = monthlyIncome || quote.monthly_income || null;
         investmentAmount = investmentAmount || quote.investment_amount || null;
+        propertyValue = propertyValue || quote.property_value || null;
+        downPayment = downPayment || quote.down_payment || null;
+        combinedMonthlyDebt = combinedMonthlyDebt || quote.combined_monthly_debt || null;
       }
     }
 
@@ -231,6 +249,9 @@ Deno.serve(async (req: Request) => {
     const loanAmtStr = loanAmount ? String(loanAmount).replace(/[^0-9.]/g, "") : "";
     const monthlyIncStr = monthlyIncome ? String(monthlyIncome).replace(/[^0-9.]/g, "") : "";
     const investAmtStr = investmentAmount ? String(investmentAmount).replace(/[^0-9.]/g, "") : "";
+    const propertyValStr = propertyValue ? String(propertyValue).replace(/[^0-9.]/g, "") : "";
+    const downPmtStr = downPayment ? String(downPayment).replace(/[^0-9.]/g, "") : "";
+    const combinedDebtStr = combinedMonthlyDebt ? String(combinedMonthlyDebt).replace(/[^0-9.]/g, "") : "";
 
     let messageValue = messageText;
     if (!messageValue && requestType !== "contact_inquiry") {
@@ -250,17 +271,71 @@ Deno.serve(async (req: Request) => {
     if (loanAmtStr) properties.loan_amount = loanAmtStr;
     if (monthlyIncStr) properties.monthly_income = monthlyIncStr;
     if (investAmtStr) properties.investment_amount = investAmtStr;
+    if (propertyValStr) properties.property_value = propertyValStr;
+    if (downPmtStr) properties.down_payment = downPmtStr;
+    if (combinedDebtStr) properties.combined_monthly_debt = combinedDebtStr;
 
     properties.message = messageValue || "";
 
     const existingId = await findContactByEmail(email);
+    let contactId: string | null = null;
 
     if (existingId) {
+      contactId = existingId;
       const updated = await updateContact(existingId, properties);
       if (!updated) console.error("HubSpot update failed for contact", existingId);
     } else {
       const createResult = await createContact(properties);
       if (!createResult.ok) console.error("HubSpot contact creation failed");
+      contactId = createResult.id;
+    }
+
+    if (contactId) {
+      const noteLines = [
+        `Safe Methods Quote Request (${String(requestType).toUpperCase()})`,
+        `Reference ID: ${referenceId || quoteId || "N/A"}`,
+        `Institutions: ${institutions || "None"}`,
+        requestType === "mortgage" && propertyValue != null
+          ? `Property Value: ${Number(propertyValue).toLocaleString()}\nDown Payment: ${Number(downPayment).toLocaleString()}\nCombined Monthly Salary + Debt: ${Number(combinedMonthlyDebt).toLocaleString()}`
+          : "",
+        requestType === "loan" && loanAmount != null
+          ? `Loan Amount: ${Number(loanAmount).toLocaleString()}\nMonthly Income: ${Number(monthlyIncome).toLocaleString()}`
+          : "",
+        requestType === "investment" && investmentAmount != null
+          ? `Investment Amount: ${Number(investmentAmount).toLocaleString()}\nTerm: ${tenure ?? "N/A"}`
+          : "",
+        `Timestamp: ${new Date().toISOString()}`,
+      ].filter(Boolean);
+      const noteContent = noteLines.join("\n");
+
+      try {
+        await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            properties: {
+              hs_timestamp: new Date().toISOString(),
+              hs_note_body: noteContent,
+            },
+            associations: [
+              {
+                to: { id: contactId },
+                types: [
+                  {
+                    associationCategory: "HUBSPOT_DEFINED",
+                    associationTypeId: 202,
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+      } catch (noteErr) {
+        console.error("HubSpot note creation failed:", noteErr instanceof Error ? noteErr.message : String(noteErr));
+      }
     }
 
     return accepted();
