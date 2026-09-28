@@ -59,39 +59,6 @@ function splitName(fullName: string): { firstname: string; lastname: string } {
   return { firstname: parts[0], lastname: parts.slice(1).join(" ") };
 }
 
-async function ensureCustomProperties(): Promise<Set<string>> {
-  const available = new Set<string>();
-  const customProps = [
-    { name: "request_type", label: "Request Type", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "requested_institutions", label: "Requested Institutions", type: "string", fieldType: "textarea", groupName: "contactinformation" },
-    { name: "loan_amount", label: "Loan Amount", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "monthly_income", label: "Monthly Income", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "investment_amount", label: "Investment Amount", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "property_value", label: "Property Value", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "down_payment", label: "Down Payment", type: "string", fieldType: "text", groupName: "contactinformation" },
-    { name: "combined_monthly_debt", label: "Combined Monthly Debt", type: "string", fieldType: "text", groupName: "contactinformation" },
-  ];
-
-  for (const prop of customProps) {
-    try {
-      const resp = await fetch("https://api.hubapi.com/crm/v3/properties/contacts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify(prop),
-      });
-      if (resp.ok || resp.status === 409) {
-        available.add(prop.name);
-      }
-    } catch {
-      // Property creation failed -- fall back to standard fields
-    }
-  }
-  return available;
-}
-
 async function findContactByEmail(email: string): Promise<string | null> {
   const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
     method: "POST",
@@ -123,7 +90,7 @@ async function createContact(properties: Record<string, string>): Promise<{ id: 
 
   if (!resp.ok) {
     const errBody = await resp.text();
-    console.error(`HubSpot create failed (${resp.status}): ${errBody.slice(0, 300)}`);
+    console.error(`HubSpot contact create failed (${resp.status}): ${errBody.slice(0, 500)}`);
     return { id: null, ok: false };
   }
   const data = await resp.json();
@@ -139,6 +106,10 @@ async function updateContact(contactId: string, properties: Record<string, strin
     },
     body: JSON.stringify({ properties }),
   });
+  if (!resp.ok) {
+    const errBody = await resp.text();
+    console.error(`HubSpot contact update failed (${resp.status}) for ${contactId}: ${errBody.slice(0, 500)}`);
+  }
   return resp.ok;
 }
 
@@ -243,37 +214,26 @@ Deno.serve(async (req: Request) => {
       return accepted();
     }
 
-    const availableProps = await ensureCustomProperties();
     const { firstname, lastname } = splitName(contactName);
-
-    const loanAmtStr = loanAmount ? String(loanAmount).replace(/[^0-9.]/g, "") : "";
-    const monthlyIncStr = monthlyIncome ? String(monthlyIncome).replace(/[^0-9.]/g, "") : "";
-    const investAmtStr = investmentAmount ? String(investmentAmount).replace(/[^0-9.]/g, "") : "";
-    const propertyValStr = propertyValue ? String(propertyValue).replace(/[^0-9.]/g, "") : "";
-    const downPmtStr = downPayment ? String(downPayment).replace(/[^0-9.]/g, "") : "";
-    const combinedDebtStr = combinedMonthlyDebt ? String(combinedMonthlyDebt).replace(/[^0-9.]/g, "") : "";
 
     let messageValue = messageText;
     if (!messageValue && requestType !== "contact_inquiry") {
-      const amt = loanAmtStr || investAmtStr || "0";
-      messageValue = `Quote Request [Ref: ${quoteId || "N/A"}]: ${String(requestType).toUpperCase()} | Amount: ${amt} | FIs: ${institutions || "None"}`;
+      messageValue = `Quote Request [Ref: ${quoteId || "N/A"}]: ${String(requestType).toUpperCase()} | FIs: ${institutions || "None"}`;
     }
 
+    // Only send standard HubSpot properties + request_type to avoid 400
+    // errors from custom fields not pre-configured in HubSpot Settings.
+    // All detailed financial data goes into a timeline engagement note.
     const properties: Record<string, string> = {
       email,
       firstname: firstname || contactName || "Lead",
       lastname: lastname || "",
       phone: phone || "",
-      request_type: String(requestType),
-      requested_institutions: institutions,
     };
 
-    if (loanAmtStr) properties.loan_amount = loanAmtStr;
-    if (monthlyIncStr) properties.monthly_income = monthlyIncStr;
-    if (investAmtStr) properties.investment_amount = investAmtStr;
-    if (propertyValStr) properties.property_value = propertyValStr;
-    if (downPmtStr) properties.down_payment = downPmtStr;
-    if (combinedDebtStr) properties.combined_monthly_debt = combinedDebtStr;
+    if (requestType && requestType !== "general_inquiry") {
+      properties.request_type = String(requestType);
+    }
 
     properties.message = messageValue || "";
 
@@ -283,7 +243,7 @@ Deno.serve(async (req: Request) => {
     if (existingId) {
       contactId = existingId;
       const updated = await updateContact(existingId, properties);
-      if (!updated) console.error("HubSpot update failed for contact", existingId);
+      if (!updated) console.error("HubSpot contact update failed for contact", existingId);
     } else {
       const createResult = await createContact(properties);
       if (!createResult.ok) console.error("HubSpot contact creation failed");
@@ -291,25 +251,29 @@ Deno.serve(async (req: Request) => {
     }
 
     if (contactId) {
+      const institutionsArr = Array.isArray(body.selected_institutions)
+        ? body.selected_institutions
+        : (typeof body.selected_institutions === "string" ? [body.selected_institutions] : []);
+
       const noteLines = [
-        `Safe Methods Quote Request (${String(requestType).toUpperCase()})`,
+        `\u{1F4DD} New Quote Request: ${requestType ? requestType.toUpperCase() : "GENERAL"}`,
         `Reference ID: ${referenceId || quoteId || "N/A"}`,
-        `Institutions: ${institutions || "None"}`,
-        requestType === "mortgage" && propertyValue != null
-          ? `Property Value: ${Number(propertyValue).toLocaleString()}\nDown Payment: ${Number(downPayment).toLocaleString()}\nCombined Monthly Salary + Debt: ${Number(combinedMonthlyDebt).toLocaleString()}`
+        requestType === "mortgage"
+          ? `\u2022 Property Value: ${propertyValue != null ? Number(propertyValue).toLocaleString() : "N/A"}\n\u2022 Down Payment: ${downPayment != null ? Number(downPayment).toLocaleString() : "N/A"}\n\u2022 Combined Monthly Debt: ${combinedMonthlyDebt != null ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
           : "",
-        requestType === "loan" && loanAmount != null
-          ? `Loan Amount: ${Number(loanAmount).toLocaleString()}\nMonthly Income: ${Number(monthlyIncome).toLocaleString()}`
+        requestType === "loan"
+          ? `\u2022 Loan Amount: ${loanAmount != null ? Number(loanAmount).toLocaleString() : "N/A"}\n\u2022 Monthly Income: ${monthlyIncome != null ? Number(monthlyIncome).toLocaleString() : "N/A"}`
           : "",
-        requestType === "investment" && investmentAmount != null
-          ? `Investment Amount: ${Number(investmentAmount).toLocaleString()}\nTerm: ${tenure ?? "N/A"}`
+        requestType === "investment"
+          ? `\u2022 Investment Amount: ${investmentAmount != null ? Number(investmentAmount).toLocaleString() : "N/A"}\n\u2022 Term: ${tenure ?? "N/A"}`
           : "",
-        `Timestamp: ${new Date().toISOString()}`,
+        `\u2022 Selected Institutions: ${institutionsArr.join(", ") || "None"}`,
+        `\u2022 Submitted At: ${new Date().toISOString()}`,
       ].filter(Boolean);
       const noteContent = noteLines.join("\n");
 
       try {
-        await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
+        const noteResp = await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
@@ -333,6 +297,10 @@ Deno.serve(async (req: Request) => {
             ],
           }),
         });
+        if (!noteResp.ok) {
+          const noteErrBody = await noteResp.text();
+          console.error(`HubSpot note creation failed (${noteResp.status}): ${noteErrBody.slice(0, 500)}`);
+        }
       } catch (noteErr) {
         console.error("HubSpot note creation failed:", noteErr instanceof Error ? noteErr.message : String(noteErr));
       }
