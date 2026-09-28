@@ -297,11 +297,12 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** sales operations can act on leads without manual cleanup.
 * **Dependencies:** F3-US6
 
-#### (F3-US11) Duplicate Submission Prevention
-* **As** Safe Methods,
-* **WHEN a** user attempts to submit a second quote request within the same session,
-* **I want** the system to detect the prior submission and display existing status instead of duplicating CRM records,
-* **So that** lead databases remain clean and deduplicated.
+#### (F3-US11) Multi-Category & Revised Submissions
+* **As a** visitor,
+* **WHEN I** submit a quote request,
+* **I want to** remain free to submit additional quote requests across different categories (Loan, Investment, Mortgage) or submit revised figures,
+* **AND** have each submission treated as an append-only event recorded with an independent timestamp and `reference_id`,
+* **So that** I am never blocked by an "Already Submitted" modal when exploring different financial products.
 * **Dependencies:** F3-US6, F3-US10
 
 #### (F3-US12) Graceful Error Recovery
