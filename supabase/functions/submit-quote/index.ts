@@ -670,23 +670,27 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── CRM sync (best-effort) ──
-    callInternal("sync-hubspot-lead", {
-      email,
-      name,
-      phone: phone ?? "",
-      quote_id: quoteRequestId,
-      reference_id: referenceId,
-      request_type: requestType,
-      loan_amount: loanAmount,
-      monthly_income: monthlyIncome,
-      investment_amount: investmentAmount,
-      tenure,
-      property_value: propertyValue,
-      down_payment: downPayment,
-      combined_monthly_debt: combinedMonthlyDebt,
-      selected_institutions: selectedInstitutions,
-    }).catch(() => {});
+    // ── CRM sync (awaited so the edge runtime doesn't terminate before the note is posted) ──
+    try {
+      await callInternal("sync-hubspot-lead", {
+        email,
+        name,
+        phone: phone ?? "",
+        quote_id: quoteRequestId,
+        reference_id: referenceId,
+        request_type: requestType,
+        loan_amount: loanAmount,
+        monthly_income: monthlyIncome,
+        investment_amount: investmentAmount,
+        tenure,
+        property_value: propertyValue,
+        down_payment: downPayment,
+        combined_monthly_debt: combinedMonthlyDebt,
+        selected_institutions: selectedInstitutions,
+      });
+    } catch (crmErr) {
+      console.error("sync-hubspot-lead call failed:", (crmErr as Error).message);
+    }
 
     return jsonResponse({ success: true, alreadySubmitted: false });
   } catch (err) {

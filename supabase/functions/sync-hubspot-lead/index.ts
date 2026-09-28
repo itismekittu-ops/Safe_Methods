@@ -244,10 +244,14 @@ Deno.serve(async (req: Request) => {
 
     if (existingId) {
       contactId = existingId;
-      const updateStatus = await updateContact(existingId, properties);
-      if (updateStatus >= 400) {
-        console.error(`HubSpot contact update failed (${updateStatus}), retrying with standard fields only`);
-        await updateContact(existingId, standardFallback);
+      try {
+        const updateStatus = await updateContact(existingId, properties);
+        if (updateStatus >= 400) {
+          console.error(`HubSpot contact update failed (${updateStatus}), retrying with standard fields only`);
+          await updateContact(existingId, standardFallback);
+        }
+      } catch (updateErr) {
+        console.error("HubSpot contact update threw:", updateErr instanceof Error ? updateErr.message : String(updateErr));
       }
     } else {
       const createResult = await createContact(properties);
@@ -308,8 +312,7 @@ Deno.serve(async (req: Request) => {
           }),
         });
         if (!noteResp.ok) {
-          const noteErrBody = await noteResp.text();
-          console.error(`HubSpot note creation failed (${noteResp.status}): ${noteErrBody.slice(0, 500)}`);
+          console.error("HubSpot note creation failed:", await noteResp.text());
         }
       } catch (noteErr) {
         console.error("HubSpot note creation failed:", noteErr instanceof Error ? noteErr.message : String(noteErr));
