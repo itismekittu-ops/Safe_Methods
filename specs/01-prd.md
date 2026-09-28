@@ -292,9 +292,9 @@ Allows visitors to submit a single contact form to request official quotes from 
 
 #### (F3-US10) Structured CRM Payload Ingestion & Timeline Logging
 * **As** Safe Methods,
-* **WHEN a** valid submission is received (initial or subsequent),
-* **I want** contact details and product specifics ingested into HubSpot contact properties,
-* **AND** an Engagement Note created on the contact's timeline logging the exact submission timestamp, category, and submitted figures,
+* **WHEN a** valid quote submission is received (initial or subsequent),
+* **I want** contact details and all category specifics (`loan_amount`, `monthly_income`, `investment_amount`, `property_value`, `down_payment`, `combined_monthly_debt`, `tenure`) ingested into structured HubSpot contact properties,
+* **AND** have an Engagement Note created on the contact's timeline logging the exact submission timestamp, category, and submitted figures,
 * **So that** sales operations can see both the latest status and the complete historical timeline of every form the customer submitted.
 * **Dependencies:** F3-US6, F3-US11
 
