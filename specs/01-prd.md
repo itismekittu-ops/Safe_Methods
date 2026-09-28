@@ -205,7 +205,7 @@ Allows visitors to submit a single contact form to request official quotes from 
 * Form dynamic fields toggle based on selected context (Loan vs. Investment vs. Mortgage).
 * Client and server-side validation must check input fields (`Name`, `Email`, `Phone`) prior to CRM submission.
 * Incomplete or invalid submissions must be blocked from reaching the CRM.
-* Duplicate submissions within a single session are prevented.
+* Submissions are append-only; visitors may submit requests across multiple categories or update figures without session blocking.
 * Confirmation UI popups and transactional confirmation emails trigger immediately upon valid submission.
 * Quote submissions must invoke the backend `submit-quote` Edge Function, minting an internal `reference_id` (format: `SM-${YYYY}-${8_HEX}`) that is strictly hidden from customer-facing UI and customer emails.
 * Submitting a quote request immediately triggers an automated transactional welcome/confirmation email dispatched via Zoho SMTP (`smtppro.zoho.in:587`), setting the 5-day expectation and providing educational links without exposing technical reference IDs.
