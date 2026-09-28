@@ -78,7 +78,7 @@ async function findContactByEmail(email: string): Promise<string | null> {
   return data.results?.[0]?.id ?? null;
 }
 
-async function createContact(properties: Record<string, string>): Promise<{ id: string | null; ok: boolean }> {
+async function createContact(properties: Record<string, string>): Promise<{ id: string | null; ok: boolean; status: number }> {
   const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
     method: "POST",
     headers: {
@@ -91,13 +91,13 @@ async function createContact(properties: Record<string, string>): Promise<{ id: 
   if (!resp.ok) {
     const errBody = await resp.text();
     console.error(`HubSpot contact create failed (${resp.status}): ${errBody.slice(0, 500)}`);
-    return { id: null, ok: false };
+    return { id: null, ok: false, status: resp.status };
   }
   const data = await resp.json();
-  return { id: data.id ?? null, ok: true };
+  return { id: data.id ?? null, ok: true, status: resp.status };
 }
 
-async function updateContact(contactId: string, properties: Record<string, string>): Promise<boolean> {
+async function updateContact(contactId: string, properties: Record<string, string>): Promise<number> {
   const resp = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`, {
     method: "PATCH",
     headers: {
@@ -110,7 +110,7 @@ async function updateContact(contactId: string, properties: Record<string, strin
     const errBody = await resp.text();
     console.error(`HubSpot contact update failed (${resp.status}) for ${contactId}: ${errBody.slice(0, 500)}`);
   }
-  return resp.ok;
+  return resp.status;
 }
 
 function accepted(): Response {
@@ -216,12 +216,24 @@ Deno.serve(async (req: Request) => {
 
     const { firstname, lastname } = splitName(contactName);
 
-    // Only send guaranteed-standard HubSpot contact properties to avoid
-    // HTTP 400 (PROPERTY_DOES_NOT_EXIST) from custom fields that are not
-    // manually pre-configured in HubSpot Settings. All financial and
-    // category data goes into a timeline engagement note instead.
+    // Populate contact properties that exist in the HubSpot layout.
+    // Custom fields like request_type / loan_amount / etc. may or may not
+    // be pre-configured in HubSpot Settings — if a 400 comes back we retry
+    // with only the guaranteed-standard fields as a fallback.
     const properties: Record<string, string> = {
       email,
+      firstname: firstname || contactName || "Lead",
+      lastname: lastname || "",
+      phone: phone || "",
+    };
+
+    if (requestType) properties.request_type = String(requestType).toLowerCase();
+    if (loanAmount != null) properties.loan_amount = String(loanAmount);
+    if (monthlyIncome != null) properties.monthly_income = String(monthlyIncome);
+    if (investmentAmount != null) properties.investment_amount = String(investmentAmount);
+    if (institutions) properties.requested_institutions = String(institutions);
+
+    const standardFallback: Record<string, string> = {
       firstname: firstname || contactName || "Lead",
       lastname: lastname || "",
       phone: phone || "",
@@ -232,17 +244,20 @@ Deno.serve(async (req: Request) => {
 
     if (existingId) {
       contactId = existingId;
-      const updated = await updateContact(existingId, properties);
-      if (!updated) console.error("HubSpot contact update failed for contact", existingId);
+      const updateStatus = await updateContact(existingId, properties);
+      if (updateStatus >= 400) {
+        console.error(`HubSpot contact update failed (${updateStatus}), retrying with standard fields only`);
+        await updateContact(existingId, standardFallback);
+      }
     } else {
       const createResult = await createContact(properties);
       if (!createResult.ok) {
-        console.error("HubSpot contact creation failed, attempting minimal fallback");
-        const fallback = await createContact({ email, firstname: firstname || "Lead" });
+        console.error(`HubSpot contact creation failed (${createResult.status}), retrying with standard fields only`);
+        const fallback = await createContact({ email, firstname: firstname || "Lead", lastname: lastname || "", phone: phone || "" });
         if (fallback.ok && fallback.id) {
           contactId = fallback.id;
         } else {
-          console.error("HubSpot minimal fallback contact creation also failed");
+          console.error("HubSpot fallback contact creation also failed");
         }
       } else {
         contactId = createResult.id;
@@ -250,23 +265,19 @@ Deno.serve(async (req: Request) => {
     }
 
     if (contactId) {
-      const institutionsArr = Array.isArray(body.selected_institutions)
-        ? body.selected_institutions
-        : (typeof body.selected_institutions === "string" ? [body.selected_institutions] : []);
-
       const noteLines = [
-        `\u{1F4DD} New Quote Request: ${requestType ? requestType.toUpperCase() : "GENERAL"}`,
+        `\u{1F4DD} Safe Methods Quote Request: ${String(requestType).toUpperCase()}`,
         `Reference ID: ${referenceId || quoteId || "N/A"}`,
         requestType === "mortgage"
-          ? `\u2022 Property Value: ${propertyValue != null ? Number(propertyValue).toLocaleString() : "N/A"}\n\u2022 Down Payment: ${downPayment != null ? Number(downPayment).toLocaleString() : "N/A"}\n\u2022 Combined Monthly Debt: ${combinedMonthlyDebt != null ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
+          ? `\u2022 Property Value: ${propertyValue ? Number(propertyValue).toLocaleString() : "N/A"}\n\u2022 Down Payment: ${downPayment ? Number(downPayment).toLocaleString() : "N/A"}\n\u2022 Combined Monthly Debt: ${combinedMonthlyDebt ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
           : "",
         requestType === "loan"
-          ? `\u2022 Loan Amount: ${loanAmount != null ? Number(loanAmount).toLocaleString() : "N/A"}\n\u2022 Monthly Income: ${monthlyIncome != null ? Number(monthlyIncome).toLocaleString() : "N/A"}`
+          ? `\u2022 Loan Amount: ${loanAmount ? Number(loanAmount).toLocaleString() : "N/A"}\n\u2022 Monthly Income: ${monthlyIncome ? Number(monthlyIncome).toLocaleString() : "N/A"}`
           : "",
         requestType === "investment"
-          ? `\u2022 Investment Amount: ${investmentAmount != null ? Number(investmentAmount).toLocaleString() : "N/A"}\n\u2022 Term: ${tenure ?? "N/A"}`
+          ? `\u2022 Investment Amount: ${investmentAmount ? Number(investmentAmount).toLocaleString() : "N/A"}\n\u2022 Term: ${tenure ?? "N/A"}`
           : "",
-        `\u2022 Selected Institutions: ${institutionsArr.join(", ") || "None"}`,
+        `\u2022 Selected Institutions: ${institutions || "None"}`,
         `\u2022 Submitted At: ${new Date().toISOString()}`,
       ].filter(Boolean);
       const noteContent = noteLines.join("\n");
