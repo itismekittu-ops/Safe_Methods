@@ -31,8 +31,7 @@ The system architecture shall strictly adhere to the following principles:
 | **Backend** | Supabase Edge Functions | Business logic, secure endpoints (`submit-quote`, `submit-consultant-bid`, `dispatch-aggregated-quotes`, `sync-hubspot-lead`, `calendly-webhook`). |
 | **Database** | Supabase PostgreSQL + `pg_cron` | Relational data persistence, Row Level Security (RLS), and scheduled 5-day SLA worker. |
 | **Transactional Email** | Zoho Mail SMTP Relay (`smtppro.zoho.in:587`) | Instant customer welcome/confirmations, consultant dispatch, admin review alerts, and consolidated quote delivery. |
-| **Integrations** | Calendly, HubSpot | 10-minute consultation bookings, direct-to-CRM booking ingestion, and CRM quote request deal pipelines. |
-
+| **Integrations** | Calendly, HubSpot | 10-minute consultation bookings, direct-to-CRM booking ingestion, quote request contact synchronization, and timeline engagement notes for multi-submission lead tracking. |
 ---
 
 ### Data Models & Schemas
