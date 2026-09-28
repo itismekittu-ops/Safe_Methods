@@ -54,70 +54,88 @@ interface RequestBody {
 
 function splitName(fullName: string): { firstname: string; lastname: string } {
   const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 0) return { firstname: "", lastname: "" };
+  if (parts.length === 0) return { firstname: "Lead", lastname: "" };
   if (parts.length === 1) return { firstname: parts[0], lastname: "" };
   return { firstname: parts[0], lastname: parts.slice(1).join(" ") };
 }
 
 async function findContactByEmail(email: string): Promise<string | null> {
-  const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({
-      filterGroups: [{ filters: [{ propertyName: "email", operator: "EQ", value: email }] }],
-      properties: ["email"],
-      limit: 1,
-    }),
-  });
+  try {
+    const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({
+        filterGroups: [{ filters: [{ propertyName: "email", operator: "EQ", value: email }] }],
+        properties: ["email"],
+        limit: 1,
+      }),
+    });
 
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return data.results?.[0]?.id ?? null;
-}
-
-async function createContact(properties: Record<string, string>): Promise<{ id: string | null; ok: boolean; status: number }> {
-  const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({ properties }),
-  });
-
-  if (!resp.ok) {
-    const errBody = await resp.text();
-    console.error(`HubSpot contact create failed (${resp.status}): ${errBody.slice(0, 500)}`);
-    return { id: null, ok: false, status: resp.status };
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.results?.[0]?.id ?? null;
+  } catch {
+    return null;
   }
-  const data = await resp.json();
-  return { id: data.id ?? null, ok: true, status: resp.status };
 }
 
-async function updateContact(contactId: string, properties: Record<string, string>): Promise<number> {
-  const resp = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({ properties }),
-  });
-  if (!resp.ok) {
-    const errBody = await resp.text();
-    console.error(`HubSpot contact update failed (${resp.status}) for ${contactId}: ${errBody.slice(0, 500)}`);
+async function createContact(properties: Record<string, string>): Promise<string | null> {
+  try {
+    const resp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({ properties }),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.id ?? null;
+    }
+
+    // Fallback: minimal standard properties only
+    const fallbackResp = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({
+        properties: {
+          email: properties.email,
+          firstname: properties.firstname || "Lead",
+        },
+      }),
+    });
+
+    if (fallbackResp.ok) {
+      const data = await fallbackResp.json();
+      return data.id ?? null;
+    }
+    return null;
+  } catch {
+    return null;
   }
-  return resp.status;
 }
 
-function accepted(): Response {
-  return new Response(
-    JSON.stringify({ accepted: true }),
-    { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
+async function updateContact(contactId: string, properties: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({ properties }),
+    });
+  } catch (err) {
+    console.error("HubSpot update error (ignored to preserve note creation):", err);
+  }
 }
 
 function normalizeInstitutions(val: string[] | string | undefined | null): string {
@@ -130,21 +148,14 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  // Accept calls from sibling functions (internal secret) OR from the
-  // browser contact form (anon key via Authorization header, verified by
-  // Supabase gateway). Both are legitimate callers.
   const hasInternalSecret = secretMatches(req.headers.get("x-internal-secret") ?? "");
   const authHeader = req.headers.get("authorization") ?? "";
   const hasServiceAuth = authHeader.includes(SERVICE_ROLE_KEY);
 
-  // If neither internal secret nor any Authorization header is present,
-  // treat as unauthenticated. The Supabase gateway already validates the
-  // anon key in the Authorization header for browser calls, so we only
-  // need to block truly unauthenticated requests here.
   if (!hasInternalSecret && !hasServiceAuth && !authHeader) {
     return new Response(
-      JSON.stringify({ error: "Not found" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
@@ -152,27 +163,16 @@ Deno.serve(async (req: Request) => {
     const body: RequestBody = await req.json();
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
-    if (!email) {
+    if (!email || !HUBSPOT_ACCESS_TOKEN) {
       return new Response(
-        JSON.stringify({ error: "Missing email" }),
+        JSON.stringify({ error: "Missing email or HubSpot not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    if (!HUBSPOT_ACCESS_TOKEN) {
-      return new Response(
-        JSON.stringify({ error: "HubSpot not configured" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // Build contact properties from the payload directly.
-    // For quote submissions, submit-quote passes all fields inline.
-    // For contact form submissions, the browser passes name/email/phone/message.
-    // If name is missing, fall back to looking up the most recent quote_request.
     let contactName = typeof body.name === "string" ? body.name.trim() : "";
     let phone = typeof body.phone === "string" ? body.phone : "";
-    let requestType = body.request_type || body.requestType || "general_inquiry";
+    let requestType = (body.request_type || body.requestType || "general_inquiry").toLowerCase();
     let institutions = normalizeInstitutions(body.selected_institutions || body.selectedInstitutions);
     let loanAmount = body.loan_amount || body.loanAmount;
     let monthlyIncome = body.monthly_income || body.monthlyIncome;
@@ -182,14 +182,13 @@ Deno.serve(async (req: Request) => {
     let combinedMonthlyDebt = body.combined_monthly_debt || body.combinedMonthlyDebt;
     const quoteId = typeof body.quote_id === "string" ? body.quote_id : "";
     const referenceId = typeof body.reference_id === "string" ? body.reference_id : "";
-    const messageText = typeof body.message === "string" ? body.message : "";
     let tenure = body.tenure || null;
 
-    // If called with only an email (legacy path), try to enrich from the DB.
+    // Database lookup fallback if contactName was not passed
     if (!contactName) {
       const { data: quote } = await supabase
         .from("quote_requests")
-        .select("id, name, phone, request_type, selected_institutions, loan_amount, monthly_income, investment_amount, consent_given")
+        .select("id, name, phone, request_type, selected_institutions, loan_amount, monthly_income, investment_amount, property_value, down_payment, combined_monthly_debt, consent_given")
         .eq("email", email)
         .eq("consent_given", true)
         .order("created_at", { ascending: false })
@@ -199,7 +198,7 @@ Deno.serve(async (req: Request) => {
       if (quote && quote.consent_given) {
         contactName = quote.name ?? "";
         phone = phone || (quote.phone ?? "");
-        requestType = requestType !== "general_inquiry" ? requestType : (quote.request_type ?? requestType);
+        requestType = requestType !== "general_inquiry" ? requestType : (quote.request_type?.toLowerCase() ?? requestType);
         institutions = institutions || (Array.isArray(quote.selected_institutions) ? quote.selected_institutions.join(", ") : "");
         loanAmount = loanAmount || quote.loan_amount || null;
         monthlyIncome = monthlyIncome || quote.monthly_income || null;
@@ -210,120 +209,91 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    if (!contactName) {
-      return accepted();
-    }
-
     const { firstname, lastname } = splitName(contactName);
 
-    // Populate contact properties that exist in the HubSpot layout.
-    // Custom fields like request_type / loan_amount / etc. may or may not
-    // be pre-configured in HubSpot Settings — if a 400 comes back we retry
-    // with only the guaranteed-standard fields as a fallback.
+    // Build contact properties payload
     const properties: Record<string, string> = {
       email,
-      firstname: firstname || contactName || "Lead",
-      lastname: lastname || "",
-      phone: phone || "",
+      firstname,
+      lastname,
+      phone,
     };
 
-    if (requestType) properties.request_type = String(requestType).toLowerCase();
+    if (requestType && requestType !== "general_inquiry") {
+      properties.request_type = requestType;
+    }
     if (loanAmount != null) properties.loan_amount = String(loanAmount);
     if (monthlyIncome != null) properties.monthly_income = String(monthlyIncome);
     if (investmentAmount != null) properties.investment_amount = String(investmentAmount);
-    if (institutions) properties.requested_institutions = String(institutions);
+    if (institutions) properties.requested_institutions = institutions;
 
-    const standardFallback: Record<string, string> = {
-      firstname: firstname || contactName || "Lead",
-      lastname: lastname || "",
-      phone: phone || "",
-    };
-
+    // 1. Resolve Contact ID (Existing vs New)
     const existingId = await findContactByEmail(email);
     let contactId: string | null = null;
 
     if (existingId) {
       contactId = existingId;
-      try {
-        const updateStatus = await updateContact(existingId, properties);
-        if (updateStatus >= 400) {
-          console.error(`HubSpot contact update failed (${updateStatus}), retrying with standard fields only`);
-          await updateContact(existingId, standardFallback);
-        }
-      } catch (updateErr) {
-        console.error("HubSpot contact update threw:", updateErr instanceof Error ? updateErr.message : String(updateErr));
-      }
+      await updateContact(existingId, properties);
     } else {
-      const createResult = await createContact(properties);
-      if (!createResult.ok) {
-        console.error(`HubSpot contact creation failed (${createResult.status}), retrying with standard fields only`);
-        const fallback = await createContact({ email, firstname: firstname || "Lead", lastname: lastname || "", phone: phone || "" });
-        if (fallback.ok && fallback.id) {
-          contactId = fallback.id;
-        } else {
-          console.error("HubSpot fallback contact creation also failed");
-        }
-      } else {
-        contactId = createResult.id;
-      }
+      contactId = await createContact(properties);
     }
 
+    // 2. Timeline Engagement Note Creation (Independent & Decoupled)
     if (contactId) {
       const noteLines = [
-        `\u{1F4DD} Safe Methods Quote Request: ${String(requestType).toUpperCase()}`,
+        `📝 Safe Methods Quote Request: ${requestType.toUpperCase()}`,
         `Reference ID: ${referenceId || quoteId || "N/A"}`,
         requestType === "mortgage"
-          ? `\u2022 Property Value: ${propertyValue ? Number(propertyValue).toLocaleString() : "N/A"}\n\u2022 Down Payment: ${downPayment ? Number(downPayment).toLocaleString() : "N/A"}\n\u2022 Combined Monthly Debt: ${combinedMonthlyDebt ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
+          ? `• Property Value: $${propertyValue ? Number(propertyValue).toLocaleString() : "N/A"}\n• Down Payment: $${downPayment ? Number(downPayment).toLocaleString() : "N/A"}\n• Combined Monthly Debt: $${combinedMonthlyDebt ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
           : "",
         requestType === "loan"
-          ? `\u2022 Loan Amount: ${loanAmount ? Number(loanAmount).toLocaleString() : "N/A"}\n\u2022 Monthly Income: ${monthlyIncome ? Number(monthlyIncome).toLocaleString() : "N/A"}`
+          ? `• Loan Amount: $${loanAmount ? Number(loanAmount).toLocaleString() : "N/A"}\n• Monthly Income: $${monthlyIncome ? Number(monthlyIncome).toLocaleString() : "N/A"}`
           : "",
         requestType === "investment"
-          ? `\u2022 Investment Amount: ${investmentAmount ? Number(investmentAmount).toLocaleString() : "N/A"}\n\u2022 Term: ${tenure ?? "N/A"}`
+          ? `• Investment Amount: $${investmentAmount ? Number(investmentAmount).toLocaleString() : "N/A"}\n• Term: ${tenure ?? "N/A"}`
           : "",
-        `\u2022 Selected Institutions: ${institutions || "None"}`,
-        `\u2022 Submitted At: ${new Date().toISOString()}`,
+        `• Selected Institutions: ${institutions || "None"}`,
+        `• Submitted At: ${new Date().toISOString()}`,
       ].filter(Boolean);
-      const noteContent = noteLines.join("\n");
 
-      try {
-        const noteResp = await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
+      const noteResp = await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          properties: {
+            hs_timestamp: new Date().toISOString(),
+            hs_note_body: noteLines.join("\n"),
           },
-          body: JSON.stringify({
-            properties: {
-              hs_timestamp: new Date().toISOString(),
-              hs_note_body: noteContent,
+          associations: [
+            {
+              to: { id: contactId },
+              types: [
+                {
+                  associationCategory: "HUBSPOT_DEFINED",
+                  associationTypeId: 202,
+                },
+              ],
             },
-            associations: [
-              {
-                to: { id: contactId },
-                types: [
-                  {
-                    associationCategory: "HUBSPOT_DEFINED",
-                    associationTypeId: 202,
-                  },
-                ],
-              },
-            ],
-          }),
-        });
-        if (!noteResp.ok) {
-          console.error("HubSpot note creation failed:", await noteResp.text());
-        }
-      } catch (noteErr) {
-        console.error("HubSpot note creation failed:", noteErr instanceof Error ? noteErr.message : String(noteErr));
+          ],
+        }),
+      });
+
+      if (!noteResp.ok) {
+        console.error("HubSpot note creation failed:", await noteResp.text());
       }
     }
 
-    return accepted();
-  } catch (err) {
-    console.error("sync-hubspot-lead error:", err instanceof Error ? err.message : String(err));
     return new Response(
-      JSON.stringify({ error: "Service temporarily unavailable" }),
+      JSON.stringify({ success: true, contactId }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (err) {
+    console.error("sync-hubspot-lead error:", err);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
