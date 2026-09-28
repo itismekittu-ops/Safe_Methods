@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { XIcon, CheckCircleIcon, LoaderIcon, ShieldCheckIcon, ArrowRightIcon } from "lucide-react";
+import { XIcon, CheckCircleIcon, LoaderIcon, ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./Button";
 import { TextInput } from "./TextInput";
@@ -83,19 +83,30 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const key = `safebot_quote_submitted_${sessionToken ?? "anon"}`;
-    if (sessionStorage.getItem(key) === "true") {
-      setAlreadySubmitted(true);
-    }
-  }, [open, sessionToken]);
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPhone("");
+    setLoanAmount("");
+    setMonthlyIncome("");
+    setInvestmentAmount("");
+    setTenure("5-year");
+    setPropertyValue("");
+    setDownPayment("");
+    setCombinedDebtPayment("");
+    setConsent(false);
+    setErrors({});
+    setSubmitError(null);
+  };
 
   useEffect(() => {
     if (!open) return;
+    if (success) {
+      resetForm();
+      setSuccess(false);
+    }
     const productType = banks[0]?.productType ?? "";
     if (productType === "gic" || productType === "investment" || productType === "market_linked") {
       setMode("investment");
@@ -185,19 +196,11 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
 
       if (!response.ok) throw new Error("submission_failed");
 
-      const result = await response.json();
-
-      sessionStorage.setItem(`safebot_quote_submitted_${sessionToken ?? "anon"}`, "true");
-
-      if (result.alreadySubmitted) {
-        setAlreadySubmitted(true);
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          onClose();
-          setSuccess(false);
-        }, 5000);
-      }
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+        setSuccess(false);
+      }, 5000);
     } catch {
       // Internal failure detail is deliberately not surfaced or logged here.
       setSubmitError("Something went wrong submitting your request. Please try again.");
@@ -260,18 +263,6 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
             })()}
 
             <p className="text-xs text-muted-foreground mt-6">This window will close automatically...</p>
-          </div>
-        ) : alreadySubmitted ? (
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-6">
-              <ShieldCheckIcon className="w-8 h-8 text-accent" />
-            </div>
-            <h2 className="font-heading text-2xl text-foreground mb-3">Already Submitted</h2>
-            <p className="text-muted-foreground leading-relaxed mb-6">
-              You've already submitted a quote request in this session. Our team is
-              processing it and you'll receive offers within 5 business days.
-            </p>
-            <Button variant="secondary" onClick={onClose}>Close</Button>
           </div>
         ) : (
           <>
