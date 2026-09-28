@@ -8,7 +8,7 @@
 | :--- | :--- | :--- |
 | **BR-CUST-01** | **Data Ownership:** A customer's data belongs exclusively to the customer. They retain the right to view, export, or delete their personal data at any time. | Charter Principle #2, PRD F5[cite: 5] |
 | **BR-CUST-02** | **Contact Validation:** A customer's contact details (`Name`, `Email`, `Phone`) must pass pre-submission validation before being accepted or dispatched to CRM pipelines. | PRD F3-US6[cite: 5] |
-| **BR-CUST-03** | **Deduplication:** A customer may submit only one quote request per active session. Duplicate submissions are explicitly blocked rather than silently re-sent. | PRD F3-US11[cite: 5] |
+| **BR-CUST-03** | **Append-Only Submissions:** Quote submissions are non-destructive and append-only. Visitors are not blocked from submitting multiple requests across categories or revising their inputs within a session. Each submission is timestamped with a unique `reference_id` while preserving prior records for full audit history. | PRD F3-US11 |
 
 ---
 
