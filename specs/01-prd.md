@@ -256,7 +256,7 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **I want to** toggle between **Loan**, **Investment**, and **Mortgage** modes to dynamically reveal relevant fields:
   * **Loan:** `Loan Amount`, `Monthly Income`
   * **Investment:** `Investment Amount`, `Term`
-  * **Mortgage:** `Property Value`, `Down Payment`, `Total Monthly Income`, `Monthly Debt Payments`
+  * **Mortgage:** `Property Value`, `Down Payment`, `Combined (Joint) Monthly Salary + Monthly debt (bill) payments`
 * **AND** retain standard required fields (`Name`, `Email`), optional fields (`Phone`), explicit consent verification, and quote submission handling across all three modes,
 * **So that** I only fill out financial details relevant to my specific inquiry.
 * **Dependencies:** F3-US2, F3-US3
