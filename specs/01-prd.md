@@ -31,7 +31,7 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **I want to** see which financial products, banks, and advisors best meet my needs in the right sidebar (ordered from top match to least match),
 * **AND** have interactive filter controls placed at the top of the panel:
   1. **Row 1:** Segmented category pills for `Loan`, `Investment`, and `Mortgage`.
-  2. **Row 2:** A single flex row aligning the `Variable` / `Fixed` toggle on the left, and the `Tenure` dropdown (`1 year` to `5 years`) on the right.
+  2. **Row 2:** A single flex row aligning the rate structure toggle pills on the left and the `Tenure` dropdown (`1 year` to `5 years`) on the right. When `Investment` is selected, the pills shall display dynamically as `Fixed Rate GIC` and `Market Linked GIC`. When `Loan` or `Mortgage` is selected, the pills shall display as `Fixed` and `Variable`.
 * **AND** when toggling between `Variable` and `Fixed`, the panel must actively filter database records by inspecting the `term` string (e.g. `'fixed'` vs `'variable'`) or `product_type` (`'gic'` vs `'market_linked'`), immediately updating the displayed rates and advisor rankings,
 * **AND** have incoming chat queries or clicked cached chips automatically synchronize these controls (defaulting to `Loan` and `Variable` for general queries),
 * **AND** have all rate figures queried dynamically from the live Supabase `rates` table with zero hardcoded percentage values,
