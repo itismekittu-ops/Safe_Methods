@@ -600,20 +600,25 @@ export function HeroSection() {
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-1.5">
-                  {(["variable", "fixed"] as const).map((rt) => (
-                    <button
-                      key={rt}
-                      onClick={() => setSelectedRateType(rt)}
-                      className={`text-xs px-3 py-1 rounded-full border transition-colors capitalize ${
-                        selectedRateType === rt
-                          ? "bg-primary/10 border-primary/40 text-primary font-semibold"
-                          : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
-                      }`}
-                    >
-                      {rt}
-                    </button>
-                  ))}
+                <div className="flex gap-1.5 flex-wrap">
+                  {(["fixed", "variable"] as const).map((rt) => {
+                    const label = selectedCategory === "investment"
+                      ? (rt === "fixed" ? "Fixed Rate GIC" : "Market Linked GIC")
+                      : (rt === "fixed" ? "Fixed" : "Variable");
+                    return (
+                      <button
+                        key={rt}
+                        onClick={() => setSelectedRateType(rt)}
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                          selectedRateType === rt
+                            ? "bg-primary/10 border-primary/40 text-primary font-semibold"
+                            : "bg-surface border-border-subtle text-muted-foreground hover:border-border"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <select
