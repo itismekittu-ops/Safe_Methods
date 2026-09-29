@@ -51,6 +51,8 @@ interface RequestBody {
   down_payment?: unknown;
   combinedMonthlyDebt?: unknown;
   combined_monthly_debt?: unknown;
+  monthlyDebtPayments?: unknown;
+  monthly_debt_payments?: unknown;
   selectedInstitutions?: unknown;
   selected_institutions?: unknown;
   consent?: unknown;
@@ -145,6 +147,7 @@ function buildCustomerWelcomeHtml(
   propertyValue: number | null,
   downPayment: number | null,
   combinedMonthlyDebt: number | null,
+  monthlyDebtPayments: number | null,
 ): string {
   const safeName = escapeHtml(customerName);
   const isLoan = requestType === "loan";
@@ -159,6 +162,8 @@ function buildCustomerWelcomeHtml(
     specifics = [
       propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : null,
       downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : null,
+      monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : null,
+      monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : null,
       combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : null,
     ].filter(Boolean).join("<br/>");
   } else if (isLoan) {
@@ -230,6 +235,7 @@ function buildCustomerWelcomeText(
   propertyValue: number | null,
   downPayment: number | null,
   combinedMonthlyDebt: number | null,
+  monthlyDebtPayments: number | null,
 ): string {
   const isLoan = requestType === "loan";
   const isMortgage = requestType === "mortgage";
@@ -240,7 +246,7 @@ function buildCustomerWelcomeText(
 
   let specifics: string;
   if (isMortgage) {
-    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else if (isLoan) {
     specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else {
@@ -281,6 +287,7 @@ function buildConsultantBriefHtml(
   propertyValue: number | null,
   downPayment: number | null,
   combinedMonthlyDebt: number | null,
+  monthlyDebtPayments: number | null,
   portalUrl: string,
   expiresAt: string,
 ): string {
@@ -292,6 +299,8 @@ function buildConsultantBriefHtml(
     specifics = [
       propertyValue != null ? `<li><strong>Property Value:</strong> ${propertyValue.toLocaleString()}</li>` : "",
       downPayment != null ? `<li><strong>Down Payment:</strong> ${downPayment.toLocaleString()}</li>` : "",
+      monthlyIncome != null ? `<li><strong>Total Monthly Income:</strong> ${monthlyIncome.toLocaleString()}</li>` : "",
+      monthlyDebtPayments != null ? `<li><strong>Monthly Debt Payments:</strong> ${monthlyDebtPayments.toLocaleString()}</li>` : "",
       combinedMonthlyDebt != null ? `<li><strong>Combined Monthly Debt:</strong> ${combinedMonthlyDebt.toLocaleString()}</li>` : "",
     ].filter(Boolean).join("");
   } else if (isLoan) {
@@ -359,6 +368,7 @@ function buildConsultantBriefText(
   propertyValue: number | null,
   downPayment: number | null,
   combinedMonthlyDebt: number | null,
+  monthlyDebtPayments: number | null,
   portalUrl: string,
   expiresAt: string,
 ): string {
@@ -367,7 +377,7 @@ function buildConsultantBriefText(
   const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
   let specifics: string;
   if (isMortgage) {
-    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else if (isLoan) {
     specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else {
@@ -484,6 +494,7 @@ Deno.serve(async (req: Request) => {
     let propertyValue: number | null = null;
     let downPayment: number | null = null;
     let combinedMonthlyDebt: number | null = null;
+    let monthlyDebtPayments: number | null = null;
 
     if (requestType === "loan") {
       loanAmount = parseAmount(body.loanAmount ?? body.loan_amount);
@@ -510,6 +521,8 @@ Deno.serve(async (req: Request) => {
     } else {
       propertyValue = parseAmount(body.propertyValue ?? body.property_value);
       downPayment = parseAmount(body.downPayment ?? body.down_payment);
+      monthlyIncome = parseAmount(body.monthlyIncome ?? body.monthly_income);
+      monthlyDebtPayments = parseAmount(body.monthlyDebtPayments ?? body.monthly_debt_payments);
       combinedMonthlyDebt = parseAmount(body.combinedMonthlyDebt ?? body.combined_monthly_debt);
       if (propertyValue === null) {
         return jsonResponse({ error: "Please provide a valid property value." }, 400);
@@ -517,12 +530,19 @@ Deno.serve(async (req: Request) => {
       if (downPayment === null) {
         return jsonResponse({ error: "Please provide a valid down payment." }, 400);
       }
-      if (combinedMonthlyDebt === null) {
-        return jsonResponse({ error: "Please provide a valid combined monthly debt amount." }, 400);
+      if (monthlyIncome === null) {
+        return jsonResponse({ error: "Please provide a valid total monthly income." }, 400);
+      }
+      if (monthlyDebtPayments === null) {
+        return jsonResponse({ error: "Please provide a valid monthly debt payments amount." }, 400);
       }
       insertPayload.property_value = propertyValue;
       insertPayload.down_payment = downPayment;
-      insertPayload.combined_monthly_debt = combinedMonthlyDebt;
+      insertPayload.monthly_income = monthlyIncome;
+      insertPayload.monthly_debt_payments = monthlyDebtPayments;
+      if (combinedMonthlyDebt !== null) {
+        insertPayload.combined_monthly_debt = combinedMonthlyDebt;
+      }
     }
 
     if (typeof body.sessionToken === "string" && body.sessionToken) {
@@ -588,12 +608,12 @@ Deno.serve(async (req: Request) => {
     const welcomeHtml = buildCustomerWelcomeHtml(
       name, requestType, selectedInstitutions,
       loanAmount, monthlyIncome, investmentAmount, tenure,
-      propertyValue, downPayment, combinedMonthlyDebt,
+      propertyValue, downPayment, combinedMonthlyDebt, monthlyDebtPayments,
     );
     const welcomeText = buildCustomerWelcomeText(
       name, requestType, selectedInstitutions,
       loanAmount, monthlyIncome, investmentAmount, tenure,
-      propertyValue, downPayment, combinedMonthlyDebt,
+      propertyValue, downPayment, combinedMonthlyDebt, monthlyDebtPayments,
     );
 
     const smtpSent = await sendEmailViaSMTP(
@@ -629,13 +649,13 @@ Deno.serve(async (req: Request) => {
         const briefHtml = buildConsultantBriefHtml(
           c.name, referenceId, requestType,
           loanAmount, monthlyIncome, investmentAmount, tenure,
-          propertyValue, downPayment, combinedMonthlyDebt,
+          propertyValue, downPayment, combinedMonthlyDebt, monthlyDebtPayments,
           portalUrl, slaDateStr,
         );
         const briefText = buildConsultantBriefText(
           c.name, referenceId, requestType,
           loanAmount, monthlyIncome, investmentAmount, tenure,
-          propertyValue, downPayment, combinedMonthlyDebt,
+          propertyValue, downPayment, combinedMonthlyDebt, monthlyDebtPayments,
           portalUrl, slaDateStr,
         );
 
@@ -674,6 +694,7 @@ Deno.serve(async (req: Request) => {
         property_value: propertyValue,
         down_payment: downPayment,
         combined_monthly_debt: combinedMonthlyDebt,
+        monthly_debt_payments: monthlyDebtPayments,
         selected_institutions: selectedInstitutions,
       });
     } catch (crmErr) {

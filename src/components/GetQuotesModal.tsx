@@ -78,7 +78,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   const [tenure, setTenure] = useState("5-year");
   const [propertyValue, setPropertyValue] = useState("");
   const [downPayment, setDownPayment] = useState("");
-  const [combinedDebtPayment, setCombinedDebtPayment] = useState("");
+  const [monthlyDebtPayments, setMonthlyDebtPayments] = useState("");
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -95,7 +95,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
     setTenure("5-year");
     setPropertyValue("");
     setDownPayment("");
-    setCombinedDebtPayment("");
+    setMonthlyDebtPayments("");
     setConsent(false);
     setErrors({});
     setSubmitError(null);
@@ -140,8 +140,10 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
       else if (isNaN(Number(propertyValue)) || Number(propertyValue) <= 0) e.propertyValue = "Enter a valid amount.";
       if (!downPayment.trim()) e.downPayment = "Down payment is required.";
       else if (isNaN(Number(downPayment)) || Number(downPayment) <= 0) e.downPayment = "Enter a valid amount.";
-      if (!combinedDebtPayment.trim()) e.combinedDebtPayment = "Combined monthly debt is required.";
-      else if (isNaN(Number(combinedDebtPayment)) || Number(combinedDebtPayment) <= 0) e.combinedDebtPayment = "Enter a valid amount.";
+      if (!monthlyIncome.trim()) e.monthlyIncome = "Total monthly income is required.";
+      else if (isNaN(Number(monthlyIncome)) || Number(monthlyIncome) <= 0) e.monthlyIncome = "Enter a valid amount.";
+      if (!monthlyDebtPayments.trim()) e.monthlyDebtPayments = "Monthly debt payments are required.";
+      else if (isNaN(Number(monthlyDebtPayments)) || Number(monthlyDebtPayments) <= 0) e.monthlyDebtPayments = "Enter a valid amount.";
     }
     if (!consent) e.consent = "You must provide consent to submit.";
     setErrors(e);
@@ -185,8 +187,12 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
           propertyValue: mode === "mortgage" ? Number(propertyValue) : undefined,
           down_payment: mode === "mortgage" ? Number(downPayment) : undefined,
           downPayment: mode === "mortgage" ? Number(downPayment) : undefined,
-          combined_monthly_debt: mode === "mortgage" ? Number(combinedDebtPayment) : undefined,
-          combinedMonthlyDebt: mode === "mortgage" ? Number(combinedDebtPayment) : undefined,
+          monthly_income: (mode === "loan" || mode === "mortgage") ? Number(monthlyIncome) : undefined,
+          monthlyIncome: (mode === "loan" || mode === "mortgage") ? Number(monthlyIncome) : undefined,
+          monthly_debt_payments: mode === "mortgage" ? Number(monthlyDebtPayments) : undefined,
+          monthlyDebtPayments: mode === "mortgage" ? Number(monthlyDebtPayments) : undefined,
+          combined_monthly_debt: mode === "mortgage" ? Number(monthlyDebtPayments) : undefined,
+          combinedMonthlyDebt: mode === "mortgage" ? Number(monthlyDebtPayments) : undefined,
           selected_institutions: selectedBanks,
           selectedInstitutions: selectedBanks,
           consent: true,
@@ -412,13 +418,22 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
                   {errors.downPayment && <p className="text-xs text-destructive -mt-2">{errors.downPayment}</p>}
 
                   <TextInput
-                    label="Combined (Joint) Monthly Salary + Monthly debt payments"
+                    label="Total Monthly Income"
                     type="number"
-                    placeholder="8500"
-                    value={combinedDebtPayment}
-                    onChange={(e) => setCombinedDebtPayment(e.target.value)}
+                    placeholder="e.g. 8500"
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(e.target.value)}
                   />
-                  {errors.combinedDebtPayment && <p className="text-xs text-destructive -mt-2">{errors.combinedDebtPayment}</p>}
+                  {errors.monthlyIncome && <p className="text-xs text-destructive -mt-2">{errors.monthlyIncome}</p>}
+
+                  <TextInput
+                    label="Monthly Debt Payments"
+                    type="number"
+                    placeholder="e.g. 1200"
+                    value={monthlyDebtPayments}
+                    onChange={(e) => setMonthlyDebtPayments(e.target.value)}
+                  />
+                  {errors.monthlyDebtPayments && <p className="text-xs text-destructive -mt-2">{errors.monthlyDebtPayments}</p>}
                 </>
               )}
 

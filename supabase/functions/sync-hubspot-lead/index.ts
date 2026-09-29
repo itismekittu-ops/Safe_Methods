@@ -48,6 +48,8 @@ interface RequestBody {
   downPayment?: number | null;
   combined_monthly_debt?: number | null;
   combinedMonthlyDebt?: number | null;
+  monthly_debt_payments?: number | null;
+  monthlyDebtPayments?: number | null;
   selected_institutions?: string[] | string;
   selectedInstitutions?: string[] | string;
 }
@@ -180,6 +182,7 @@ Deno.serve(async (req: Request) => {
     let propertyValue = body.property_value || body.propertyValue;
     let downPayment = body.down_payment || body.downPayment;
     let combinedMonthlyDebt = body.combined_monthly_debt || body.combinedMonthlyDebt;
+    let monthlyDebtPayments = body.monthly_debt_payments || body.monthlyDebtPayments;
     const quoteId = typeof body.quote_id === "string" ? body.quote_id : "";
     const referenceId = typeof body.reference_id === "string" ? body.reference_id : "";
     let tenure = body.tenure || null;
@@ -188,7 +191,7 @@ Deno.serve(async (req: Request) => {
     if (!contactName) {
       const { data: quote } = await supabase
         .from("quote_requests")
-        .select("id, name, phone, request_type, selected_institutions, loan_amount, monthly_income, investment_amount, property_value, down_payment, combined_monthly_debt, consent_given")
+        .select("id, name, phone, request_type, selected_institutions, loan_amount, monthly_income, investment_amount, property_value, down_payment, combined_monthly_debt, monthly_debt_payments, consent_given")
         .eq("email", email)
         .eq("consent_given", true)
         .order("created_at", { ascending: false })
@@ -206,6 +209,7 @@ Deno.serve(async (req: Request) => {
         propertyValue = propertyValue || quote.property_value || null;
         downPayment = downPayment || quote.down_payment || null;
         combinedMonthlyDebt = combinedMonthlyDebt || quote.combined_monthly_debt || null;
+        monthlyDebtPayments = monthlyDebtPayments || quote.monthly_debt_payments || null;
       }
     }
 
@@ -244,7 +248,7 @@ Deno.serve(async (req: Request) => {
         `📝 Safe Methods Quote Request: ${requestType.toUpperCase()}`,
         `Reference ID: ${referenceId || quoteId || "N/A"}`,
         requestType === "mortgage"
-          ? `• Property Value: $${propertyValue ? Number(propertyValue).toLocaleString() : "N/A"}\n• Down Payment: $${downPayment ? Number(downPayment).toLocaleString() : "N/A"}\n• Combined Monthly Debt: $${combinedMonthlyDebt ? Number(combinedMonthlyDebt).toLocaleString() : "N/A"}`
+          ? `• Property Value: ${propertyValue ? Number(propertyValue).toLocaleString() : "N/A"}\n• Down Payment: ${downPayment ? Number(downPayment).toLocaleString() : "N/A"}\n• Total Monthly Income: ${monthlyIncome ? Number(monthlyIncome).toLocaleString() : "N/A"}\n• Monthly Debt Payments: ${monthlyDebtPayments ? Number(monthlyDebtPayments).toLocaleString() : "N/A"}`
           : "",
         requestType === "loan"
           ? `• Loan Amount: $${loanAmount ? Number(loanAmount).toLocaleString() : "N/A"}\n• Monthly Income: $${monthlyIncome ? Number(monthlyIncome).toLocaleString() : "N/A"}`
