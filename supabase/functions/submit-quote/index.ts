@@ -164,7 +164,6 @@ function buildCustomerWelcomeHtml(
       downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : null,
       monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : null,
       monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : null,
-      combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : null,
     ].filter(Boolean).join("<br/>");
   } else if (isLoan) {
     specifics = [
@@ -246,7 +245,7 @@ function buildCustomerWelcomeText(
 
   let specifics: string;
   if (isMortgage) {
-    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else if (isLoan) {
     specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else {
@@ -301,7 +300,6 @@ function buildConsultantBriefHtml(
       downPayment != null ? `<li><strong>Down Payment:</strong> ${downPayment.toLocaleString()}</li>` : "",
       monthlyIncome != null ? `<li><strong>Total Monthly Income:</strong> ${monthlyIncome.toLocaleString()}</li>` : "",
       monthlyDebtPayments != null ? `<li><strong>Monthly Debt Payments:</strong> ${monthlyDebtPayments.toLocaleString()}</li>` : "",
-      combinedMonthlyDebt != null ? `<li><strong>Combined Monthly Debt:</strong> ${combinedMonthlyDebt.toLocaleString()}</li>` : "",
     ].filter(Boolean).join("");
   } else if (isLoan) {
     specifics = [
@@ -377,7 +375,7 @@ function buildConsultantBriefText(
   const typeLabel = isMortgage ? "Mortgage" : isLoan ? "Loan" : "Investment";
   let specifics: string;
   if (isMortgage) {
-    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : "", combinedMonthlyDebt != null ? `Combined Monthly Debt: ${combinedMonthlyDebt.toLocaleString()}` : ""].filter(Boolean).join("\n");
+    specifics = [propertyValue != null ? `Property Value: ${propertyValue.toLocaleString()}` : "", downPayment != null ? `Down Payment: ${downPayment.toLocaleString()}` : "", monthlyIncome != null ? `Total Monthly Income: ${monthlyIncome.toLocaleString()}` : "", monthlyDebtPayments != null ? `Monthly Debt Payments: ${monthlyDebtPayments.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else if (isLoan) {
     specifics = [loanAmount != null ? `Loan Amount: ${loanAmount.toLocaleString()}` : "", monthlyIncome != null ? `Monthly Income: ${monthlyIncome.toLocaleString()}` : ""].filter(Boolean).join("\n");
   } else {
