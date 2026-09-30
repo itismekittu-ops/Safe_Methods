@@ -18,12 +18,12 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 
 #### (F1-US1) Ask a Question and Get an Answer
 
-* **As a** visitor, 
-* **WHEN I** view the search bar, 
-* **I want to** see an animated rotating placeholder stating *"Ask me anything about "* followed by cycling categories (*"loans..."*, *"mortgages..."*, *"personal investments..."*, *"mutual funds..."*, *"debt consolidation..."*), 
-* **AND** submit inquiries via a clean magnifying glass search icon button, 
-* **AND** receive a concise response accompanied by relevant follow-up prompts and matching bank rankings, 
-* **So that** I understand the platform's financial scope immediately and can inquire effortlessly. 
+* **As a** visitor,
+* **WHEN I** view the search bar (in both the initial hero state and during an active follow-up conversation),
+* **I want to** see an animated rotating placeholder stating *"Ask me anything about "* followed by cycling categories (*"loans..."*, *"mortgages..."*, *"personal investments..."*, *"mutual funds..."*, *"debt consolidation..."*),
+* **AND** submit inquiries via a clean magnifying glass search icon button,
+* **AND** receive a concise response (maximum 2–3 lines) accompanied by relevant follow-up prompts and matching bank rankings,
+* **So that** I understand the platform's financial scope immediately and can inquire effortlessly at any stage of the conversation.
 * **Dependencies:** EVALS
 
 #### (F1-US2) See Best-Matched Financial Products & Banks & Interactive Filter Controls
