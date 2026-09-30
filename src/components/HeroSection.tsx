@@ -25,7 +25,7 @@ const PLACEHOLDER_TERMS = [
   "debt consolidation...",
 ];
 
-function useRotatingPlaceholder(intervalMs: number, enabled: boolean) {
+function useRotatingTerm(intervalMs: number, enabled: boolean) {
   const [termIndex, setTermIndex] = useState(0);
   useEffect(() => {
     if (!enabled) return;
@@ -34,7 +34,7 @@ function useRotatingPlaceholder(intervalMs: number, enabled: boolean) {
     }, intervalMs);
     return () => clearInterval(id);
   }, [intervalMs, enabled]);
-  return `Ask me anything about ${PLACEHOLDER_TERMS[termIndex]}`;
+  return PLACEHOLDER_TERMS[termIndex];
 }
 
 interface BankMatch {
@@ -185,7 +185,7 @@ export function HeroSection() {
   const [ratesLoading, setRatesLoading] = useState(true);
 
   const isEmpty = messages.length === 0;
-  const rotatingPlaceholder = useRotatingPlaceholder(2200, true);
+  const rotatingTerm = useRotatingTerm(2200, true);
 
   const triggerMatchFocus = () => {
     matchesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -423,14 +423,21 @@ export function HeroSection() {
             {/* Bottom Search Input Bar */}
             <div className="pt-3 border-t border-border-subtle/50">
               <div className="relative flex items-center">
+                {!inputValue && (
+                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1">
+                    <span>Ask me anything about</span>
+                    <span className="font-bold text-foreground tracking-wide transition-all duration-300">
+                      {rotatingTerm}
+                    </span>
+                  </div>
+                )}
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isLoading}
-                  placeholder={rotatingPlaceholder}
-                  className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                  className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
                   style={{ borderRadius: "9999px" }}
                 />
                 <button
@@ -561,14 +568,21 @@ export function HeroSection() {
             {/* Bottom Follow-up Input Bar */}
             <div className="shrink-0 pt-2 border-t border-border-subtle/50">
               <div className="relative flex items-center">
+                {!inputValue && (
+                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1">
+                    <span>Ask me anything about</span>
+                    <span className="font-bold text-foreground tracking-wide transition-all duration-300">
+                      {rotatingTerm}
+                    </span>
+                  </div>
+                )}
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isLoading}
-                  placeholder={rotatingPlaceholder}
-                  className="w-full pl-6 pr-14 py-3 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                  className="w-full pl-6 pr-14 py-3 bg-background border border-border-subtle text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
                   style={{ borderRadius: "9999px" }}
                 />
                 <button
