@@ -403,22 +403,21 @@ export function HeroSection() {
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards - Full Width Pills with Icon Snapped Next to Text */}
+              {/* 6 Demo Question Cards - Uniform Length/Width & Expanded Vertical Coverage */}
               <div className="flex-1 flex flex-col justify-between py-6 px-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-7 gap-x-6">
                   {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSend(item.question)}
-                      className="w-full min-h-[58px] px-5 py-3 rounded-xl border border-border-subtle bg-background hover:bg-muted/60 hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs transition-all duration-200 text-left flex items-center justify-start cursor-pointer"
-                    >
-                      <span className="inline-flex items-center gap-2 group">
-                        <span className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                    <div key={item.id} className="flex justify-center sm:justify-start">
+                      <button
+                        onClick={() => handleSend(item.question)}
+                        className="w-full max-w-[340px] h-[52px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/60 hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs transition-all duration-200 text-left flex items-center justify-start gap-2 group cursor-pointer"
+                      >
+                        <span className="text-xs sm:text-[13px] font-medium text-foreground group-hover:text-primary transition-colors truncate">
                           {item.question}
                         </span>
-                        <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 shrink-0 transition-all duration-200" />
-                      </span>
-                    </button>
+                        <SearchIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 shrink-0 transition-all duration-200" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
