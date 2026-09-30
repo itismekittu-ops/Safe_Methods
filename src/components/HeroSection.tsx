@@ -387,12 +387,12 @@ export function HeroSection() {
   const showSkeletons = isLoading || ratesLoading;
 
   return (
-    <section className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+    <section className="w-full min-h-[calc(100vh-5.5rem)] flex items-center py-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Left Column: Chat / Demo Area */}
-        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[650px] min-h-[650px] overflow-hidden">
+        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between min-h-[620px] overflow-hidden">
           {isEmpty ? (
-            <div className="flex flex-col justify-between h-full">
+            <div className="flex flex-col justify-between h-full flex-1">
               {/* Header */}
               <div className="text-center shrink-0 w-full pt-2">
                 <p className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-foreground tracking-tight w-full lg:whitespace-nowrap">
@@ -403,14 +403,14 @@ export function HeroSection() {
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards - Fixed Compact Height, Centered Evenly */}
-              <div className="my-auto py-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
+              {/* 6 Demo Question Cards - Fixed Compact Heights (h-[56px]) */}
+              <div className="my-auto py-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                     <button
                       key={item.id}
                       onClick={() => handleSend(item.question)}
-                      className="h-[54px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
+                      className="h-[56px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
                     >
                       <span className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
                         {item.question}
@@ -457,9 +457,9 @@ export function HeroSection() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col justify-between h-full overflow-hidden">
+            <div className="flex flex-col justify-between h-full flex-1 overflow-hidden">
               {/* Active Chat Conversation Feed */}
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[460px]">
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[440px]">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -609,7 +609,7 @@ export function HeroSection() {
           ref={matchesRef}
           animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[650px] min-h-[650px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
+          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between min-h-[620px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
         >
           <div className="shrink-0">
             <h3 className="font-heading text-2xl text-foreground mb-3 font-bold">
