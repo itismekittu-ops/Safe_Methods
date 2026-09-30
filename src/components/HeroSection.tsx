@@ -390,7 +390,7 @@ export function HeroSection() {
     <section className="w-full">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Left Column: Chat / Demo Area */}
-        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[610px] min-h-[610px] overflow-hidden">
+        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[600px] min-h-[600px] overflow-hidden">
           {isEmpty ? (
             <div className="flex flex-col justify-between h-full">
               {/* Header */}
@@ -403,25 +403,22 @@ export function HeroSection() {
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-auto px-1">
-                {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSend(item.question)}
-                    className="p-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block mb-0.5">
-                        {item.categoryTag}
-                      </span>
-                      <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+              {/* 6 Demo Question Cards - Icon Placed Directly Next to Text */}
+              <div className="flex-1 flex flex-col justify-between py-6 px-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4">
+                  {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSend(item.question)}
+                      className="min-h-[58px] px-5 py-3 rounded-xl border border-border-subtle bg-background hover:bg-muted/60 hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs transition-all duration-200 text-left flex items-center justify-start gap-2 group cursor-pointer w-full"
+                    >
+                      <span className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                         {item.question}
-                      </p>
-                    </div>
-                    <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
-                  </button>
-                ))}
+                      </span>
+                      <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 shrink-0 transition-all duration-200" />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Bottom Search Input Bar with Bold Rotating Term */}
@@ -612,7 +609,7 @@ export function HeroSection() {
           ref={matchesRef}
           animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[610px] min-h-[610px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
+          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[600px] min-h-[600px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
         >
           <div className="shrink-0">
             <h3 className="font-heading text-2xl text-foreground mb-3 font-bold">
