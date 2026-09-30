@@ -27,12 +27,13 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **Dependencies:** EVALS
 
 #### (F1-US2) See Best-Matched Financial Products & Banks & Interactive Filter Controls
+
 * **As a** visitor,
 * **WHEN I** ask a financial question, click a suggestion, or manually interact with the Top Matches panel controls,
 * **I want to** see which financial products, banks, and advisors best meet my needs in the right sidebar (ordered from top match to least match),
-* **AND** have interactive filter controls placed at the top of the panel inside dedicated segmented container boxes: 
-1. **Row 1:** Segmented category box enclosing `Loan`, `Investment`, and `Mortgage` with clear highlighted/darkened background and border states indicating the active selection. 
-2. **Row 2:** Segmented rate structure box aligning pills on the left (`Fixed Rate GIC` / `Market Linked GIC` for Investment; `Fixed` / `Variable` for Loan/Mortgage with distinct active highlights) and the `Tenure` dropdown (`1 year` to `5 years`) on the right.
+* **AND** have interactive filter controls placed at the top of the panel inside dedicated segmented container boxes:
+  1. **Row 1:** Segmented category container box enclosing `Loan`, `Investment`, and `Mortgage` with clear highlighted/darkened background and border states indicating the active selection.
+  2. **Row 2:** A single horizontal flex row aligning the segmented rate structure toggle pills on the left (`Fixed Rate GIC` / `Market Linked GIC` for Investment; `Fixed` / `Variable` for Loan/Mortgage with distinct active highlights) and the `Tenure` dropdown (`1 year` to `5 years`) on the right in the exact same line.
 * **AND** when toggling between `Variable` and `Fixed`, the panel must actively filter database records by inspecting the `term` string (e.g. `'fixed'` vs `'variable'`) or `product_type` (`'gic'` vs `'market_linked'`), immediately updating the displayed rates and advisor rankings,
 * **AND** have incoming chat queries or clicked cached chips automatically synchronize these controls (defaulting to `Loan` and `Variable` for general queries),
 * **AND** have all rate figures queried dynamically from the live Supabase `rates` table with zero hardcoded percentage values,
