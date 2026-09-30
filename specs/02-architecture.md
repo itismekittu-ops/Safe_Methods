@@ -27,11 +27,11 @@ The system architecture shall strictly adhere to the following principles:
 
 | Layer | Technologies | Responsibilities |
 | :--- | :--- | :--- |
-| **Frontend** | Vite, React, TypeScript, Tailwind CSS | UI presentation, layout, chat widget, OAuth authentication (Google & Facebook), Calendly redirect/embed, Consultant Portal (`/consultant-portal`), and Admin Review Dashboard (`/admin/quotes`). |
+| **Frontend** | Vite, React, TypeScript, Tailwind CSS | UI presentation, layout, chat widget, OAuth authentication (Google & Facebook), Calendly redirect/embed, Consultant Portal (`/consultant-portal`), Admin Review Dashboard (`/admin/quotes`), Cookie Consent Banner, and attribution capture (`src/lib/attribution.ts`). |
 | **Backend** | Supabase Edge Functions | Business logic, secure endpoints (`submit-quote`, `submit-consultant-bid`, `dispatch-aggregated-quotes`, `sync-hubspot-lead`, `calendly-webhook`). |
 | **Database** | Supabase PostgreSQL + `pg_cron` | Relational data persistence, Row Level Security (RLS), and scheduled 5-day SLA worker. |
 | **Transactional Email** | Zoho Mail SMTP Relay (`smtppro.zoho.in:587`) | Instant customer welcome/confirmations, consultant dispatch, admin review alerts, and consolidated quote delivery. |
-| **Integrations** | Calendly, HubSpot | 10-minute consultation bookings, direct-to-CRM booking ingestion, quote request contact synchronization, and timeline engagement notes for multi-submission lead tracking. |
+| **Integrations** | Calendly, HubSpot, Google Analytics 4 (GA4) | 10-minute consultation bookings, lead ingestion with campaign/referrer attribution, CRM engagement notes, and privacy-respecting client analytics with Consent Mode v2. |
 ---
 
 ### Data Models & Schemas
