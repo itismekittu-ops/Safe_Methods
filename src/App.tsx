@@ -55,6 +55,7 @@ export function AppRoutes() {
           <Route path="/login" element={<Auth />} />
           <Route path="/account" element={<Account />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route
             path="/admin/quotes"
