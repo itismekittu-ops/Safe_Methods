@@ -420,7 +420,7 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Bottom Search Input Bar */}
+            {/* Bottom Search Input Bar with Bold Rotating Term */}
             <div className="pt-3 border-t border-border-subtle/50 shrink-0">
               <div className="relative flex items-center">
                 {!inputValue && (
@@ -565,7 +565,7 @@ export function HeroSection() {
               </div>
             )}
 
-            {/* Bottom Follow-up Input Bar */}
+            {/* Bottom Follow-up Input Bar with Bold Rotating Term */}
             <div className="shrink-0 pt-2 border-t border-border-subtle/50">
               <div className="relative flex items-center">
                 {!inputValue && (
