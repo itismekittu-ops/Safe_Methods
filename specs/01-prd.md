@@ -300,13 +300,13 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** I have instant confirmation and permanent records in my inbox.
 * **Dependencies:** F3-US6
 
-#### (F3-US10) Structured CRM Payload Ingestion & Timeline Logging
-* **As** Safe Methods,
-* **WHEN a** valid submission is received (initial or subsequent),
-* **I want** contact details and product specifics ingested into HubSpot contact properties,
-* **AND** an Engagement Note created on the contact's timeline logging the exact submission timestamp, category, and submitted figures,
-* **So that** sales operations can see both the latest status and the complete historical timeline of every form the customer submitted.
-* **Dependencies:** F3-US6, F3-US11
+#### (F3-US10) Structured CRM Payload Ingestion & Marketing Attribution
+
+* **As** Safe Methods, 
+* **WHEN a** valid quote submission is received (initial or subsequent), 
+* **I want** contact details, financial request parameters, and captured marketing attribution data (`utm_source`, `utm_medium`, `utm_campaign`, `initial_referrer`) ingested into HubSpot contact properties and recorded on the contact timeline Engagement Note, 
+* **So that** sales operations can track whether the lead originated from Meta Ads, LinkedIn, Organic Search, or Direct traffic. 
+* **Dependencies:** F3-US6, sync-hubspot-lead, HubSpot CRM
 
 #### (F3-US11) Multi-Category & Revised Submissions
 * **As a** visitor,
@@ -538,6 +538,17 @@ Provides users with direct control to view, export, or permanently delete person
 * **So that** I understand how my information is handled before submitting any financial inquiry.
 * **Dependencies:** F3 (Quote Requests), F5 (Data Subject Rights)
 
+#### (F5-US5) Cookie Consent Banner & GA4 Telemetry Controls
+
+* **As a** visitor, 
+* **WHEN I** first navigate to `safemethods.com`, 
+* **I want** an unobtrusive, non-blocking bottom consent banner offering "Essential Only" and "Accept All", 
+* **AND** selecting "Essential Only" keeps GA4 tracking disabled (`analytics_storage: 'denied'`), 
+* **AND** selecting "Accept All" enables GA4 tracking (`analytics_storage: 'granted'`), 
+* **AND** saves my preference in `localStorage` (`safemethods_cookie_consent`) so the banner does not reappear on future visits, 
+* **So that** my tracking preferences comply with Canadian statutory privacy standards (PIPEDA / Law 25). 
+* **Dependencies:** VITE_GA_MEASUREMENT_ID, Google Analytics 4
+
 ---
 
 ## FEATURE 6: (F6) Homepage FAQ & Answer Engine Optimization
@@ -574,6 +585,7 @@ Replaces `SafeBotDemo.tsx` and `CtaSection.tsx` on the homepage with an accessib
 * **Deduplication:** Transmits normalized key pairs (lowercased email, digits-only phone) to allow native contact deduplication.
 * **Resiliency:** API failures queue leads asynchronously without blocking user UI feedback (`F3-US7`).
 
-### Mixpanel Analytics Touchpoints
-* **Funnel Events:** Tracks interactions: `chat_started`, `category_card_clicked`, `get_quotes_opened`, `consent_given`, `consent_denied`, `quote_submitted`, `account_created`, `logged_in`.
-* **Privacy Controls:** Blocked message events fire generic flags containing zero raw text payload or block specifics.
+### Google Analytics 4 (GA4) Touchpoints
+* **Consent Management:** Implements Google Consent Mode v2 (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`). Default state is denied until the visitor clicks "Accept All".
+* **Route Telemetry:** Fires SPA page views on React Router transitions via `useLocation()`.
+* **Lead Conversion Events:** Dispatches telemetry hits upon quote modal submission and consultation bookings.
