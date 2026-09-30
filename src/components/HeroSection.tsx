@@ -387,7 +387,7 @@ export function HeroSection() {
   const showSkeletons = isLoading || ratesLoading;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
       {/* Left Column: Chat / Demo Area */}
       <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[640px] overflow-hidden">
         {isEmpty ? (
@@ -513,7 +513,7 @@ export function HeroSection() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Floating Banner */}
+            {/* Floating Options Banner */}
             {!isLoading && messages[messages.length - 1]?.role === "bot" && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
@@ -542,7 +542,7 @@ export function HeroSection() {
               </motion.div>
             )}
 
-            {/* Follow-up suggestions */}
+            {/* Follow-up Suggestion Chips */}
             {followUps.length > 0 && !isLoading && (
               <div className="shrink-0 py-1.5 flex flex-wrap gap-1.5">
                 {followUps.map((chip, idx) => (
@@ -558,7 +558,7 @@ export function HeroSection() {
               </div>
             )}
 
-            {/* Bottom Input for Follow-up */}
+            {/* Bottom Follow-up Input Bar */}
             <div className="shrink-0 pt-2 border-t border-border-subtle/50">
               <div className="relative flex items-center">
                 <input
@@ -589,7 +589,7 @@ export function HeroSection() {
         )}
       </div>
 
-      {/* Right Column: Top Matches */}
+      {/* Right Column: Top Matches Sidebar */}
       <motion.div
         ref={matchesRef}
         animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
@@ -742,11 +742,11 @@ export function HeroSection() {
         <div className="shrink-0 flex flex-col gap-2 pt-1">
           <Button
             variant="primary"
-            className="w-full bg-accent text-primary hover:bg-accent/90 border-transparent text-sm py-2.5"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border-transparent text-sm py-2.5 font-medium shadow-sm"
             onClick={() => setQuotesOpen(true)}
           >
             <FileTextIcon className="h-4 w-4 mr-1.5" />
-            Get <span className="text-emerald-950 font-bold mx-1">Free</span> Quotes
+            Get <span className="text-amber-300 font-bold mx-1.5 underline decoration-amber-400 underline-offset-2">Free</span> Quotes
           </Button>
 
           <p className="text-xs font-medium text-foreground text-center">
