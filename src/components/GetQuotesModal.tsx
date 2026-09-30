@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "./Button";
 import { TextInput } from "./TextInput";
 import { Select } from "./Select";
+import { getStoredAttribution } from "../lib/attribution";
 
 export interface BankMatchRef {
   name: string;
@@ -197,6 +198,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
           selectedInstitutions: selectedBanks,
           consent: true,
           sessionToken: sessionToken ?? undefined,
+          attribution: getStoredAttribution(),
         }),
       });
 

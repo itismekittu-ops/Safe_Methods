@@ -7,7 +7,7 @@ const root = resolve(__dirname, "..");
 const distDir = resolve(root, "dist");
 const ssrDir = resolve(root, "dist-ssr");
 
-const ROUTES = ["/", "/services", "/blog", "/privacy-policy"];
+const ROUTES = ["/", "/services", "/blog", "/privacy-policy", "/privacy"];
 
 function fail(msg) {
   console.error(`\n[prerender] FATAL: ${msg}\n`);

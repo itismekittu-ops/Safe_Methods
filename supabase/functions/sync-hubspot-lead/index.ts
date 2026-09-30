@@ -52,6 +52,14 @@ interface RequestBody {
   monthlyDebtPayments?: number | null;
   selected_institutions?: string[] | string;
   selectedInstitutions?: string[] | string;
+  attribution?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+    initial_referrer?: string;
+  };
 }
 
 function splitName(fullName: string): { firstname: string; lastname: string } {
@@ -186,6 +194,7 @@ Deno.serve(async (req: Request) => {
     const quoteId = typeof body.quote_id === "string" ? body.quote_id : "";
     const referenceId = typeof body.reference_id === "string" ? body.reference_id : "";
     let tenure = body.tenure || null;
+    const attribution = body.attribution ?? {};
 
     // Database lookup fallback if contactName was not passed
     if (!contactName) {
@@ -230,6 +239,10 @@ Deno.serve(async (req: Request) => {
     if (monthlyIncome != null) properties.monthly_income = String(monthlyIncome);
     if (investmentAmount != null) properties.investment_amount = String(investmentAmount);
     if (institutions) properties.requested_institutions = institutions;
+    if (attribution.utm_source) properties.utm_source = attribution.utm_source;
+    if (attribution.utm_medium) properties.utm_medium = attribution.utm_medium;
+    if (attribution.utm_campaign) properties.utm_campaign = attribution.utm_campaign;
+    if (attribution.initial_referrer) properties.initial_referrer = attribution.initial_referrer;
 
     // 1. Resolve Contact ID (Existing vs New)
     const existingId = await findContactByEmail(email);
@@ -258,6 +271,12 @@ Deno.serve(async (req: Request) => {
           : "",
         `• Selected Institutions: ${institutions || "None"}`,
         `• Submitted At: ${new Date().toISOString()}`,
+        "",
+        "Marketing Attribution:",
+        `• utm_source: ${attribution.utm_source || "N/A"}`,
+        `• utm_medium: ${attribution.utm_medium || "N/A"}`,
+        `• utm_campaign: ${attribution.utm_campaign || "N/A"}`,
+        `• initial_referrer: ${attribution.initial_referrer || "N/A"}`,
       ].filter(Boolean);
 
       const noteResp = await fetch("https://api.hubapi.com/crm/v3/objects/notes", {

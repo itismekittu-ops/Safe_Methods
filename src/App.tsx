@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import ReactGA from 'react-ga4';
 import { AuthProvider, useAuth } from './lib/auth';
+import { initGA, trackPageView } from './lib/analytics';
+import { CookieBanner } from './components/CookieBanner';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { ServiceDetail } from './pages/ServiceDetail';
@@ -36,15 +37,15 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
 function usePageTracking() {
   const location = useLocation();
   useEffect(() => {
-    const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
-    if (gaId) {
-      ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
-    }
+    trackPageView(location.pathname + location.search);
   }, [location]);
 }
 
 export function AppRoutes() {
   usePageTracking();
+  useEffect(() => {
+    initGA();
+  }, []);
   return (
     <AuthProvider>
       <Routes>
@@ -68,6 +69,7 @@ export function AppRoutes() {
         </Route>
         <Route path="/consultant-portal" element={<ConsultantPortal />} />
       </Routes>
+      <CookieBanner />
     </AuthProvider>
   );
 }
