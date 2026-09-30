@@ -391,28 +391,33 @@ export function HeroSection() {
     <section className="container mx-auto px-4 pt-3 pb-8 flex flex-col">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
         {/* Left Column: Chat / Demo */}
-        <div className="lg:col-span-2 flex flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-soft h-[600px] md:h-[680px]">
+        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 flex flex-col justify-start gap-5 shadow-soft">
           {isEmpty ? (
-            <div className="flex flex-col h-full p-6">
-              <p className="text-sm md:text-base font-medium text-muted-foreground text-center mb-4">
-                Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
-              </p>
+            <>
+              <div className="flex flex-col items-center">
+                <p className="text-sm md:text-base font-semibold text-foreground text-center">
+                  Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground text-center max-w-xl mx-auto mt-1">
+                  We bring financial experts from top big firms so you can compare & choose the best product or interest rate.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                   <button
                     key={item.id}
                     onClick={() => handleSend(item.question)}
-                    className="p-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/50 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-sm"
+                    className="p-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs"
                   >
                     <span className="sr-only">{item.category}</span>
-                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">{item.question}</span>
+                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors">{item.question}</span>
                     <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
                   </button>
                 ))}
               </div>
 
-              <div className="mt-auto pt-4 border-t border-border-subtle/50">
+              <div className="mt-2 pt-2 border-t border-border-subtle/40">
                 <div className="relative flex items-center">
                   <input
                     type="text"
@@ -421,7 +426,7 @@ export function HeroSection() {
                     onKeyDown={handleKeyDown}
                     disabled={isLoading}
                     placeholder={rotatingPlaceholder}
-                    className="w-full pl-6 pr-14 py-4 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                    className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
                     style={{ borderRadius: "9999px" }}
                   />
                   <button
@@ -438,10 +443,10 @@ export function HeroSection() {
                   </button>
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto pr-2 scroll-smooth p-6 flex flex-col gap-6">
+              <div className="flex-1 overflow-y-auto pr-2 scroll-smooth flex flex-col gap-6">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -546,7 +551,7 @@ export function HeroSection() {
                 </div>
               )}
 
-              <div className="p-4 bg-surface border-t border-border-subtle">
+              <div className="mt-2 pt-2 border-t border-border-subtle/40">
                 <div className="relative flex items-center">
                   <input
                     type="text"
@@ -555,14 +560,13 @@ export function HeroSection() {
                     onKeyDown={handleKeyDown}
                     disabled={isLoading}
                     placeholder="Ask a follow-up question..."
-                    className="w-full pl-6 pr-14 py-3 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm disabled:opacity-60"
+                    className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
                     style={{ borderRadius: "9999px" }}
                   />
                   <button
                     onClick={() => handleSend(inputValue)}
                     disabled={!inputValue.trim() || isLoading}
-                    className="absolute right-1.5 w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
-                    style={{ borderRadius: "9999px" }}
+                    className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
                     aria-label="Search"
                   >
                     {isLoading ? (
@@ -590,14 +594,14 @@ export function HeroSection() {
 
           {/* Category Controls */}
           <div className="mb-3">
-            <div className="bg-muted/50 p-1 rounded-xl border border-border-subtle flex gap-1">
+            <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1">
               {(["loan", "investment", "mortgage"] as const).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-1 text-xs px-3 py-1.5 rounded-lg transition-colors capitalize ${
+                  className={`flex-1 text-xs py-1.5 px-3 rounded-lg transition-colors capitalize ${
                     selectedCategory === cat
-                      ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -609,7 +613,7 @@ export function HeroSection() {
 
           {/* Rate Structure Controls */}
           <div className="mb-4">
-            <div className="bg-muted/50 p-1 rounded-xl border border-border-subtle flex gap-1">
+            <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1">
               {(["fixed", "variable"] as const).map((rt) => {
                 const label = selectedCategory === "investment"
                   ? (rt === "fixed" ? "Fixed Rate GIC" : "Market Linked GIC")
@@ -618,9 +622,9 @@ export function HeroSection() {
                   <button
                     key={rt}
                     onClick={() => setSelectedRateType(rt)}
-                    className={`flex-1 text-xs px-3 py-1.5 rounded-lg transition-colors ${
+                    className={`flex-1 text-xs py-1.5 px-3 rounded-lg transition-colors ${
                       selectedRateType === rt
-                        ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
