@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { XIcon, CheckCircleIcon, LoaderIcon, ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./Button";
@@ -20,6 +20,7 @@ interface GetQuotesModalProps {
   onClose: () => void;
   banks: BankMatchRef[];
   sessionToken: string | null;
+  initialCategory?: RequestMode;
 }
 
 type RequestMode = "loan" | "investment" | "mortgage";
@@ -68,7 +69,7 @@ function topicFromProductType(pt: string | undefined): Topic {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[\d\s()+\-]{7,}$/;
 
-export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotesModalProps) {
+export function GetQuotesModal({ open, onClose, banks, sessionToken, initialCategory }: GetQuotesModalProps) {
   const [mode, setMode] = useState<RequestMode>("loan");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -85,6 +86,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const prevOpenRef = useRef(false);
 
   const resetForm = () => {
     setName("");
@@ -103,20 +105,31 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken }: GetQuotes
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || prevOpenRef.current) return;
+    prevOpenRef.current = true;
+
     if (success) {
       resetForm();
       setSuccess(false);
     }
-    const productType = banks[0]?.productType ?? "";
-    if (productType === "gic" || productType === "investment" || productType === "market_linked") {
-      setMode("investment");
-    } else if (productType === "mortgage") {
-      setMode("mortgage");
+
+    if (initialCategory) {
+      setMode(initialCategory);
     } else {
-      setMode("loan");
+      const productType = banks[0]?.productType ?? "";
+      if (productType === "gic" || productType === "investment" || productType === "market_linked") {
+        setMode("investment");
+      } else if (productType === "mortgage") {
+        setMode("mortgage");
+      } else {
+        setMode("loan");
+      }
     }
-  }, [open, banks]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!open) prevOpenRef.current = false;
+  }, [open]);
 
   if (!open) return null;
 

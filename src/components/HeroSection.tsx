@@ -788,13 +788,14 @@ export function HeroSection() {
           onClose={() => setQuotesOpen(false)}
           banks={(banks.length > 0 ? banks : DEFAULT_BANKS).map((b): BankMatchRef => ({
             name: b.name,
-            productType: detectedTopic === "investment" ? "gic" : b.productType,
+            productType: b.productType,
             rate: b.rate,
             rank: b.rank,
             consultantId: b.consultantId,
             consultantName: b.consultantName,
           }))}
           sessionToken={sessionToken}
+          initialCategory={selectedCategory}
         />
       </div>
     </section>
