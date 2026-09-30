@@ -392,26 +392,26 @@ export function HeroSection() {
       <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[640px] overflow-hidden">
         {isEmpty ? (
           <div className="flex flex-col justify-between h-full">
-            {/* Header */}
-            <div className="text-center pt-2">
-              <p className="text-sm md:text-base font-semibold text-foreground tracking-tight">
+            {/* Expanded Header - Guaranteed Single Line */}
+            <div className="text-center pt-1 shrink-0 w-full">
+              <p className="text-sm sm:text-base lg:text-[1.05rem] font-semibold text-foreground tracking-tight w-full lg:whitespace-nowrap">
                 Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-lg mx-auto">
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 max-w-xl mx-auto">
                 We bring financial experts from top big firms so you can compare &amp; choose the best product or interest rate.
               </p>
             </div>
 
-            {/* 6 Demo Question Cards */}
-            <div className="my-auto py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 6 Demo Question Cards - Evenly Distributed Across Full Height */}
+            <div className="flex-1 flex flex-col justify-between py-3 my-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full items-stretch">
                 {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                   <button
                     key={item.id}
                     onClick={() => handleSend(item.question)}
-                    className="p-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer"
+                    className="py-4 px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
                   >
-                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
                       {item.question}
                     </span>
                     <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
@@ -421,10 +421,10 @@ export function HeroSection() {
             </div>
 
             {/* Bottom Search Input Bar */}
-            <div className="pt-3 border-t border-border-subtle/50">
+            <div className="pt-3 border-t border-border-subtle/50 shrink-0">
               <div className="relative flex items-center">
                 {!inputValue && (
-                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1">
+                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1.5">
                     <span>Ask me anything about</span>
                     <span className="font-bold text-foreground tracking-wide transition-all duration-300">
                       {rotatingTerm}
@@ -569,7 +569,7 @@ export function HeroSection() {
             <div className="shrink-0 pt-2 border-t border-border-subtle/50">
               <div className="relative flex items-center">
                 {!inputValue && (
-                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1">
+                  <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1.5">
                     <span>Ask me anything about</span>
                     <span className="font-bold text-foreground tracking-wide transition-all duration-300">
                       {rotatingTerm}
