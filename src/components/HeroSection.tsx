@@ -403,8 +403,8 @@ export function HeroSection() {
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards - Centered with Equal Left/Right Margins, Rows 1-3 & 4-6, Golden Border on Hover */}
-              <div className="flex-1 flex flex-col justify-between py-5 md:py-6 px-1">
+              {/* 6 Demo Question Cards - Perfectly Centered Between Headline and Search Bar */}
+              <div className="my-auto py-2 px-1 w-full">
                 <div className="w-full max-w-[760px] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-y-6 sm:gap-y-8 gap-x-8 sm:gap-x-10 justify-items-center">
                   {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                     <div key={item.id} className="w-full flex justify-center">
