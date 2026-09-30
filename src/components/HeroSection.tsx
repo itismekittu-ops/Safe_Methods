@@ -397,21 +397,21 @@ export function HeroSection() {
               <p className="text-sm sm:text-base lg:text-[1.05rem] font-semibold text-foreground tracking-tight w-full lg:whitespace-nowrap">
                 Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-xl mx-auto">
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 max-w-xl mx-auto">
                 We bring financial experts from top big firms so you can compare &amp; choose the best product or interest rate.
               </p>
             </div>
 
-            {/* 6 Demo Question Cards - Natural Padding & Height */}
+            {/* 6 Demo Question Cards */}
             <div className="my-auto py-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                   <button
                     key={item.id}
                     onClick={() => handleSend(item.question)}
-                    className="min-h-[58px] px-4 py-3 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
+                    className="h-auto py-3 px-4.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
                   >
-                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                    <span className="text-sm sm:text-[0.95rem] font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                       {item.question}
                     </span>
                     <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
