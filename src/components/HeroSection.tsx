@@ -390,35 +390,33 @@ export function HeroSection() {
     <section className="w-full">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         {/* Left Column: Chat / Demo Area */}
-        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[650px] min-h-[650px] overflow-hidden">
+        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[580px] overflow-hidden">
           {isEmpty ? (
             <div className="flex flex-col justify-between h-full">
               {/* Header */}
-              <div className="text-center shrink-0 w-full pt-2">
+              <div className="text-center shrink-0 w-full pt-1">
                 <p className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-foreground tracking-tight w-full lg:whitespace-nowrap">
                   Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
                 </p>
-                <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">
+                <p className="text-sm text-muted-foreground mt-1 max-w-xl mx-auto">
                   We bring financial experts from top big firms so you can compare &amp; choose the best product or interest rate.
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards - Fixed Compact Height, Centered Evenly */}
-              <div className="my-auto py-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
-                  {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSend(item.question)}
-                      className="h-[54px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
-                    >
-                      <span className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                        {item.question}
-                      </span>
-                      <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
-                    </button>
-                  ))}
-                </div>
+              {/* 6 Demo Question Cards - Fixed Natural Height, No Vertical Stretching */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-auto px-1">
+                {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSend(item.question)}
+                    className="h-[52px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
+                  >
+                    <span className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      {item.question}
+                    </span>
+                    <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+                  </button>
+                ))}
               </div>
 
               {/* Bottom Search Input Bar with Bold Rotating Term */}
@@ -459,7 +457,7 @@ export function HeroSection() {
           ) : (
             <div className="flex flex-col justify-between h-full overflow-hidden">
               {/* Active Chat Conversation Feed */}
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[460px]">
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[410px]">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -527,7 +525,7 @@ export function HeroSection() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="shrink-0 mx-auto my-1 flex w-full max-w-md flex-col items-center gap-1.5 rounded-lg border border-accent/60 bg-background px-6 py-2.5 text-center shadow-soft"
+                  className="shrink-0 mx-auto my-1 flex w-full max-w-md flex-col items-center gap-1 rounded-lg border border-accent/60 bg-background px-6 py-2 text-center shadow-soft"
                 >
                   <button
                     type="button"
@@ -541,9 +539,9 @@ export function HeroSection() {
                   <p className="-mt-1 text-xs font-medium text-foreground">
                     Get <span className="font-semibold text-emerald-700">free</span>, no-obligation quotes in your inbox
                   </p>
-                  <Button onClick={() => setQuotesOpen(true)} className="px-5 py-1.5 text-xs">
+                  <Button onClick={() => setQuotesOpen(true)} className="px-4 py-1 text-xs">
                     <span className="inline-flex items-center gap-1.5">
-                      <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <FileTextIcon className="h-3 w-3" aria-hidden="true" />
                       Get Quotes
                     </span>
                   </Button>
@@ -609,10 +607,10 @@ export function HeroSection() {
           ref={matchesRef}
           animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[650px] min-h-[650px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
+          className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-5 shadow-soft flex flex-col justify-between h-[580px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
         >
           <div className="shrink-0">
-            <h3 className="font-heading text-2xl text-foreground mb-3 font-bold">
+            <h3 className="font-heading text-2xl text-foreground mb-2 font-bold">
               Top Matches
             </h3>
 
@@ -622,7 +620,7 @@ export function HeroSection() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-1 text-center py-1.5 text-xs rounded-lg transition-colors capitalize ${
+                  className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors capitalize ${
                     selectedCategory === cat
                       ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
@@ -634,7 +632,7 @@ export function HeroSection() {
             </div>
 
             {/* Row 2: Rate Structure + Tenure in the SAME line */}
-            <div className="flex items-center justify-between gap-2 mt-2.5 w-full">
+            <div className="flex items-center justify-between gap-2 mt-2 w-full">
               <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1 flex-1">
                 {(["fixed", "variable"] as const).map((rt) => {
                   const label = selectedCategory === "investment"
@@ -644,7 +642,7 @@ export function HeroSection() {
                     <button
                       key={rt}
                       onClick={() => setSelectedRateType(rt)}
-                      className={`flex-1 text-center py-1.5 text-xs rounded-lg transition-colors ${
+                      className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors ${
                         selectedRateType === rt
                           ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                           : "text-muted-foreground hover:text-foreground"
@@ -658,7 +656,7 @@ export function HeroSection() {
               <select
                 value={selectedTenure}
                 onChange={(e) => setSelectedTenure(e.target.value)}
-                className="shrink-0 w-[105px] py-1.5 text-xs border border-border-subtle rounded-xl bg-background px-2 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
+                className="shrink-0 w-[105px] py-1 text-xs border border-border-subtle rounded-xl bg-background px-2 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
               >
                 {TENURE_OPTIONS.map((t) => (
                   <option key={t} value={t}>
@@ -670,20 +668,20 @@ export function HeroSection() {
           </div>
 
           {/* Match Cards */}
-          <div className="flex-1 flex flex-col justify-center gap-3 my-3 overflow-y-auto">
+          <div className="flex-1 flex flex-col justify-center gap-2 my-2 overflow-y-auto">
             {showSkeletons ? (
               <>
                 {[1, 2, 3].map((n) => (
                   <div
                     key={n}
-                    className="flex items-center gap-3 p-3.5 rounded-lg border bg-surface border-border-subtle animate-pulse"
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-surface border-border-subtle animate-pulse"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-muted shrink-0" />
-                    <div className="flex-grow min-w-0 space-y-2">
-                      <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="w-9 h-9 rounded-lg bg-muted shrink-0" />
+                    <div className="flex-grow min-w-0 space-y-1.5">
+                      <div className="h-3.5 bg-muted rounded w-3/4" />
                       <div className="h-3 bg-muted rounded w-1/2" />
                     </div>
-                    <div className="w-10 h-6 bg-muted rounded shrink-0" />
+                    <div className="w-9 h-5 bg-muted rounded shrink-0" />
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground mt-1 text-center">
@@ -695,36 +693,36 @@ export function HeroSection() {
                 {(banks.length > 0 ? banks : DEFAULT_BANKS).map((bank) => (
                   <div
                     key={bank.rank}
-                    className={`flex items-center gap-3 p-3.5 rounded-lg border transition-colors ${
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
                       bank.isBest
                         ? "bg-accent/10 border-accent/40 shadow-soft"
                         : "bg-surface border-border-subtle"
                     }`}
                   >
                     <div
-                      className={`relative w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                      className={`relative w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
                         bank.isBest
                           ? "bg-accent/20 border border-accent/50"
                           : "bg-muted border border-border-subtle"
                       }`}
                     >
                       <BuildingIcon
-                        className={`w-5 h-5 ${
+                        className={`w-4 h-4 ${
                           bank.isBest ? "text-primary" : "text-muted-foreground"
                         }`}
                       />
                       {bank.isBest && (
-                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
-                          <CheckIcon className="w-3 h-3" />
+                        <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
+                          <CheckIcon className="w-2.5 h-2.5" />
                         </span>
                       )}
                     </div>
 
                     <div className="flex-grow min-w-0">
-                      <p className="font-semibold text-sm text-foreground truncate">
+                      <p className="font-semibold text-xs text-foreground truncate">
                         {bank.consultantName ?? bank.name}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-[11px] text-muted-foreground truncate">
                         {bank.name}
                         {bank.consultantTitle ? ` · ${bank.consultantTitle}` : ""}
                       </p>
@@ -733,20 +731,20 @@ export function HeroSection() {
                     <div className="text-right shrink-0">
                       {bank.rate > 0 ? (
                         <span
-                          className={`font-heading text-base font-bold ${
+                          className={`font-heading text-sm font-bold ${
                             bank.isBest ? "text-accent" : "text-foreground"
                           }`}
                         >
                           {bank.rate}%
                         </span>
                       ) : (
-                        <span className="font-heading text-base font-bold text-muted-foreground">&mdash;</span>
+                        <span className="font-heading text-sm font-bold text-muted-foreground">&mdash;</span>
                       )}
                     </div>
                   </div>
                 ))}
 
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug text-center">
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug text-center">
                   AI can make mistakes, We encourage you to speak to real advisors for personalized offers.
                 </p>
               </>
@@ -754,17 +752,17 @@ export function HeroSection() {
           </div>
 
           {/* Bottom CTAs */}
-          <div className="shrink-0 flex flex-col gap-2 pt-1">
+          <div className="shrink-0 flex flex-col gap-1.5 pt-1">
             <Button
               variant="primary"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border-transparent text-sm py-2.5 font-medium shadow-sm"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border-transparent text-xs py-2 font-medium shadow-sm"
               onClick={() => setQuotesOpen(true)}
             >
-              <FileTextIcon className="h-4 w-4 mr-1.5" />
+              <FileTextIcon className="h-3.5 w-3.5 mr-1.5" />
               Get <span className="text-amber-300 font-bold mx-1.5 underline decoration-amber-400 underline-offset-2">Free</span> Quotes
             </Button>
 
-            <p className="text-xs font-medium text-foreground text-center">
+            <p className="text-[11px] font-medium text-foreground text-center">
               Make institutions <span className="text-primary font-bold underline decoration-accent underline-offset-2">Bid</span> for you
             </p>
 
@@ -774,7 +772,7 @@ export function HeroSection() {
                 const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
                 window.open(url, "_blank", "noopener,noreferrer");
               }}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
             >
               <CalendarIcon className="h-3.5 w-3.5" />
               Book a Consultant
