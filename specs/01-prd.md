@@ -258,14 +258,17 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **Dependencies:** F3-US1, F3-US3
 
 #### (F3-US5) Dynamic Form Toggling (Loan vs. Investment vs. Mortgage)
-* **As a** visitor,
-* **WHEN** filling out the quote request modal,
-* **I want to** toggle between **Loan**, **Investment**, and **Mortgage** modes to dynamically reveal relevant fields:
-  * **Loan:** `Loan Amount`, `Monthly Income`
-  * **Investment:** `Investment Amount`, `Term`
-  * **Mortgage:** `Property Value`, `Down Payment`, `Total Monthly Income`, `Monthly Debt Payments`
-* **AND** retain standard required fields (`Name`, `Email`), optional fields (`Phone`), explicit consent verification, and quote submission handling across all three modes,
-* **So that** I only fill out financial details relevant to my specific inquiry.
+
+* **As a** visitor, 
+* **WHEN** filling out the quote request modal, 
+* **I want to** toggle between **Loan**, **Investment**, and **Mortgage** modes to dynamically reveal relevant fields: 
+  * **Loan:** `Loan Amount`, `Monthly Income` 
+  * **Investment:** `Investment Amount`, `Term` 
+  * **Mortgage:** `Property Value`, `Down Payment`, `Total Monthly Income`, `Monthly Debt Payments` 
+* **AND** when the modal opens, initialize the active tab to match the currently selected context/query (e.g. Loan query defaults to Loan, Mortgage to Mortgage),
+* **AND** once the modal is open, user-selected tab switches must be preserved without being overwritten or reverted back to Mortgage by background re-renders, prop syncs, or polling timers,
+* **AND** retain standard required fields (`Name`, `Email`), optional fields (`Phone`), explicit consent verification, and quote submission handling across all three modes, 
+* **So that** I have full, uninterrupted control over the financial details I submit. 
 * **Dependencies:** F3-US2, F3-US3
 
 #### (F3-US6) Pre-Submission Data Validation
