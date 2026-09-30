@@ -5,7 +5,7 @@
 ## FEATURE 1: (F1) Financial Advice Chat Widget 
 
 ### Description & Purpose
-An inline, non-popup AI chat widget embedded in the homepage hero. It answers financial questions from a defined knowledge base and LLM if the answer is not available in RAG knowledge base. Chat widget guides visitors toward either follow-up prompts or continue the conversation manually or requesting quotes from recommended financial institutions (from Financial Institutions displayed & ranked in right side bar "top Matches" section).
+An inline, persistent two-column split layout embedded in the homepage hero that renders by default on initial page load. On the left column (taking 2/3 width), visitors see an animated rotating search prompt along with 6 compact demo question cards. On the right column (taking 1/3 width), the Top Matches panel is rendered and ranked deterministically from the Supabase `rates` table before and during customer conversations.
 
 ### Objectives
 * **Primary Objective 1:** Provide visitors with unbiased, free, and fair financial advice, in the main chat widget. Additionally ranking financial institutions that meets customer needs in the right side bar (Top Matches section). 
@@ -17,21 +17,22 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 ### User Stories under Feature 1
 
 #### (F1-US1) Ask a Question and Get an Answer
-* **As a** visitor,
-* **WHEN I** ask a financial question or express a need in plain language,
-* **I want to** receive a concise response (maximum 2–3 lines) accompanied by a list of satisfying products/services,
-* **AND** see up to 3 relevant follow-up prompts at the bottom of the screen,
-* **AND** see a list of relevant banks and consultants in the right sidebar,
-* **So that** I can quickly become informed and make a confident decision.
+
+* **As a** visitor, 
+* **WHEN I** view the search bar, 
+* **I want to** see an animated rotating placeholder stating *"Ask me anything about "* followed by cycling categories (*"loans..."*, *"mortgages..."*, *"personal investments..."*, *"mutual funds..."*, *"debt consolidation..."*), 
+* **AND** submit inquiries via a clean magnifying glass search icon button, 
+* **AND** receive a concise response accompanied by relevant follow-up prompts and matching bank rankings, 
+* **So that** I understand the platform's financial scope immediately and can inquire effortlessly. 
 * **Dependencies:** EVALS
 
 #### (F1-US2) See Best-Matched Financial Products & Banks & Interactive Filter Controls
 * **As a** visitor,
 * **WHEN I** ask a financial question, click a suggestion, or manually interact with the Top Matches panel controls,
 * **I want to** see which financial products, banks, and advisors best meet my needs in the right sidebar (ordered from top match to least match),
-* **AND** have interactive filter controls placed at the top of the panel:
-  1. **Row 1:** Segmented category pills for `Loan`, `Investment`, and `Mortgage`.
-  2. **Row 2:** A single flex row aligning the rate structure toggle pills on the left and the `Tenure` dropdown (`1 year` to `5 years`) on the right. When `Investment` is selected, the pills shall display dynamically as `Fixed Rate GIC` and `Market Linked GIC`. When `Loan` or `Mortgage` is selected, the pills shall display as `Fixed` and `Variable`.
+* **AND** have interactive filter controls placed at the top of the panel inside dedicated segmented container boxes: 
+1. **Row 1:** Segmented category box enclosing `Loan`, `Investment`, and `Mortgage` with clear highlighted/darkened background and border states indicating the active selection. 
+2. **Row 2:** Segmented rate structure box aligning pills on the left (`Fixed Rate GIC` / `Market Linked GIC` for Investment; `Fixed` / `Variable` for Loan/Mortgage with distinct active highlights) and the `Tenure` dropdown (`1 year` to `5 years`) on the right.
 * **AND** when toggling between `Variable` and `Fixed`, the panel must actively filter database records by inspecting the `term` string (e.g. `'fixed'` vs `'variable'`) or `product_type` (`'gic'` vs `'market_linked'`), immediately updating the displayed rates and advisor rankings,
 * **AND** have incoming chat queries or clicked cached chips automatically synchronize these controls (defaulting to `Loan` and `Variable` for general queries),
 * **AND** have all rate figures queried dynamically from the live Supabase `rates` table with zero hardcoded percentage values,
@@ -77,7 +78,7 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
   1. A sequential list of financial institutions (FIs) and matched consultants relevant to my topic.
   2. Products ordered from most attractive to least.
   3. Consultants clearly paired with their respective institutions.
-  4. The mandatory disclaimer: *"Prices are indicative and subject to change. For best results it is recommended to connect directly with the advisor for personalized offer."*
+  4. The mandatory advisory disclaimer: *"AI can make mistakes, We encourage you to speak to real advisors for personalized offers."*
 * **So that** I can assess rates, terms, and leading market experts at a glance.
 * **Dependencies:** F4-US1 (Guardrails), F4-US3 (Grounding)
 
@@ -124,12 +125,14 @@ An inline, non-popup AI chat widget embedded in the homepage hero. It answers fi
 * **Dependencies:** F1-US11
 
 #### (F1-US14) Client-Side Cached Q&A Interceptor for Demo Questions
-* **As a** visitor,
-* **WHEN I** click any of the 6 homepage demo topic cards or submit a matching question,
-* **I want** to receive an instant, zero-latency response served directly from the local pre-canned data store (`src/data/preCannedQuestions.ts`) without triggering dynamic LLM inference,
-* **AND** the response shall display structured sections (Introduction bullets, optional Pros/Cons, informational guidance intake prompts, and grounded product rates or advisor guidance notes), followed by category-relevant suggestion chips and the inline quote CTA card,
-* **AND IF** my query is novel or un-cached, route the request seamlessly through the dynamic Supabase Edge Function (`safebot-chat`) pipeline,
-* **So that** common questions load instantaneously with zero fabrication risk, while novel inquiries still receive dynamic AI answers.
+
+* **As a** visitor, 
+* **WHEN I** view the initial hero chat state (`messages.length === 0`), 
+* **I want to** see a focused introductory statistic: *"Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice"*, 
+* **AND** see 6 compact demo question cards featuring a small magnifying glass icon on the right side of the question text, with category labels hidden from view, sized to neatly wrap their text content with balanced spacing, 
+* **AND WHEN I** click any demo question card, receive an instant, zero-latency response served directly from the local pre-canned data store (`src/data/preCannedQuestions.ts`), 
+* **AND IF** my query is novel or un-cached, route the request seamlessly through the dynamic Supabase Edge Function (`safebot-chat`) pipeline, 
+* **So that** common questions load instantaneously with zero fabrication risk, while novel inquiries still receive dynamic AI answers. 
 * **Dependencies:** F1-US1, 02-architecture.md
 
 ---
@@ -223,10 +226,11 @@ Allows visitors to submit a single contact form to request official quotes from 
 ### User Stories under Feature (F3)
 
 #### (F3-US1) Trigger "Get Quotes" from Top Matches Panel
-* **As a** visitor,
-* **WHEN I** am viewing the Top Matches panel,
-* **I want** a prominent *"Get Quotes"* button located at the bottom of the panel that opens the multi-bank quote request modal,
-* **So that** I can request quotes from all matched banks in a single action.
+
+* **As a** visitor, 
+* **WHEN I** am viewing the Top Matches panel, 
+* **I want** a prominent *"Get Free Quotes"* button (with *"Free"* accented) accompanied by the caption *"Make institutions Bid for you"* (with *"Bid"* highlighted), 
+* **So that** I am encouraged to request competitive quotes from all matched banks in a single action. 
 * **Dependencies:** F1-US2
 
 #### (F3-US2) Fill Out Contact Information
