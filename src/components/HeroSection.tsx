@@ -392,24 +392,24 @@ export function HeroSection() {
       <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[640px] overflow-hidden">
         {isEmpty ? (
           <div className="flex flex-col justify-between h-full">
-            {/* Expanded Header - Guaranteed Single Line */}
+            {/* Expanded Header */}
             <div className="text-center pt-1 shrink-0 w-full">
               <p className="text-sm sm:text-base lg:text-[1.05rem] font-semibold text-foreground tracking-tight w-full lg:whitespace-nowrap">
                 Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 max-w-xl mx-auto">
+              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-xl mx-auto">
                 We bring financial experts from top big firms so you can compare &amp; choose the best product or interest rate.
               </p>
             </div>
 
-            {/* 6 Demo Question Cards - Evenly Distributed Across Full Height */}
-            <div className="flex-1 flex flex-col justify-between py-3 my-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full items-stretch">
+            {/* 6 Demo Question Cards - Natural Padding & Height */}
+            <div className="my-auto py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                   <button
                     key={item.id}
                     onClick={() => handleSend(item.question)}
-                    className="py-4 px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
+                    className="min-h-[58px] px-4 py-3 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
                   >
                     <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
                       {item.question}
