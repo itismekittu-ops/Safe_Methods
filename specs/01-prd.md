@@ -297,13 +297,13 @@ Allows visitors to submit a single contact form to request official quotes from 
 * **So that** I have instant confirmation and permanent records in my inbox.
 * **Dependencies:** F3-US6
 
-#### (F3-US10) Structured CRM Payload Ingestion & Timeline Logging
-* **As** Safe Methods,
-* **WHEN a** valid submission is received (initial or subsequent),
-* **I want** contact details and product specifics ingested into HubSpot contact properties,
-* **AND** an Engagement Note created on the contact's timeline logging the exact submission timestamp, category, and submitted figures,
-* **So that** sales operations can see both the latest status and the complete historical timeline of every form the customer submitted.
-* **Dependencies:** F3-US6, F3-US11
+#### (F3-US10) Structured CRM Payload Ingestion & Marketing Attribution
+
+* **As** Safe Methods, 
+* **WHEN a** valid quote submission is received, 
+* **I want** contact details, financial request parameters, and captured marketing attribution data (`utm_source`, `utm_medium`, `utm_campaign`, `initial_referrer`) ingested into HubSpot contact properties and recorded on the contact timeline Engagement Note, 
+* **So that** sales operations can track whether the lead originated from Meta Ads, LinkedIn, Organic Search, or Direct traffic. 
+* **Dependencies:** F3-US6, sync-hubspot-lead, HubSpot CRM
 
 #### (F3-US11) Multi-Category & Revised Submissions
 * **As a** visitor,
@@ -534,6 +534,17 @@ Provides users with direct control to view, export, or permanently delete person
 * **I want to** review a comprehensive, plain-language privacy disclosure detailing data ownership, third-party CRM ingestion (HubSpot), PII exclusion rules, and data retention limits,
 * **So that** I understand how my information is handled before submitting any financial inquiry.
 * **Dependencies:** F3 (Quote Requests), F5 (Data Subject Rights)
+
+#### (F5-US5) Cookie Consent Banner & GA4 Telemetry Controls
+
+* **As a** visitor, 
+* **WHEN I** first navigate to `safemethods.com`, 
+* **I want** an unobtrusive, non-blocking bottom consent banner offering "Essential Only" and "Accept All", 
+* **AND** selecting "Essential Only" keeps GA4 tracking disabled (`analytics_storage: 'denied'`), 
+* **AND** selecting "Accept All" enables GA4 tracking (`analytics_storage: 'granted'`), 
+* **AND** saves my preference in `localStorage` (`safemethods_cookie_consent`) so the banner does not reappear on future visits, 
+* **So that** my tracking preferences comply with Canadian statutory privacy standards (PIPEDA / Law 25). 
+* **Dependencies:** VITE_GA_MEASUREMENT_ID, Google Analytics 4
 
 ---
 
