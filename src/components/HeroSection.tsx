@@ -403,19 +403,19 @@ export function HeroSection() {
                 </p>
               </div>
 
-              {/* 6 Demo Question Cards - Uniform Length/Width & Expanded Vertical Coverage */}
-              <div className="flex-1 flex flex-col justify-between py-6 px-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-7 gap-x-6">
+              {/* 6 Demo Question Cards - Centered with Equal Left/Right Margins, Rows 1-3 & 4-6, Golden Border on Hover */}
+              <div className="flex-1 flex flex-col justify-between py-5 md:py-6 px-1">
+                <div className="w-full max-w-[760px] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-y-6 sm:gap-y-8 gap-x-8 sm:gap-x-10 justify-items-center">
                   {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
-                    <div key={item.id} className="flex justify-center sm:justify-start">
+                    <div key={item.id} className="w-full flex justify-center">
                       <button
                         onClick={() => handleSend(item.question)}
-                        className="w-full max-w-[340px] h-[52px] px-4 rounded-xl border border-border-subtle bg-background hover:bg-muted/60 hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs transition-all duration-200 text-left flex items-center justify-start gap-2 group cursor-pointer"
+                        className="w-full max-w-[340px] h-[54px] px-4 rounded-xl border border-border-subtle bg-background hover:border-amber-400 hover:ring-2 hover:ring-amber-400/40 hover:bg-amber-500/5 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs transition-all duration-200 text-left flex items-center justify-start gap-2 group cursor-pointer"
                       >
-                        <span className="text-xs sm:text-[13px] font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                        <span className="text-xs sm:text-[13px] font-medium text-foreground group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors truncate">
                           {item.question}
                         </span>
-                        <SearchIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 shrink-0 transition-all duration-200" />
+                        <SearchIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-amber-500 group-hover:scale-110 shrink-0 transition-all duration-200" />
                       </button>
                     </div>
                   ))}
