@@ -34,7 +34,7 @@ const FINANCIAL_SERVICE_JSONLD = {
 
 export function Home() {
   return (
-    <main>
+    <main className="w-full overflow-x-hidden flex flex-col">
       <SEO
         title="Compare Financial Advice from Top Institutions"
         fullTitle="Safe Methods | Compare Financial Advice from Top Institutions"
