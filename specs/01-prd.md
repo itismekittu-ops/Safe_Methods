@@ -148,7 +148,7 @@ Returning users can sign in and resume personalized sessions safely; logging out
 
 ### Key Capabilities
 * User Registration & Password Strength Checks
-* Email/Password Login & Google OAuth
+* Email/Password Login, Google OAuth & Facebook OAuth
 * Secure Session Management & Navbar State Integration
 * Password Reset Flow
 * Automatic Local Cache Purge on Logout
@@ -172,12 +172,13 @@ Returning users can sign in and resume personalized sessions safely; logging out
 * **So that** I can access protected features without re-registering.
 * **Dependencies:** F2-US1
 
-#### (F2-US3) Sign In with Google OAuth
-* **As a** visitor,
-* **WHEN I** choose OAuth authentication,
-* **I want to** sign in using my Google account via strictly verified domains,
-* **So that** I can authenticate seamlessly without creating new passwords.
-* **Dependencies:** Google OAuth, Supabase Auth
+#### (F2-US3) Sign In with Google and Facebook OAuth
+
+* **As a** visitor, 
+* **WHEN I** choose OAuth authentication on the Log In or Sign Up screen, 
+* **I want to** sign in using my Google or Facebook account via strictly verified domains, 
+* **So that** I can authenticate seamlessly without creating or managing new passwords. 
+* **Dependencies:** Google OAuth, Facebook OAuth, Supabase Auth
 
 #### (F2-US4) Log Out Securely
 * **As an** authenticated user,
