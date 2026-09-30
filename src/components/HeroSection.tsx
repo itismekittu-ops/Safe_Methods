@@ -186,7 +186,7 @@ export function HeroSection() {
   const [ratesLoading, setRatesLoading] = useState(true);
 
   const isEmpty = messages.length === 0;
-  const rotatingPlaceholder = useRotatingPlaceholder(2200, isEmpty);
+  const rotatingPlaceholder = useRotatingPlaceholder(2200, true);
 
   const triggerMatchFocus = () => {
     matchesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -388,232 +388,231 @@ export function HeroSection() {
   const showSkeletons = isLoading || ratesLoading;
 
   return (
-    <section className="container mx-auto px-4 pt-3 pb-8 flex flex-col">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full flex-grow">
-        {/* Left Column: Chat / Demo */}
-        <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 flex flex-col justify-start gap-5 shadow-soft">
-          {isEmpty ? (
-            <>
-              <div className="flex flex-col items-center">
-                <p className="text-sm md:text-base font-semibold text-foreground text-center">
-                  Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
-                </p>
-                <p className="text-xs md:text-sm text-muted-foreground text-center max-w-xl mx-auto mt-1">
-                  We bring financial experts from top big firms so you can compare & choose the best product or interest rate.
-                </p>
-              </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Left Column: Chat / Demo */}
+      <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-5 shadow-soft flex flex-col justify-between overflow-hidden h-[620px] max-h-[620px]">
+        {isEmpty ? (
+          <>
+            <div className="shrink-0 text-center mb-3">
+              <p className="text-sm md:text-base font-semibold text-foreground tracking-tight">
+                Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
+              </p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-lg mx-auto">
+                We bring financial experts from top big firms so you can compare & choose the best product or interest rate.
+              </p>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex-1 flex flex-col justify-center my-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
                   <button
                     key={item.id}
                     onClick={() => handleSend(item.question)}
-                    className="p-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs"
+                    className="p-3 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer"
                   >
-                    <span className="sr-only">{item.category}</span>
-                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors">{item.question}</span>
+                    <span className="text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.question}</span>
                     <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
                   </button>
                 ))}
               </div>
+            </div>
 
-              <div className="mt-2 pt-2 border-t border-border-subtle/40">
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading}
-                    placeholder={rotatingPlaceholder}
-                    className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
-                    style={{ borderRadius: "9999px" }}
-                  />
-                  <button
-                    onClick={() => handleSend(inputValue)}
-                    disabled={!inputValue.trim() || isLoading}
-                    className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
-                    aria-label="Search"
-                  >
-                    {isLoading ? (
-                      <LoaderIcon className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <SearchIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex-1 overflow-y-auto pr-2 scroll-smooth flex flex-col gap-6">
-                {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[85%] p-4 rounded-2xl ${
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-tr-sm"
-                          : "bg-muted text-foreground rounded-tl-sm"
-                      }`}
-                    >
-                      {msg.role === "bot" ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          className="text-gray-800 text-sm leading-relaxed"
-                          components={{
-                            table: ({ node, ...props }) => (
-                              <div className="overflow-x-auto my-4">
-                                <table className="w-full border-collapse border border-gray-300 text-sm" {...props} />
-                              </div>
-                            ),
-                            thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
-                            th: ({ node, ...props }) => (
-                              <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800" {...props} />
-                            ),
-                            td: ({ node, ...props }) => (
-                              <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />
-                            ),
-                            ul: ({ node, ...props }) => (
-                              <ul className="list-disc pl-6 my-3 space-y-1 text-gray-800" {...props} />
-                            ),
-                            ol: ({ node, ...props }) => (
-                              <ol className="list-decimal pl-6 my-3 space-y-1 text-gray-800" {...props} />
-                            ),
-                            li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
-                            p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                            strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />
-                          }}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
-                      ) : (
-                        <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-4">
-                      <div className="flex items-center gap-2">
-                        <LoaderIcon className="w-4 h-4 animate-spin text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">SafeBot is analyzing...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {!isLoading && messages[messages.length - 1]?.role === "bot" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="mx-auto my-5 flex w-full max-w-md flex-col items-center gap-3 rounded-lg border border-accent/60 bg-background px-6 py-4 text-center shadow-soft"
+            <div className="shrink-0 pt-3 border-t border-border-subtle/40">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  placeholder={rotatingPlaceholder}
+                  className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                  style={{ borderRadius: "9999px" }}
+                />
+                <button
+                  onClick={() => handleSend(inputValue)}
+                  disabled={!inputValue.trim() || isLoading}
+                  className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                  aria-label="Search"
                 >
-                  <button
-                    type="button"
-                    onClick={triggerMatchFocus}
-                    className="group inline-flex items-center gap-2 font-heading text-lg font-semibold text-primary focus:outline-none focus-visible:underline cursor-pointer"
-                  >
-                    <span>Your best options are on the right</span>
-                    <ArrowRightIcon className="hidden h-4 w-4 text-accent transition-transform group-hover:translate-x-1.5 lg:block" aria-hidden="true" />
-                    <ArrowDownIcon className="h-4 w-4 text-accent transition-transform group-hover:translate-y-1.5 lg:hidden" aria-hidden="true" />
-                  </button>
-                  <p className="-mt-1 text-sm font-medium text-foreground">
-                    Get <span className="font-semibold text-emerald-700">free</span>, no-obligation quotes in your inbox
-                  </p>
-                  <Button onClick={() => setQuotesOpen(true)} className="px-6 py-2">
-                    <span className="inline-flex items-center gap-2">
-                      <FileTextIcon className="h-4 w-4" aria-hidden="true" />
-                      Get Quotes
-                    </span>
-                  </Button>
-                </motion.div>
-              )}
-
-              {followUps.length > 0 && !isLoading && (
-                <div className="px-6 pb-3 flex flex-wrap gap-2">
-                  {followUps.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSend(chip)}
-                      className="text-xs px-4 py-1.5 border border-border-subtle bg-background hover:bg-muted text-foreground transition-colors"
-                      style={{ borderRadius: "9999px" }}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-2 pt-2 border-t border-border-subtle/40">
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading}
-                    placeholder="Ask a follow-up question..."
-                    className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
-                    style={{ borderRadius: "9999px" }}
-                  />
-                  <button
-                    onClick={() => handleSend(inputValue)}
-                    disabled={!inputValue.trim() || isLoading}
-                    className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
-                    aria-label="Search"
-                  >
-                    {isLoading ? (
-                      <LoaderIcon className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <SearchIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
+                  {isLoading ? (
+                    <LoaderIcon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <SearchIcon className="w-4 h-4" />
+                  )}
+                </button>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[85%] p-4 rounded-2xl ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-tr-sm"
+                        : "bg-muted text-foreground rounded-tl-sm"
+                    }`}
+                  >
+                    {msg.role === "bot" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="text-gray-800 text-sm leading-relaxed"
+                        components={{
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="w-full border-collapse border border-gray-300 text-sm" {...props} />
+                            </div>
+                          ),
+                          thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                          th: ({ node, ...props }) => (
+                            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800" {...props} />
+                          ),
+                          td: ({ node, ...props }) => (
+                            <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />
+                          ),
+                          ul: ({ node, ...props }) => (
+                            <ul className="list-disc pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol className="list-decimal pl-6 my-3 space-y-1 text-gray-800" {...props} />
+                          ),
+                          li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="leading-relaxed whitespace-pre-line">{msg.content}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-4">
+                    <div className="flex items-center gap-2">
+                      <LoaderIcon className="w-4 h-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">SafeBot is analyzing...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-        {/* Right Column: Top Matches */}
-        <motion.div
-          ref={matchesRef}
-          animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className={`lg:col-span-1 flex flex-col rounded-xl p-4 ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background shadow-lg' : ''} transition-all duration-300`}
-        >
-          <h3 className="font-heading text-2xl text-foreground mb-4">
+            {!isLoading && messages[messages.length - 1]?.role === "bot" && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="shrink-0 mx-auto my-3 flex w-full max-w-md flex-col items-center gap-2 rounded-lg border border-accent/60 bg-background px-6 py-3 text-center shadow-soft"
+              >
+                <button
+                  type="button"
+                  onClick={triggerMatchFocus}
+                  className="group inline-flex items-center gap-2 font-heading text-lg font-semibold text-primary focus:outline-none focus-visible:underline cursor-pointer"
+                >
+                  <span>Your best options are on the right</span>
+                  <ArrowRightIcon className="hidden h-4 w-4 text-accent transition-transform group-hover:translate-x-1.5 lg:block" aria-hidden="true" />
+                  <ArrowDownIcon className="h-4 w-4 text-accent transition-transform group-hover:translate-y-1.5 lg:hidden" aria-hidden="true" />
+                </button>
+                <p className="-mt-1 text-sm font-medium text-foreground">
+                  Get <span className="font-semibold text-emerald-700">free</span>, no-obligation quotes in your inbox
+                </p>
+                <Button onClick={() => setQuotesOpen(true)} className="px-6 py-2">
+                  <span className="inline-flex items-center gap-2">
+                    <FileTextIcon className="h-4 w-4" aria-hidden="true" />
+                    Get Quotes
+                  </span>
+                </Button>
+              </motion.div>
+            )}
+
+            {followUps.length > 0 && !isLoading && (
+              <div className="shrink-0 py-2 flex flex-wrap gap-1.5">
+                {followUps.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSend(chip)}
+                    className="text-xs px-4 py-1.5 border border-border-subtle bg-background hover:bg-muted text-foreground transition-colors"
+                    style={{ borderRadius: "9999px" }}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="shrink-0 pt-3 border-t border-border-subtle/40">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  placeholder={rotatingPlaceholder}
+                  className="w-full pl-6 pr-14 py-3.5 bg-background border border-border-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-soft disabled:opacity-60"
+                  style={{ borderRadius: "9999px" }}
+                />
+                <button
+                  onClick={() => handleSend(inputValue)}
+                  disabled={!inputValue.trim() || isLoading}
+                  className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                  aria-label="Search"
+                >
+                  {isLoading ? (
+                    <LoaderIcon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <SearchIcon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Right Column: Top Matches */}
+      <motion.div
+        ref={matchesRef}
+        animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-5 shadow-soft flex flex-col justify-between overflow-hidden h-[620px] max-h-[620px] ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
+      >
+        <div className="shrink-0">
+          <h3 className="font-heading text-2xl text-foreground mb-3">
             Top Matches
           </h3>
 
-          {/* Category Controls */}
-          <div className="mb-3">
-            <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1">
-              {(["loan", "investment", "mortgage"] as const).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`flex-1 text-xs py-1.5 px-3 rounded-lg transition-colors capitalize ${
-                    selectedCategory === cat
-                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/* Row 1: Category Switcher */}
+          <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1 w-full">
+            {(["loan", "investment", "mortgage"] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors capitalize ${
+                  selectedCategory === cat
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
 
-          {/* Rate Structure Controls */}
-          <div className="mb-4">
-            <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1">
+          {/* Row 2: Rate Structure + Tenure in one line */}
+          <div className="flex items-center justify-between gap-2 mt-2 w-full">
+            <div className="bg-muted/40 p-1 rounded-xl border border-border-subtle flex gap-1 flex-1">
               {(["fixed", "variable"] as const).map((rt) => {
                 const label = selectedCategory === "investment"
                   ? (rt === "fixed" ? "Fixed Rate GIC" : "Market Linked GIC")
@@ -622,7 +621,7 @@ export function HeroSection() {
                   <button
                     key={rt}
                     onClick={() => setSelectedRateType(rt)}
-                    className={`flex-1 text-xs py-1.5 px-3 rounded-lg transition-colors ${
+                    className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors ${
                       selectedRateType === rt
                         ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
@@ -633,14 +632,10 @@ export function HeroSection() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Tenure selector */}
-          <div className="mb-4 flex justify-end">
             <select
               value={selectedTenure}
               onChange={(e) => setSelectedTenure(e.target.value)}
-              className="w-32 px-3 py-1.5 text-xs rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+              className="shrink-0 w-[105px] py-1 text-xs border border-border-subtle rounded-xl bg-background px-2 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
             >
               {TENURE_OPTIONS.map((t) => (
                 <option key={t} value={t}>
@@ -649,9 +644,12 @@ export function HeroSection() {
               ))}
             </select>
           </div>
+        </div>
 
+        {/* Match Cards */}
+        <div className="flex-1 flex flex-col gap-3 my-3 overflow-y-auto">
           {showSkeletons ? (
-            <div className="flex flex-col gap-3">
+            <>
               {[1, 2, 3].map((n) => (
                 <div
                   key={n}
@@ -668,9 +666,9 @@ export function HeroSection() {
               <p className="text-xs text-muted-foreground mt-2 text-center">
                 Analyzing market rates & matching experts...
               </p>
-            </div>
+            </>
           ) : (
-            <div className="flex flex-col gap-3">
+            <>
               {(banks.length > 0 ? banks : DEFAULT_BANKS).map((bank) => (
                 <div
                   key={bank.rank}
@@ -725,38 +723,41 @@ export function HeroSection() {
                 </div>
               ))}
 
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed text-center">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed text-center">
                 AI can make mistakes, We encourage you to speak to real advisors for personalized offers.
               </p>
-
-              <Button
-                variant="primary"
-                className="w-full mt-4 bg-accent text-primary hover:bg-accent/90 border-transparent"
-                onClick={() => setQuotesOpen(true)}
-              >
-                <FileTextIcon className="h-4 w-4 mr-2" />
-                Get{" "}<span className="text-accent font-bold">Free</span>{" "}Quotes
-              </Button>
-
-              <p className="text-xs font-medium text-foreground text-center my-2.5">
-                Make institutions <span className="text-primary font-bold underline decoration-accent underline-offset-2">Bid</span> for you
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
-                  window.open(url, "_blank", "noopener,noreferrer");
-                }}
-                className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
-              >
-                <CalendarIcon className="h-4 w-4" />
-                Book a Consultant
-              </button>
-            </div>
+            </>
           )}
-        </motion.div>
-      </div>
+        </div>
+
+        {/* Bottom CTAs */}
+        <div className="shrink-0 flex flex-col gap-2">
+          <Button
+            variant="primary"
+            className="w-full bg-accent text-primary hover:bg-accent/90 border-transparent"
+            onClick={() => setQuotesOpen(true)}
+          >
+            <FileTextIcon className="h-4 w-4 mr-2" />
+            Get <span className="text-accent font-bold">Free</span> Quotes
+          </Button>
+
+          <p className="text-xs font-medium text-foreground text-center">
+            Make institutions <span className="text-primary font-bold underline decoration-accent underline-offset-2">Bid</span> for you
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              const url = import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/safemethods";
+              window.open(url, "_blank", "noopener,noreferrer");
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md border border-border-subtle bg-surface text-foreground hover:border-border hover:bg-muted transition-colors"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            Book a Consultant
+          </button>
+        </div>
+      </motion.div>
 
       <GetQuotesModal
         open={quotesOpen}
@@ -771,6 +772,6 @@ export function HeroSection() {
         }))}
         sessionToken={sessionToken}
       />
-    </section>
+    </div>
   );
 }
