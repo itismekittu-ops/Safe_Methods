@@ -128,11 +128,11 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 
 * **As a** visitor, 
 * **WHEN I** view the initial hero chat state (`messages.length === 0`), 
-* **I want to** see the entire interaction contained within the standard left chat card frame (`h-[600px] md:h-[680px] bg-surface border border-border-subtle rounded-2xl flex flex-col justify-between p-6`),
-* **AND** see the focused headline *"Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice"* centered at the top,
-* **AND** see the 6 demo questions laid out in a clean 2-column grid (`grid grid-cols-1 sm:grid-cols-2 gap-3`), each styled as an interactive pill with the question text on the left and a small magnifying glass search icon on the right,
-* **AND** have the animated rotating search input bar pinned firmly at the bottom of the card with no page-overflow or floating detachment,
-* **So that** the pre-chat and post-chat viewports maintain an identical, balanced visual footprint beside the Top Matches panel.
+* **I want to** see the focused headline *"Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice"* paired with the brand sub-headline *"We bring financial experts from top big firms so you can compare & choose the best product or interest rate."*,
+* **AND** see 6 compact demo question cards featuring a small magnifying glass icon on the right side of the question text, with category labels hidden from view, sized to neatly wrap their text content with balanced spacing, 
+* **AND WHEN I** click any demo question card, receive an instant, zero-latency response served directly from the local pre-canned data store (`src/data/preCannedQuestions.ts`), 
+* **AND IF** my query is novel or un-cached, route the request seamlessly through the dynamic Supabase Edge Function (`safebot-chat`) pipeline, 
+* **So that** common questions load instantaneously with zero fabrication risk, while novel inquiries still receive dynamic AI answers. 
 * **Dependencies:** F1-US1, 02-architecture.md
 
 ---
