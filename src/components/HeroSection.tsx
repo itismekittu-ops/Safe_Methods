@@ -389,39 +389,37 @@ export function HeroSection() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
       {/* Left Column: Chat / Demo Area */}
-      <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between h-[640px] overflow-hidden">
+      <div className="lg:col-span-2 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between overflow-hidden">
         {isEmpty ? (
-          <div className="flex flex-col justify-between h-full">
+          <div className="flex flex-col justify-between flex-1 gap-6">
             {/* Expanded Header */}
-            <div className="text-center pt-1 shrink-0 w-full">
-              <p className="text-sm sm:text-base lg:text-[1.05rem] font-semibold text-foreground tracking-tight w-full lg:whitespace-nowrap">
+            <div className="text-center shrink-0 w-full pt-1">
+              <p className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-foreground tracking-tight w-full lg:whitespace-nowrap">
                 Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 max-w-xl mx-auto">
+              <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">
                 We bring financial experts from top big firms so you can compare &amp; choose the best product or interest rate.
               </p>
             </div>
 
             {/* 6 Demo Question Cards */}
-            <div className="my-auto py-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSend(item.question)}
-                    className="h-auto py-3 px-4.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
-                  >
-                    <span className="text-sm sm:text-[0.95rem] font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                      {item.question}
-                    </span>
-                    <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-auto">
+              {PRE_CANNED_QUESTIONS.slice(0, 6).map((item: PreCannedQA) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleSend(item.question)}
+                  className="px-5 py-3.5 rounded-xl border border-border-subtle bg-background hover:bg-muted/40 hover:border-primary/40 transition-all text-left flex items-center justify-between gap-3 group shadow-xs cursor-pointer w-full"
+                >
+                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                    {item.question}
+                  </span>
+                  <SearchIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+                </button>
+              ))}
             </div>
 
             {/* Bottom Search Input Bar with Bold Rotating Term */}
-            <div className="pt-3 border-t border-border-subtle/50 shrink-0">
+            <div className="pt-4 border-t border-border-subtle/50 shrink-0">
               <div className="relative flex items-center">
                 {!inputValue && (
                   <div className="absolute left-6 pointer-events-none text-muted-foreground text-sm sm:text-base select-none flex items-center gap-1.5">
@@ -456,9 +454,9 @@ export function HeroSection() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col justify-between h-full overflow-hidden">
+          <div className="flex flex-col justify-between flex-1 gap-4 overflow-hidden">
             {/* Active Chat Conversation Feed */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[440px]">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[460px]">
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
@@ -526,7 +524,7 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                className="shrink-0 mx-auto my-2 flex w-full max-w-md flex-col items-center gap-1.5 rounded-lg border border-accent/60 bg-background px-6 py-2.5 text-center shadow-soft"
+                className="shrink-0 mx-auto my-1 flex w-full max-w-md flex-col items-center gap-1.5 rounded-lg border border-accent/60 bg-background px-6 py-2.5 text-center shadow-soft"
               >
                 <button
                   type="button"
@@ -551,7 +549,7 @@ export function HeroSection() {
 
             {/* Follow-up Suggestion Chips */}
             {followUps.length > 0 && !isLoading && (
-              <div className="shrink-0 py-1.5 flex flex-wrap gap-1.5">
+              <div className="shrink-0 py-1 flex flex-wrap gap-1.5">
                 {followUps.map((chip, idx) => (
                   <button
                     key={idx}
@@ -608,10 +606,10 @@ export function HeroSection() {
         ref={matchesRef}
         animate={highlightMatches ? { scale: [1, 1.015, 1], y: [0, -6, 0] } : { scale: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-5 shadow-soft flex flex-col justify-between h-[640px] overflow-hidden ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
+        className={`lg:col-span-1 bg-surface border border-border-subtle rounded-2xl p-6 shadow-soft flex flex-col justify-between ${highlightMatches ? 'ring-2 ring-accent ring-offset-4 ring-offset-background' : ''} transition-all duration-300`}
       >
         <div className="shrink-0">
-          <h3 className="font-heading text-2xl text-foreground mb-3">
+          <h3 className="font-heading text-2xl text-foreground mb-3 font-bold">
             Top Matches
           </h3>
 
@@ -621,7 +619,7 @@ export function HeroSection() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors capitalize ${
+                className={`flex-1 text-center py-1.5 text-xs rounded-lg transition-colors capitalize ${
                   selectedCategory === cat
                     ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -643,7 +641,7 @@ export function HeroSection() {
                   <button
                     key={rt}
                     onClick={() => setSelectedRateType(rt)}
-                    className={`flex-1 text-center py-1 text-xs rounded-lg transition-colors ${
+                    className={`flex-1 text-center py-1.5 text-xs rounded-lg transition-colors ${
                       selectedRateType === rt
                         ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
@@ -657,7 +655,7 @@ export function HeroSection() {
             <select
               value={selectedTenure}
               onChange={(e) => setSelectedTenure(e.target.value)}
-              className="shrink-0 w-[105px] py-1 text-xs border border-border-subtle rounded-xl bg-background px-2 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
+              className="shrink-0 w-[105px] py-1.5 text-xs border border-border-subtle rounded-xl bg-background px-2 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
             >
               {TENURE_OPTIONS.map((t) => (
                 <option key={t} value={t}>
@@ -669,7 +667,7 @@ export function HeroSection() {
         </div>
 
         {/* Match Cards */}
-        <div className="flex-1 flex flex-col justify-center gap-2.5 my-2 overflow-y-auto">
+        <div className="flex-1 flex flex-col justify-center gap-2.5 my-4">
           {showSkeletons ? (
             <>
               {[1, 2, 3].map((n) => (
