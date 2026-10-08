@@ -59,15 +59,15 @@ export function Hero() {
 
   return (
     <section className="relative mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="flex flex-col pb-2 pt-3 lg:h-[calc(100vh-86px)] lg:justify-between overflow-hidden">
-        <div className="grid gap-8 lg:h-[min(calc(100vh-140px),720px)] lg:grid-cols-[minmax(0,1fr)_420px] lg:items-stretch lg:gap-10 xl:grid-cols-[minmax(0,1fr)_444px]">
+      <div className="flex flex-col pb-2 pt-2 lg:h-[calc(100vh-80px)] lg:justify-between overflow-hidden">
+        <div className="grid gap-6 flex-1 lg:h-[min(calc(100vh-140px),680px)] lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_440px] items-stretch relative z-10">
           <div className="hero-left relative">
             <div
               id="coin-slot"
               aria-hidden="true"
               className="pointer-events-none absolute -right-12 -top-8 z-0 hidden h-44 w-44 lg:block" />
 
-            <HeroIntro />
+            <HeroIntro onOpenQuotesModal={() => setQuotesOpen(true)} />
           </div>
 
           <motion.div
@@ -82,8 +82,8 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Brand marquee: only the top half of the first row peeks above the fold */}
-        <div className="h-10 overflow-hidden shrink-0 mt-auto">
+        {/* Brand marquee: sits below the cards, only top half peeks above the fold */}
+        <div className="h-9 shrink-0 overflow-hidden relative z-0 mt-2 pointer-events-none">
           <BrandMarquee />
         </div>
       </div>

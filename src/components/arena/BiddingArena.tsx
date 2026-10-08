@@ -50,7 +50,7 @@ export function BiddingArena() {
           <button
             type="button"
             onClick={skip}
-            className="inline-flex min-h-10 shrink-0 items-center rounded px-2 text-sm font-medium text-muted underline underline-offset-4 transition-colors duration-150 hover:text-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40">
+            className="inline-flex min-h-8 shrink-0 items-center rounded px-2 text-sm font-semibold text-[#0B3D2E] underline underline-offset-4 hover:text-[#145440] focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40">
             
                 Skip
               </button>

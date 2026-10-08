@@ -36,7 +36,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      className="relative flex h-full w-full flex-col rounded-[28px] border border-line/80 bg-white/95 px-5 pb-4 pt-4 shadow-panel backdrop-blur-sm"
+      className="relative flex h-full w-full flex-col rounded-[28px] border border-[#E3DCCD] bg-white px-5 pb-4 pt-4 shadow-panel"
       style={tilt.style}>
 
       <div className="flex h-5 items-center">
@@ -74,7 +74,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
             })}
           </div>
         ) : (
-          <span className="text-[13px] font-semibold text-muted">{option.label}</span>
+          <span className="text-[13px] font-semibold text-[#5B6660]">{option.label}</span>
         )}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>

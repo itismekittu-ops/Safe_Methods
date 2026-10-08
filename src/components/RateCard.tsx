@@ -39,8 +39,8 @@ export function RateCard({ advisor, rate, index, best, layoutId, arrived = false
         layout: flight
       }}
       style={{ borderRadius: 14 }}
-      className={`relative z-10 flex h-12 items-center gap-2.5 border pl-3 pr-4 ${
-      best ? 'border-forest/15 bg-white' : 'border-line/80 bg-cream-card'}`
+      className={`relative z-10 flex h-[48px] items-center gap-2.5 border pl-3 pr-4 ${
+      best ? 'border-forest/15 bg-white' : 'border-[#E3DCCD] bg-[#FBF9F4]'}`
       }>
       
       {sparkle && <ArrivalSparkle delay={flight.duration} />}
