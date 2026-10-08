@@ -78,10 +78,10 @@ export function AskInput({ value, status, submitted, inputRef, disabled = false,
           {value.length === 0 &&
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex items-center truncate text-[15px] text-muted">
+            className="pointer-events-none absolute inset-0 flex items-center truncate text-[15px] text-[#5B6660]">
             
               <span className="whitespace-nowrap">Ask me anything about&nbsp;</span>
-              <span className="truncate font-semibold text-ink">{typed}</span>
+              <span className="truncate font-semibold text-[#1C2B25]">{typed}</span>
               {!reduced && <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-forest/60" />}
             </span>
           }

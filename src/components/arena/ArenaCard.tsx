@@ -162,10 +162,10 @@ export function ArenaCard({
               </span>
             </span>
             <p className="mt-2.5 text-[15px] font-semibold text-ink">{advisor.name}</p>
-            <p className="text-xs text-muted">
+            <p className="text-xs font-medium text-[#5B6660]">
               {advisor.firm} · {advisor.role}
             </p>
-            <p className="mt-2.5 text-sm text-muted">
+            <p className="mt-2.5 text-sm text-[#5B6660]">
               {winnerLabel}:{' '}
               <span className="font-serif text-2xl font-semibold text-forest">{finalRate.toFixed(2)}%</span>
             </p>
@@ -177,12 +177,12 @@ export function ArenaCard({
             <AdvisorAvatar advisor={advisor} className="h-8 w-8 text-[11px]" />
             <div className="min-w-0">
               <p className="break-words text-[12px] font-semibold leading-[1.15] text-ink">{advisor.name}</p>
-              <p className="truncate text-[11px] text-muted">{advisor.firm}</p>
+              <p className="truncate text-[11px] font-medium text-[#5B6660]">{advisor.firm}</p>
             </div>
           </div>
           <div className={`flex items-end justify-between gap-2 ${desktop ? 'mt-2' : 'shrink-0'}`}>
             {desktop &&
-          <span className="text-[11px] font-medium leading-tight text-muted">
+          <span className="text-[11px] font-medium leading-tight text-[#5B6660]">
                 {round > 0 ?
             <motion.span
               key={round}

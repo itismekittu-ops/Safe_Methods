@@ -59,8 +59,8 @@ export function Hero() {
 
   return (
     <section className="relative mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="flex flex-col pb-2 pt-3 lg:h-[calc(100vh-80px)] lg:justify-between overflow-hidden">
-        <div className="grid gap-8 lg:h-[min(calc(100vh-116px),720px)] lg:grid-cols-[minmax(0,1fr)_404px] lg:items-stretch lg:gap-10 xl:grid-cols-[minmax(0,1fr)_444px]">
+      <div className="flex flex-col pb-2 pt-3 lg:h-[calc(100vh-86px)] lg:justify-between overflow-hidden">
+        <div className="grid gap-8 lg:h-[min(calc(100vh-140px),720px)] lg:grid-cols-[minmax(0,1fr)_420px] lg:items-stretch lg:gap-10 xl:grid-cols-[minmax(0,1fr)_444px]">
           <div className="hero-left relative">
             <div
               id="coin-slot"
@@ -83,7 +83,7 @@ export function Hero() {
         </div>
 
         {/* Brand marquee: only the top half of the first row peeks above the fold */}
-        <div className="relative h-9 max-h-10 overflow-hidden">
+        <div className="h-10 overflow-hidden shrink-0 mt-auto">
           <BrandMarquee />
         </div>
       </div>

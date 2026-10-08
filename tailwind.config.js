@@ -50,9 +50,9 @@ export default {content: [
           DEFAULT: '#E3DCCB',
           80: 'rgba(227, 220, 203, 0.8)',
         },
-        ink: '#1F1B16',
-        sage: '#8A9B87',
-        note: '#7A7264',
+        ink: '#1C2B25',
+        sage: '#5B6660',
+        note: '#5A5A52',
       },
       fontFamily: {
         heading: ['"Playfair Display"', 'Georgia', 'serif'],

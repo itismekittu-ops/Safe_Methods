@@ -164,7 +164,7 @@ export function HeroIntro() {
                   We're changing that.
                 </span>
               </motion.h2>
-              <motion.p variants={fadeUp} className="mx-auto mt-1 max-w-[520px] text-[15px] leading-relaxed text-muted">
+              <motion.p variants={fadeUp} className="mx-auto mt-1 max-w-[520px] text-[15px] leading-relaxed text-[#5B6660]">
                 Experts from top financial firms bid for you.
               </motion.p>
             </div>
@@ -194,14 +194,14 @@ export function HeroIntro() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-muted transition-colors hover:text-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40">
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-[#5B6660] transition-colors hover:text-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40">
                 <RotateCcwIcon className="h-3.5 w-3.5" aria-hidden="true" />
                 New Topic
               </button>
             </div>
 
             {/* Conversation stream */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto max-h-[460px] space-y-3 pr-2">
               {messages.map((msg, idx) => (
                 <motion.div
                   key={idx}
@@ -217,7 +217,7 @@ export function HeroIntro() {
                   ) : msg.loading ? (
                     <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3">
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
-                      <span className="text-[13px] text-muted">SafeBot is analyzing your question…</span>
+                      <span className="text-[13px] text-[#5B6660]">SafeBot is analyzing your question…</span>
                     </div>
                   ) : (
                     <div className="max-w-[90%] rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3">
@@ -248,7 +248,7 @@ export function HeroIntro() {
       </AnimatePresence>
 
       {/* AskInput — always at bottom */}
-      <motion.div variants={fadeUp} className="mt-auto border-t border-line pt-[18px]">
+      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-3">
         <AskInput
           value={ask.value}
           status={ask.status}

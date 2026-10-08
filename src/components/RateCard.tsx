@@ -67,7 +67,7 @@ export function RateCard({ advisor, rate, index, best, layoutId, arrived = false
             </motion.span>
           }
         </div>
-        <p className="truncate text-[12px] text-muted">
+        <p className="truncate text-[12px] font-medium text-[#5B6660]">
           {advisor.firm} · {advisor.role}
         </p>
       </motion.div>
