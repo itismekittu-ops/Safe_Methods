@@ -125,16 +125,18 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Interactive 5-Advisor Bidding Arena & Chat Stream Integration
+#### (F1-US14) Interactive 5-Advisor Bidding Arena, Viewport Peeking Marquee & Multi-Turn Stream
 
 * **As a** visitor, 
-* **WHEN I** enter a financial inquiry or click a suggested prompt in the hero section, 
-* **I want to** watch an interactive, animated 3D "Bidding Arena" where 5 leading Canadian bank advisors (David Chen / BMO, Emily Roberts / Scotiabank, Daniel Singh / CIBC, Victor Gaur / RBC, Sarah Mitchell / TD) compete across rounds to offer the most competitive rate, 
-* **AND** have the winning card smoothly fly and land in the #1 slot of the Top Matches panel with an arrival sparkle and animated ticker count-up, 
-* **AND** once the duel concludes, have the left hero container smoothly render the chat response (displaying the instant verified answer for cached pre-canned queries from `src/data/preCannedQuestions.ts`, or the completed response from `safebot-chat` for novel queries), 
-* **AND** provide clickable suggested follow-up chips and a "New Question" reset action to return cleanly to the 6-suggestion cards grid without white-screen unmounts, 
-* **AND** ensure all underlying rates reflect live data queried dynamically from the Supabase `rates` table, 
-* **So that** I experience an engaging competitive visual representation alongside actionable, grounded financial guidance. 
+* **WHEN I** enter any financial question (pre-canned or novel) in the hero input bar, 
+* **I want to** watch the 5-advisor Bidding Arena duel animation narrow down to the best market rate, 
+* **AND** when the duel concludes, have the left hero section transition into an active multi-turn conversational chat thread displaying: 
+  * My inquiry paired with SafeBot's formatted response (from local cache for pre-canned queries, or streamed via `safebot-chat` for novel queries), 
+  * Selectable follow-up prompt chips, 
+  * A clear message history and a "New Question" reset button to return to the 6-suggestion grid, 
+* **AND** ensure all 5 category tabs (`Loan`, `Mortgage`, `Investment`, `Mutual Fund`, `Debt`) and sub-toggles (`Fixed`, `Variable`, `Fixed Rate GIC`, `Market Linked GIC`) in the Top Matches panel remain fully visible and distinct at all times with high-contrast text, 
+* **AND** format the hero viewport (`100vh - navbar`) such that the bottom Canadian institution Brand Marquee only shows the top half of its first moving row peeking above the viewport edge as a scroll cue, 
+* **AND** ensure the 5 advisor cards maintain stable layout geometry during duel transitions without collapsing the Top Matches card container. 
 * **Dependencies:** F1-US1, F1-US2, Supabase rates, safebot-chat, GetQuotesModal
 
 ---
