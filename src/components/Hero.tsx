@@ -60,11 +60,11 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
       {/* 
-        Hero cards and marquee wrapper.
-        At 100% desktop zoom, the cards and search bar are 100% visible,
-        while only the top row of the marquee peeks at the bottom fold.
+        Hero viewport: 
+        Cards fill the visible screen at 100% zoom with room for the disclaimer text, 
+        and the top line of the marquee peeks right at the bottom edge.
       */}
-      <div className="flex flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-80px)] lg:max-h-[660px]">
+      <div className="flex flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[690px]">
         {/* Two-column card grid */}
         <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
@@ -89,8 +89,11 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Brand marquee: 40px visible peeking fold. Scrolling reveals the second row */}
-        <div className="relative z-10 mt-2 h-10 shrink-0 overflow-hidden pointer-events-none">
+        {/* 
+          Marquee container: 
+          Peeks Line 1 above the fold at 100% zoom; scrolling reveals both full lines.
+        */}
+        <div className="relative z-10 mt-2 h-12 shrink-0 overflow-visible pointer-events-none">
           <BrandMarquee />
         </div>
       </div>
