@@ -10,6 +10,7 @@ import { SourceMarker } from './SourceMarker';
 import { useAskInput } from '../hooks/useAskInput';
 import { useBidding } from '../contexts/BiddingContext';
 import { easeOut, fadeUp, stagger } from '../utils/motion';
+import { supabase } from '../lib/supabase';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -24,86 +25,69 @@ interface HeroIntroProps {
 
 export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const reduced = useReducedMotion() ?? false;
-  const { ask: startBidding, arena, cachedAnswer, chatReply, followUps } = useBidding();
-  const ask = useAskInput(reduced, startBidding);
+  const { ask: startBidding, arena, cachedAnswer, followUps } = useBidding();
   const busy = arena.run !== null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
 
-  const handleSubmit = useCallback((question: string) => {
-    setPendingQuery(question);
-    setMessages((prev) => [...prev, { role: 'user', content: question }]);
-  }, []);
+  const handleSendMessage = useCallback(async (question: string) => {
+    if (!question.trim() || isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-  useEffect(() => {
-    if (ask.submitted && ask.submitted.length > 0) {
-      const lastMsg = messages[messages.length - 1];
-      if (!lastMsg || lastMsg.role !== 'user' || lastMsg.content !== ask.submitted) {
-        handleSubmit(ask.submitted);
-      }
-    }
-  }, [ask.submitted, handleSubmit, messages]);
+    // Trigger duel animation
+    startBidding(question);
 
-  useEffect(() => {
-    if (busy && arena.run) {
-      const question = arena.run.question;
-      const lastMsg = messages[messages.length - 1];
-      if (!lastMsg || lastMsg.role !== 'user' || lastMsg.content !== question) {
-        setPendingQuery(question);
-        setMessages((prev) => [...prev, { role: 'user', content: question }]);
-      }
-    }
-  }, [busy, arena.run, messages]);
+    // Append user message immediately
+    setMessages((prev) => [...prev, { role: 'user', content: question }, { role: 'assistant', content: '', loading: true }]);
 
-  useEffect(() => {
-    if (!busy && pendingQuery) {
-      const answer = cachedAnswer ?? chatReply ?? null;
-      if (answer) {
+    try {
+      // 1. Check if cached answer was provided by BiddingContext
+      if (cachedAnswer) {
         setMessages((prev) => {
-          const withoutLoading = prev.filter((m) => !m.loading);
-          return [...withoutLoading, { role: 'assistant', content: answer, followUps }];
+          const filtered = prev.filter((m) => !m.loading);
+          return [...filtered, { role: 'assistant', content: cachedAnswer, followUps: followUps || [] }];
         });
-        setPendingQuery(null);
-      } else if (cachedAnswer === null && chatReply === null) {
-        const hasLoading = messages.some((m) => m.loading);
-        if (!hasLoading) {
-          setMessages((prev) => [...prev, { role: 'assistant', content: '', loading: true }]);
-        }
-        const timeout = setTimeout(() => {
-          setMessages((prev) => {
-            const loading = prev.find((m) => m.loading);
-            if (loading) {
-              return prev.map((m) =>
-                m.loading
-                  ? {
-                      role: 'assistant',
-                      content:
-                        'I’m experiencing a temporary issue connecting to my knowledge base. Please try asking again.',
-                      followUps: []
-                    }
-                  : m
-              );
-            }
-            return prev;
-          });
-          setPendingQuery(null);
-        }, 5000);
-        return () => clearTimeout(timeout);
+        isFetchingRef.current = false;
+        return;
       }
-    }
-  }, [busy, pendingQuery, cachedAnswer, chatReply, followUps, messages]);
 
-  useEffect(() => {
-    if (chatReply && pendingQuery === null && messages.some((m) => m.loading)) {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.loading ? { role: 'assistant', content: chatReply, followUps } : m
-        )
-      );
+      // 2. Query LLM via Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('safebot-chat', {
+        body: { message: question }
+      });
+
+      if (error || !data) {
+        throw error || new Error('No reply from AI');
+      }
+
+      const replyText = data.reply || data.content || (typeof data === 'string' ? data : '');
+      const dynamicFollowUps = data.followUps || [];
+
+      setMessages((prev) => {
+        const filtered = prev.filter((m) => !m.loading);
+        return [...filtered, { role: 'assistant', content: replyText, followUps: dynamicFollowUps }];
+      });
+    } catch {
+      setMessages((prev) => {
+        const filtered = prev.filter((m) => !m.loading);
+        return [
+          ...filtered,
+          {
+            role: 'assistant',
+            content:
+              'I am having trouble connecting to live rates right now. Please explore our posted rates on the right or book a direct consultation with one of our verified advisors.',
+            followUps: ['Best mortgage rate?', 'Best GIC rates?']
+          }
+        ];
+      });
+    } finally {
+      isFetchingRef.current = false;
     }
-  }, [chatReply, followUps, pendingQuery, messages]);
+  }, [cachedAnswer, followUps, startBidding]);
+
+  const ask = useAskInput(reduced, handleSendMessage);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -113,12 +97,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
   const handleReset = () => {
     setMessages([]);
-    setPendingQuery(null);
-  };
-
-  const handleFollowUp = (question: string) => {
-    startBidding(question);
-    handleSubmit(question);
+    isFetchingRef.current = false;
   };
 
   const showChat = messages.length > 0 && !busy;
@@ -190,7 +169,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       {/* 2. Bidding Arena Animation Overlay */}
       <BiddingArena />
 
-      {/* 3. Multi-Turn Conversation Stream (Contained scroll, no overflow) */}
+      {/* 3. Multi-Turn Conversation Stream */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
@@ -216,7 +195,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
-            {/* Scrollable Message Thread: Fills available card height without pushing the search bar off-screen */}
+            {/* Scrollable Message Thread */}
             <div
               ref={scrollRef}
               className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2.5"
@@ -259,7 +238,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* In-chat Get Competing Quotes Box: rendered ONLY on latest assistant response */}
+                        {/* Quote Box: strictly on latest assistant response */}
                         {isLatest && (
                           <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
@@ -280,13 +259,13 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: rendered ONLY on latest response */}
+                        {/* Follow-up chips: strictly on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
                               <button
                                 key={chipIdx}
-                                onClick={() => handleFollowUp(chip)}
+                                onClick={() => handleSendMessage(chip)}
                                 className="rounded-full border border-[#E3DCCD] bg-white px-2.5 py-1 text-[11px] font-medium text-forest transition-colors hover:border-forest hover:bg-gold-light/40"
                               >
                                 {chip}
@@ -304,7 +283,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 4. Pinned AskInput Bar (Always visible at the card bottom) */}
+      {/* 4. Pinned AskInput Bar */}
       <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
         <AskInput
           value={ask.value}

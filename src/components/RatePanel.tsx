@@ -36,22 +36,22 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white p-4 sm:p-5 shadow-panel overflow-hidden"
+      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white p-3.5 sm:p-4 shadow-panel overflow-hidden"
       style={tilt.style}
     >
       <div className="flex h-5 items-center shrink-0">
-        <h2 id="rates-heading" className="font-serif text-[18px] sm:text-[20px] font-semibold leading-none text-forest">
+        <h2 id="rates-heading" className="font-serif text-[18px] sm:text-[19px] font-semibold leading-none text-forest">
           Top Matches
         </h2>
       </div>
 
-      <div className="shrink-0 pt-2">
+      <div className="shrink-0 pt-1">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      <div className="flex h-9 items-center justify-between gap-2 shrink-0 pt-1">
+      <div className="flex h-8 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
-          <div role="radiogroup" aria-label="Rate type" className="flex h-8 rounded-full border border-line bg-cream-card p-0.5">
+          <div role="radiogroup" aria-label="Rate type" className="flex h-7 rounded-full border border-line bg-cream-card p-0.5">
             {category.options.map((o) => {
               const active = o.id === option.id;
               return (
@@ -61,7 +61,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   aria-checked={active}
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
-                  className={`relative h-7 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
+                  className={`relative h-6 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
                     active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
                   }`}
                 >
@@ -74,17 +74,17 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
             })}
           </div>
         ) : (
-          <span className="text-[12.5px] font-semibold text-[#5B6660]">{option.label}</span>
+          <span className="text-[12px] font-semibold text-[#5B6660]">{option.label}</span>
         )}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* Card list: tight gap to prevent forcing outer expansion */}
-      <div aria-live="polite" className="shrink-0 py-1">
+      {/* Card list: strictly sized */}
+      <div aria-live="polite" className="shrink-0 py-0.5">
         <AnimatePresence mode="wait" initial>
           <motion.ul
             key={`${revealKey}-${category.id}-${option.id}-${term.id}`}
-            className="flex flex-col gap-1 sm:gap-1.5"
+            className="flex flex-col gap-1"
           >
             {ranked.map((q, i) => {
               const advisor = advisors.find((a) => a.id === q.advisorId);
@@ -110,7 +110,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </AnimatePresence>
       </div>
 
-      <div className="shrink-0 pt-1">
+      <div className="shrink-0 pt-0.5">
         <QuoteCta onQuote={onQuote} onBook={onBook} />
       </div>
     </motion.section>
