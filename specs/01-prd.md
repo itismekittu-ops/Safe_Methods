@@ -125,18 +125,19 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Interactive 5-Advisor Bidding Arena, Viewport Peeking Marquee & Grounded Chat Stream
+#### (F1-US14) Interactive 5-Advisor Bidding Arena, In-Chat Quote Box & Peeking Marquee
 
 * **As a** visitor, 
-* **WHEN I** enter any financial inquiry or click a suggested prompt in the hero section, 
+* **WHEN I** enter any financial question (pre-canned or novel) in the hero input bar, 
 * **I want to** watch the 5-advisor Bidding Arena duel animation narrow down to the best market rate, 
-* **AND** when the duel concludes, have the left hero section transition into a clean, scrollable chat panel constrained to the card's height displaying: 
-  * My inquiry paired with SafeBot's formatted response (from local cache for pre-canned queries, or streamed via `safebot-chat` for novel queries), 
-  * Clickable follow-up chips and a prominent "New Question" button to return to the 6-suggestion cards grid, 
-* **AND** ensure all text across sub-headlines, advisor titles, and search input placeholders uses high-contrast typography (`#5B6660` / `#1C2B25`) that is never washed out or invisible against the `#F6F2EA` ivory background, 
-* **AND** ensure all 5 category tabs (`Loan`, `Mortgage`, `Investment`, `Mutual Fund`, `Debt`) and sub-toggles (`Fixed`, `Variable`, `Fixed Rate GIC`, `Market Linked GIC`) remain clearly visible with distinct contrast states, 
-* **AND** constrain the Hero section to the desktop viewport (`calc(100vh - 86px)`) so that only the top 30px (top half of the first line) of the Canadian Brand Marquee peeks above the bottom fold as a visual scroll cue, 
-* **AND** ensure live data from the Supabase `rates` table powers all advisor rankings deterministically. 
+* **AND** when the duel concludes, have the left hero section transition into a clean, scrollable chat panel displaying: 
+  * My inquiry paired with SafeBot's formatted response, 
+  * A dedicated high-conversion callout box featuring two clear lines encouraging real offers and a prominent "Get Competing Quotes" button (matching the right panel label) that triggers `GetQuotesModal` with active category context, 
+  * Selectable follow-up prompt chips, 
+  * A "New Topic" button at the top right that cleanly resets back to the initial 6-suggestion cards grid, 
+* **AND** ensure all icons (`SearchIcon`, `ArrowUpIcon`) and auxiliary actions (`Skip`) use high-contrast dark sage (`#5B6660`) and remain fully visible at all times, 
+* **AND** format the hero viewport layout so the Canadian Brand Marquee sits in its own distinct bottom layout row beneath the cards (never sliding behind or bleeding through the chat bar and window), with only the top 30px peeking above the fold as a scroll indicator, 
+* **AND** maintain static slot heights (`h-12`) in the Top Matches panel during arena duels to eliminate layout jitter and overlapping card artifacts. 
 * **Dependencies:** F1-US1, F1-US2, Supabase rates, safebot-chat, GetQuotesModal
 ---
 
