@@ -13,11 +13,13 @@ function MarqueeRow({ names, direction, seconds }: MarqueeRowProps) {
   const half = [...names, ...names];
   return (
     <div
-      className="marquee flex h-6 w-full items-center overflow-hidden"
+      className="marquee flex h-5 w-full items-center overflow-hidden"
       style={{ maskImage: edgeMask, WebkitMaskImage: edgeMask }}
     >
       <div
-        className={`marquee-track flex w-max items-center ${direction === 'ltr' ? 'marquee-ltr' : 'marquee-rtl'}`}
+        className={`marquee-track flex w-max items-center ${
+          direction === 'ltr' ? 'marquee-ltr' : 'marquee-rtl'
+        }`}
         style={{ animationDuration: `${seconds}s` }}
       >
         {[0, 1].map((copy) => (
@@ -28,7 +30,7 @@ function MarqueeRow({ names, direction, seconds }: MarqueeRowProps) {
                 className={`whitespace-nowrap px-6 leading-none text-[#5B6660] ${
                   brandStyles[name] ?? ''
                 }`}
-                style={{ fontSize: '13.5px' }}
+                style={{ fontSize: '12.5px' }}
               >
                 {name}
               </li>
@@ -42,7 +44,7 @@ function MarqueeRow({ names, direction, seconds }: MarqueeRowProps) {
 
 export function BrandMarquee() {
   return (
-    <div className="flex w-full flex-col gap-1.5 py-1">
+    <div className="flex w-full flex-col gap-1 py-0.5">
       <MarqueeRow names={brandRows[0]} direction="ltr" seconds={36} />
       <MarqueeRow names={brandRows[1]} direction="rtl" seconds={46} />
     </div>

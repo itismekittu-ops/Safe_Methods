@@ -75,9 +75,16 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           setMessages((prev) => {
             const loading = prev.find((m) => m.loading);
             if (loading) {
-              return prev.map((m) => m.loading
-                ? { role: 'assistant', content: 'I\u2019m experiencing a temporary issue connecting to my knowledge base. Please try asking again.', followUps: [] }
-                : m);
+              return prev.map((m) =>
+                m.loading
+                  ? {
+                      role: 'assistant',
+                      content:
+                        'I’m experiencing a temporary issue connecting to my knowledge base. Please try asking again.',
+                      followUps: []
+                    }
+                  : m
+              );
             }
             return prev;
           });
@@ -90,11 +97,11 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
   useEffect(() => {
     if (chatReply && pendingQuery === null && messages.some((m) => m.loading)) {
-      setMessages((prev) => prev.map((m) =>
-        m.loading
-          ? { role: 'assistant', content: chatReply, followUps }
-          : m
-      ));
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.loading ? { role: 'assistant', content: chatReply, followUps } : m
+        )
+      );
     }
   }, [chatReply, followUps, pendingQuery, messages]);
 
@@ -122,9 +129,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       variants={stagger}
       initial="hidden"
       animate="show"
-      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-5 sm:p-6 shadow-sm overflow-hidden"
+      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
     >
-      {/* Intro / Suggestion Grid */}
+      {/* 1. Intro View */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -134,18 +141,18 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             animate="show"
             exit={{ opacity: 0 }}
             aria-hidden={busy}
-            className={`flex flex-1 flex-col justify-between transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+            className={`flex flex-1 min-h-0 flex-col justify-between transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
               busy ? 'pointer-events-none opacity-20 blur-[6px]' : ''
             }`}
           >
-            <div className="text-center pt-1">
+            <div className="text-center pt-1 shrink-0">
               <motion.h2
                 variants={fadeUp}
                 className="mx-auto font-serif font-semibold text-forest"
               >
                 <span
                   className="relative inline-block leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
-                  style={{ fontSize: 'clamp(19px, 1.8vw, 24px)' }}
+                  style={{ fontSize: 'clamp(18px, 1.8vw, 24px)' }}
                 >
                   Only{' '}
                   <motion.span
@@ -160,40 +167,45 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                 </span>
                 <span
                   className="mt-0.5 block font-normal italic leading-[1.05] tracking-[-0.02em] text-gold-dark"
-                  style={{ fontSize: 'clamp(30px, 3.2vw, 44px)' }}
+                  style={{ fontSize: 'clamp(28px, 3vw, 42px)' }}
                 >
                   We're changing that.
                 </span>
               </motion.h2>
-              <motion.p variants={fadeUp} className="mx-auto mt-0.5 max-w-[480px] text-[13.5px] leading-relaxed text-[#5B6660]">
+              <motion.p
+                variants={fadeUp}
+                className="mx-auto mt-0.5 max-w-[480px] text-[13px] leading-relaxed text-[#5B6660]"
+              >
                 Experts from top financial firms bid for you.
               </motion.p>
             </div>
 
-            <div className="my-auto py-2">
+            <div className="my-auto py-1 shrink-0">
               <SuggestionGrid onPick={ask.autoType} disabled={busy} />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Arena overlay */}
+      {/* 2. Bidding Arena Animation Overlay */}
       <BiddingArena />
 
-      {/* Multi-turn Chat Stream */}
+      {/* 3. Multi-Turn Conversation Stream (Contained scroll, no overflow) */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
             key="chat"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: easeOut }}
-            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-2"
+            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header */}
-            <div className="mb-2 flex items-center justify-between border-b border-[#E3DCCD] pb-1.5 shrink-0">
-              <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">SafeBot Guidance</p>
+            {/* Header with New Topic button */}
+            <div className="mb-2 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
+              <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">
+                SafeBot Guidance
+              </p>
               <button
                 type="button"
                 onClick={handleReset}
@@ -204,8 +216,11 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
-            {/* Scrollable messages container filling full card height */}
-            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto pr-2 flex flex-col gap-3">
+            {/* Scrollable Message Thread: Fills available card height without pushing the search bar off-screen */}
+            <div
+              ref={scrollRef}
+              className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2.5"
+            >
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
 
@@ -215,7 +230,11 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: easeOut }}
-                    className={msg.role === 'user' ? 'flex justify-end' : 'flex flex-col items-start gap-2'}
+                    className={
+                      msg.role === 'user'
+                        ? 'flex justify-end'
+                        : 'flex flex-col items-start gap-2'
+                    }
                   >
                     {msg.role === 'user' ? (
                       <div className="inline-flex max-w-[85%] items-center gap-2 rounded-full border border-forest/15 bg-white px-3.5 py-1.5 text-xs font-medium text-forest shadow-sm">
@@ -223,46 +242,52 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                         <span className="truncate">{msg.content}</span>
                       </div>
                     ) : msg.loading ? (
-                      <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3.5 py-2.5">
-                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
-                        <span className="text-[12.5px] text-[#5B6660]">SafeBot is analyzing your question…</span>
+                      <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-4 py-3">
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
+                        <span className="text-[12.5px] text-[#5B6660]">
+                          SafeBot is analyzing your question…
+                        </span>
                       </div>
                     ) : (
                       <>
-                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-4 py-3 shadow-sm">
+                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3.5 py-2.5 shadow-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="chat-markdown text-[13px] leading-relaxed text-ink space-y-2"
+                            className="chat-markdown text-[12.5px] leading-relaxed text-ink space-y-1.5"
                           >
                             {msg.content}
                           </ReactMarkdown>
                         </div>
 
-                        {/* Inline Quote CTA — strictly on latest assistant response */}
+                        {/* In-chat Get Competing Quotes Box: rendered ONLY on latest assistant response */}
                         {isLatest && (
-                          <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-3 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+                          <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
-                              <p className="text-[12.5px] font-semibold text-[#0B3D2E]">Want real offers from top Canadian institutions?</p>
-                              <p className="text-[11px] text-[#5B6660]">Make banks compete with no obligation and compare side-by-side.</p>
+                              <p className="text-[12px] font-semibold text-[#0B3D2E]">
+                                Want real offers from top Canadian institutions?
+                              </p>
+                              <p className="text-[11px] text-[#5B6660]">
+                                Make banks compete with no obligation and compare side-by-side.
+                              </p>
                             </div>
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="whitespace-nowrap rounded-xl bg-[#0B3D2E] px-3.5 py-2 text-xs font-semibold text-[#F3E7BF] hover:bg-[#145440] transition-colors shrink-0"
+                              className="whitespace-nowrap rounded-xl bg-[#0B3D2E] px-3 py-1.5 text-xs font-semibold text-[#F3E7BF] hover:bg-[#145440] transition-colors shrink-0"
                             >
                               Get Competing Quotes →
                             </button>
                           </div>
                         )}
 
-                        {/* Follow-up suggestion chips — strictly on latest response */}
+                        {/* Follow-up chips: rendered ONLY on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
                               <button
                                 key={chipIdx}
                                 onClick={() => handleFollowUp(chip)}
-                                className="rounded-full border border-[#E3DCCD] bg-white px-3 py-1 text-[11.5px] font-medium text-forest transition-colors hover:border-forest hover:bg-gold-light/40"
+                                className="rounded-full border border-[#E3DCCD] bg-white px-2.5 py-1 text-[11px] font-medium text-forest transition-colors hover:border-forest hover:bg-gold-light/40"
                               >
                                 {chip}
                               </button>
@@ -279,8 +304,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* Pinned AskInput bar */}
-      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2.5 shrink-0">
+      {/* 4. Pinned AskInput Bar (Always visible at the card bottom) */}
+      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
         <AskInput
           value={ask.value}
           status={ask.status}

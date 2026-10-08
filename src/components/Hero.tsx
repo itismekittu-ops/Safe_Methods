@@ -60,12 +60,13 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
       {/* 
-        Hero cards fill the viewport, leaving dedicated space for the marquee.
+        Hero cards and marquee are separated into distinct vertical blocks.
+        The cards fit strictly within the viewport, while the marquee is anchored directly below them.
       */}
-      <div className="flex flex-col justify-start pt-1 lg:h-[calc(100vh-80px)] lg:min-h-[580px] lg:max-h-[720px]">
+      <div className="flex flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[680px]">
         {/* Two-column card grid */}
-        <div className="relative z-20 grid flex-1 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
-          <div className="hero-left relative z-20 flex h-full flex-col">
+        <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
+          <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
             <div
               id="coin-slot"
               aria-hidden="true"
@@ -78,16 +79,17 @@ export function Hero() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2, ease: easeOut }}
-            className="relative z-20 flex h-full flex-col">
-
+            className="relative z-20 flex h-full min-h-0 flex-col"
+          >
             <RatePanel
               onQuote={() => setQuotesOpen(true)}
-              onBook={handleBook} />
+              onBook={handleBook}
+            />
           </motion.div>
         </div>
 
-        {/* Brand marquee sitting strictly in its own section below the grid */}
-        <div className="relative z-10 mt-2 h-14 shrink-0 overflow-hidden pointer-events-none">
+        {/* Brand marquee: strictly positioned in its own block below the cards */}
+        <div className="relative z-10 mt-2 h-12 shrink-0 overflow-hidden pointer-events-none">
           <BrandMarquee />
         </div>
       </div>

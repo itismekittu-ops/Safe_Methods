@@ -36,24 +36,22 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      className="relative flex h-full w-full flex-col rounded-[28px] border border-[#E3DCCD] bg-white px-5 pb-4 pt-4 shadow-panel"
-      style={tilt.style}>
-
-      <div className="flex h-5 items-center">
-        <h2 id="rates-heading" className="font-serif text-[20px] font-semibold leading-none text-forest">
+      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white p-4 sm:p-5 shadow-panel overflow-hidden"
+      style={tilt.style}
+    >
+      <div className="flex h-5 items-center shrink-0">
+        <h2 id="rates-heading" className="font-serif text-[18px] sm:text-[20px] font-semibold leading-none text-forest">
           Top Matches
         </h2>
       </div>
 
-      <div aria-hidden="true" className="min-h-4 flex-1" />
-      <div>
+      <div className="shrink-0 pt-2">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      <div aria-hidden="true" className="min-h-3 flex-1" />
-      <div className="flex h-10 items-center justify-between gap-2">
+      <div className="flex h-9 items-center justify-between gap-2 shrink-0 pt-1">
         {hasRateType ? (
-          <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full border border-line bg-cream-card p-1">
+          <div role="radiogroup" aria-label="Rate type" className="flex h-8 rounded-full border border-line bg-cream-card p-0.5">
             {category.options.map((o) => {
               const active = o.id === option.id;
               return (
@@ -63,8 +61,10 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   aria-checked={active}
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
-                  className={`relative h-8 whitespace-nowrap rounded-full px-3 text-[12px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
-                    active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'}`}>
+                  className={`relative h-7 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
+                    active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
+                  }`}
+                >
                   {active && (
                     <motion.span layoutId="option-pill" transition={pillTransition} className="absolute inset-0 rounded-full bg-[#0B3D2E]" />
                   )}
@@ -74,18 +74,18 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
             })}
           </div>
         ) : (
-          <span className="text-[13px] font-semibold text-[#5B6660]">{option.label}</span>
+          <span className="text-[12.5px] font-semibold text-[#5B6660]">{option.label}</span>
         )}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      <div aria-hidden="true" className="min-h-[14px] flex-1" />
-      <div aria-live="polite">
+      {/* Card list: tight gap to prevent forcing outer expansion */}
+      <div aria-live="polite" className="shrink-0 py-1">
         <AnimatePresence mode="wait" initial>
           <motion.ul
             key={`${revealKey}-${category.id}-${option.id}-${term.id}`}
-            className="flex flex-col gap-1.5">
-
+            className="flex flex-col gap-1 sm:gap-1.5"
+          >
             {ranked.map((q, i) => {
               const advisor = advisors.find((a) => a.id === q.advisorId);
               if (!advisor) return null;
@@ -102,16 +102,17 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   best={i === 0}
                   arrived={arrived}
                   quickFlight={run?.quick ?? false}
-                  layoutId={arrived && run ? arenaLayoutId(run.id, advisor.id) : undefined} />
+                  layoutId={arrived && run ? arenaLayoutId(run.id, advisor.id) : undefined}
+                />
               );
             })}
           </motion.ul>
         </AnimatePresence>
       </div>
 
-      <div aria-hidden="true" className="min-h-[18px] flex-1" />
-      <div>
+      <div className="shrink-0 pt-1">
         <QuoteCta onQuote={onQuote} onBook={onBook} />
       </div>
-    </motion.section>);
+    </motion.section>
+  );
 }
