@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { QuoteCta } from './QuoteCta';
 import { RateCard } from './RateCard';
 import { EmptyRankSlot } from './EmptyRankSlot';
@@ -9,7 +9,7 @@ import { useTilt } from '../hooks/useTilt';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useBidding } from '../contexts/BiddingContext';
 import { advisors, rateCategories, terms } from '../data/rates';
-import { arenaLayoutId, rankQuotes } from '../utils/ranking';
+import { rankQuotes } from '../utils/ranking';
 
 const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
@@ -19,7 +19,7 @@ interface RatePanelProps {
 }
 
 export function RatePanel({ onQuote, onBook }: RatePanelProps) {
-  const { categoryId, optionId, termId, revealKey, selectCategory, setOptionId, setTermId, arena } = useBidding();
+  const { categoryId, optionId, termId, selectCategory, setOptionId, setTermId, arena } = useBidding();
   const desktop = useMediaQuery('(min-width: 1024px)');
   const tilt = useTilt(4);
 
@@ -45,11 +45,11 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </h2>
       </div>
 
-      <div className="shrink-0 pt-1">
+      <div className="shrink-0 pt-0.5">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      <div className="flex h-8 items-center justify-between gap-2 shrink-0 pt-0.5">
+      <div className="flex h-8 items-center justify-between gap-2 shrink-0">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-7 rounded-full border border-line bg-cream-card p-0.5">
             {category.options.map((o) => {
@@ -61,7 +61,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   aria-checked={active}
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
-                  className={`relative h-6 whitespace-nowrap rounded-full px-2.5 text-[11px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
+                  className={`relative h-6 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
                     active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
                   }`}
                 >
@@ -79,35 +79,33 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* 5-Card list */}
-      <div aria-live="polite" className="shrink-0 py-1">
-        <AnimatePresence mode="wait" initial>
-          <motion.ul
-            key={`${revealKey}-${category.id}-${option.id}-${term.id}`}
-            className="flex flex-col gap-1 sm:gap-1.5"
-          >
-            {ranked.map((q, i) => {
-              const advisor = advisors.find((a) => a.id === q.advisorId);
-              if (!advisor) return null;
-              if (run && !arena.landed.includes(advisor.id)) {
-                return <EmptyRankSlot key={`slot-${advisor.id}`} rank={i + 1} />;
-              }
-              const arrived = run !== null && desktop;
-              return (
-                <RateCard
-                  key={advisor.id}
-                  advisor={advisor}
-                  rate={q.rate}
-                  index={i}
-                  best={i === 0}
-                  arrived={arrived}
-                  quickFlight={run?.quick ?? false}
-                  layoutId={arrived && run ? arenaLayoutId(run.id, advisor.id) : undefined}
-                />
-              );
-            })}
-          </motion.ul>
-        </AnimatePresence>
+      {/* Static 5-card list without overlapping motion collisions */}
+      <div aria-live="polite" className="shrink-0 py-0.5">
+        <ul className="flex flex-col gap-1">
+          {ranked.map((q, i) => {
+            const advisor = advisors.find((a) => a.id === q.advisorId);
+            if (!advisor) return null;
+
+            // Render empty slot while advisor is actively dueling in the arena
+            if (run && !arena.landed.includes(advisor.id)) {
+              return <EmptyRankSlot key={`slot-${advisor.id}`} rank={i + 1} />;
+            }
+
+            const arrived = run !== null && desktop;
+
+            return (
+              <RateCard
+                key={advisor.id}
+                advisor={advisor}
+                rate={q.rate}
+                index={i}
+                best={i === 0}
+                arrived={arrived}
+                quickFlight={run?.quick ?? false}
+              />
+            );
+          })}
+        </ul>
       </div>
 
       <div className="shrink-0 pt-0.5">

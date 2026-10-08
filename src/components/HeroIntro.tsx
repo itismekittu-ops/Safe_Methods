@@ -26,22 +26,40 @@ interface HeroIntroProps {
 
 export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const reduced = useReducedMotion() ?? false;
-  const { ask: startBidding, arena, clearCache } = useBidding();
+  const { ask: startBidding, arena } = useBidding();
   const busy = arena.run !== null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isFetchingRef = useRef<string | null>(null);
+  const activeDispatchRef = useRef<string | null>(null);
 
   const handleSendMessage = useCallback(async (question: string) => {
     const trimmed = question.trim();
-    if (!trimmed || isFetchingRef.current === trimmed) return;
-    isFetchingRef.current = trimmed;
+    if (!trimmed || activeDispatchRef.current === trimmed) return;
+    activeDispatchRef.current = trimmed;
 
-    // Trigger Bidding Arena animation
+    // Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
-    // Append user message + temporary loading state
+    // 1. Immediately check local pre-canned cache
+    const cached = findPreCannedMatch(trimmed);
+
+    if (cached) {
+      // Append user question and pre-canned response directly (NO blank state)
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: trimmed },
+        {
+          role: 'assistant',
+          content: cached.answer,
+          followUps: cached.followUpQuestions || []
+        }
+      ]);
+      activeDispatchRef.current = null;
+      return;
+    }
+
+    // 2. If novel, append user message with loading indicator
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -49,25 +67,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     ]);
 
     try {
-      // 1. Direct local pre-canned check (Instant response)
-      const cached = findPreCannedMatch(trimmed);
-      if (cached) {
-        setMessages((prev) => {
-          const clean = prev.filter((m) => !m.loading);
-          return [
-            ...clean,
-            {
-              role: 'assistant',
-              content: cached.answer,
-              followUps: cached.followUpQuestions || []
-            }
-          ];
-        });
-        isFetchingRef.current = null;
-        return;
-      }
-
-      // 2. Novel question -> Query Supabase Edge Function (safebot-chat)
       const { data, error } = await supabase.functions.invoke('safebot-chat', {
         body: { message: trimmed }
       });
@@ -98,13 +97,13 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           {
             role: 'assistant',
             content:
-              'Safe Methods provides free, transparent financial guidance and lets top Canadian institutions bid for your business. Please explore our posted rates on the right or book a direct consultation with one of our verified advisors.',
+              'Safe Methods provides transparent financial guidance and lets top Canadian institutions bid for your business. Please explore our posted rates on the right or book a direct consultation with one of our verified advisors.',
             followUps: ['Best mortgage rate?', 'Best GIC rates?', 'Smart way to borrow money?']
           }
         ];
       });
     } finally {
-      isFetchingRef.current = null;
+      activeDispatchRef.current = null;
     }
   }, [startBidding]);
 
@@ -118,8 +117,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
   const handleReset = () => {
     setMessages([]);
-    clearCache();
-    isFetchingRef.current = null;
+    activeDispatchRef.current = null;
   };
 
   const showChat = messages.length > 0 && !busy;
@@ -132,7 +130,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
     >
-      {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
+      {/* 1. Intro View (Default 6 Demo Cards) */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -202,7 +200,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             transition={{ duration: 0.3, ease: easeOut }}
             className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header with New Topic button */}
+            {/* Header with New Topic reset button */}
             <div className="mb-1.5 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
               <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">
                 SafeBot Guidance
@@ -260,7 +258,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* Quote Box: Rendered ONLY on latest assistant response */}
+                        {/* In-chat Get Competing Quotes Box: rendered ONLY on latest assistant response */}
                         {isLatest && (
                           <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
@@ -281,7 +279,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: Rendered ONLY on latest response */}
+                        {/* Follow-up chips: rendered ONLY on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
