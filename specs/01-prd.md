@@ -125,17 +125,18 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Client-Side Cached Q&A Interceptor for Demo Questions
+#### (F1-US14) Interactive 5-Advisor Bidding Arena & Hero Experience
 
 * **As a** visitor, 
-* **WHEN I** view the initial hero chat state (`messages.length === 0`), 
-* **I want to** see the introductory statistic *"Only 1 in 4 (25%) Canadians turn to a financial advisor or planner for advice"* formatted cleanly as a single unbroken line across desktop viewports, paired with the sub-headline *"We bring financial experts from top big firms so you can compare & choose the best product or interest rate."*,
-* **AND** see the 6 demo question cards rendered in a centered 2-column grid (`w-full max-w-[340px] h-[54px]`) positioned with strictly equalized top and bottom spacing (`my-auto py-2`) between the headline and the bottom search bar,
-* **AND WHEN I** hover over any demo question card, see a distinct golden highlighted hover state (`hover:border-amber-400 hover:ring-2 hover:ring-amber-400/40 hover:bg-amber-500/5 hover:-translate-y-0.5 hover:shadow-md`) with the search icon turning golden,
-* **AND WHEN I** click any demo question card, receive an instant, zero-latency response served directly from the local pre-canned data store (`src/data/preCannedQuestions.ts`), 
-* **AND IF** my query is novel or un-cached, route the request seamlessly through the dynamic Supabase Edge Function (`safebot-chat`) pipeline, 
-* **So that** common questions load instantaneously with zero fabrication risk, while novel inquiries still receive dynamic AI answers. 
-* **Dependencies:** F1-US1, 02-architecture.md
+* **WHEN I** enter a financial inquiry or click a suggested prompt in the hero section, 
+* **I want to** watch an interactive, animated 3D "Bidding Arena" where 5 leading Canadian bank advisors (David Chen / BMO, Victor Gaur / RBC, Sarah Mitchell / TD, Emily Roberts / Scotiabank, Daniel Singh / CIBC) compete across rounds to offer the most competitive rate, 
+* **AND** have the winning card smoothly fly and land in the #1 slot of the Top Matches panel with an arrival sparkle and animated ticker count-up, 
+* **AND** ensure all underlying rates reflect live data queried dynamically from the Supabase `rates` table, 
+* **AND** retain sub-50ms instant responses for pre-canned demo queries (`src/data/preCannedQuestions.ts`) while routing novel queries to `safebot-chat`, 
+* **AND** clicking "Get Competing Quotes" opens the Get Quotes modal with marketing attribution preserved, 
+* **AND** clicking "Book a Consultant" triggers the Calendly consultation workflow, 
+* **So that** I experience an engaging, visual representation of financial competition while receiving real market data. 
+* **Dependencies:** F1-US1, F1-US2, Supabase rates, GetQuotesModal
 
 ---
 
