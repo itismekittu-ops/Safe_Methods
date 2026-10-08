@@ -39,7 +39,7 @@ export function RateCard({ advisor, rate, index, best, layoutId, arrived = false
         layout: flight
       }}
       style={{ borderRadius: 14 }}
-      className={`relative z-10 flex h-[clamp(36px,4.6vh,48px)] items-center gap-2.5 border pl-3 pr-4 ${
+      className={`relative z-10 flex h-12 items-center gap-2.5 border pl-3 pr-4 ${
       best ? 'border-forest/15 bg-white' : 'border-line/80 bg-cream-card'}`
       }>
       

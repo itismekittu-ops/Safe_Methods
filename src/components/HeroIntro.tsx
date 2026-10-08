@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { SearchIcon, RotateCcwIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -11,11 +11,11 @@ import { useAskInput } from '../hooks/useAskInput';
 import { useBidding } from '../contexts/BiddingContext';
 import { easeOut, fadeUp, stagger } from '../utils/motion';
 
-interface ChatState {
-  query: string;
-  answer: string;
-  followUps: string[];
-  loading: boolean;
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  followUps?: string[];
+  loading?: boolean;
 }
 
 export function HeroIntro() {
@@ -24,72 +24,103 @@ export function HeroIntro() {
   const ask = useAskInput(reduced, startBidding);
   const busy = arena.run !== null;
 
-  const [chat, setChat] = useState<ChatState | null>(null);
-  const [lastQuery, setLastQuery] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Track which question triggered the current arena run
-  const arenaDone = !busy && arena.phase === 'intro';
+  // When a question is submitted (typed or auto-typed), set up a pending user message
+  // The arena plays, and when it finishes we attach the answer.
+  const handleSubmit = useCallback((question: string) => {
+    setPendingQuery(question);
+    setMessages((prev) => [...prev, { role: 'user', content: question }]);
+  }, []);
 
-  // When a query is submitted, capture it for chat state
+  // Detect when a new question was asked via AskInput submit
   useEffect(() => {
-    if (ask.submitted && ask.submitted !== lastQuery) {
-      setLastQuery(ask.submitted);
-      setChat({ query: ask.submitted, answer: '', followUps: [], loading: true });
+    if (ask.submitted && ask.submitted.length > 0) {
+      // Check if this is a new submission (not already in messages)
+      const lastMsg = messages[messages.length - 1];
+      if (!lastMsg || lastMsg.role !== 'user' || lastMsg.content !== ask.submitted) {
+        handleSubmit(ask.submitted);
+      }
     }
-  }, [ask.submitted, lastQuery]);
+  }, [ask.submitted, handleSubmit, messages]);
 
-  // Also handle auto-typed suggestions (they call startBidding directly, not submit)
-  // We detect this by watching when arena.run starts and chat hasn't been set yet
+  // Detect when arena starts from auto-typed suggestion (no ask.submitted)
   useEffect(() => {
-    if (busy && arena.run && !chat) {
-      setChat({ query: arena.run.question, answer: '', followUps: [], loading: true });
+    if (busy && arena.run) {
+      const question = arena.run.question;
+      const lastMsg = messages[messages.length - 1];
+      if (!lastMsg || lastMsg.role !== 'user' || lastMsg.content !== question) {
+        setPendingQuery(question);
+        setMessages((prev) => [...prev, { role: 'user', content: question }]);
+      }
     }
-  }, [busy, arena.run, chat]);
+  }, [busy, arena.run, messages]);
 
-  // When arena finishes, populate the answer
+  // When arena finishes and we have a pending query, attach the answer
   useEffect(() => {
-    if (!busy && chat && chat.loading) {
+    if (!busy && pendingQuery) {
       const answer = cachedAnswer ?? chatReply ?? null;
       if (answer) {
-        setChat((c) => c ? { ...c, answer, followUps, loading: false } : c);
+        setMessages((prev) => {
+          // Replace any existing loading assistant message, or append
+          const withoutLoading = prev.filter((m) => !m.loading);
+          return [...withoutLoading, { role: 'assistant', content: answer, followUps }];
+        });
+        setPendingQuery(null);
       } else if (cachedAnswer === null && chatReply === null) {
-        // Neither cache nor LLM responded yet — keep loading if we haven't timed out
-        // Give the LLM a short grace period after arena ends
+        // Show loading message while waiting for LLM
+        const hasLoading = messages.some((m) => m.loading);
+        if (!hasLoading) {
+          setMessages((prev) => [...prev, { role: 'assistant', content: '', loading: true }]);
+        }
+        // Timeout fallback
         const timeout = setTimeout(() => {
-          setChat((c) => {
-            if (c && c.loading) {
-              return { ...c, answer: 'I\u2019m experiencing a temporary issue. Please try asking again.', loading: false };
+          setMessages((prev) => {
+            const loading = prev.find((m) => m.loading);
+            if (loading) {
+              return prev.map((m) => m.loading
+                ? { role: 'assistant', content: 'I\u2019m experiencing a temporary issue connecting to my knowledge base. Please try asking again.', followUps: [] }
+                : m);
             }
-            return c;
+            return prev;
           });
-        }, 3000);
+          setPendingQuery(null);
+        }, 5000);
         return () => clearTimeout(timeout);
       }
     }
-  }, [busy, chat, cachedAnswer, chatReply, followUps]);
+  }, [busy, pendingQuery, cachedAnswer, chatReply, followUps, messages]);
 
-  // Update answer if LLM reply arrives after cache
+  // Update loading message when LLM reply arrives
   useEffect(() => {
-    if (chat && !chat.loading && chatReply && chat.answer === '' && cachedAnswer === null) {
-      setChat((c) => c ? { ...c, answer: chatReply, loading: false } : c);
+    if (chatReply && pendingQuery === null && messages.some((m) => m.loading)) {
+      setMessages((prev) => prev.map((m) =>
+        m.loading
+          ? { role: 'assistant', content: chatReply, followUps }
+          : m
+      ));
     }
-    if (chat && chatReply && cachedAnswer === null && chat.loading) {
-      setChat((c) => c ? { ...c, answer: chatReply, followUps, loading: false } : c);
-    }
-  }, [chatReply, cachedAnswer, chat]);
+  }, [chatReply, followUps, pendingQuery, messages]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages]);
 
   const handleReset = () => {
-    setChat(null);
-    setLastQuery(null);
+    setMessages([]);
+    setPendingQuery(null);
   };
 
   const handleFollowUp = (question: string) => {
-    setLastQuery(question);
-    setChat({ query: question, answer: '', followUps: [], loading: true });
-    ask.autoType(question);
+    startBidding(question);
+    handleSubmit(question);
   };
 
-  const showChat = chat !== null && !busy;
+  const showChat = messages.length > 0 && !busy;
+  const showIntro = messages.length === 0;
 
   return (
     <motion.div
@@ -97,10 +128,10 @@ export function HeroIntro() {
       initial="hidden"
       animate="show"
       className="relative z-10 flex h-full flex-col rounded-[28px] border border-line bg-cream-card px-6 pb-6 pt-8">
-      
-      {/* Intro / Suggestion Grid view — hidden when chat is showing or arena is busy */}
+
+      {/* Intro / Suggestion Grid view */}
       <AnimatePresence mode="wait">
-        {!showChat && (
+        {showIntro && (
           <motion.div
             key="intro"
             variants={stagger}
@@ -109,25 +140,20 @@ export function HeroIntro() {
             exit={{ opacity: 0 }}
             aria-hidden={busy}
             className={`flex flex-1 flex-col transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-            busy ? 'pointer-events-none opacity-20 blur-[6px]' : ''}`}
-            >
-            
+            busy ? 'pointer-events-none opacity-20 blur-[6px]' : ''}`}>
             <div className="text-center">
               <motion.h2
                 variants={fadeUp}
                 className="mx-auto font-serif font-semibold text-forest">
-                
                 <span
                   className="relative inline-block leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
                   style={{ fontSize: 'clamp(19px, 1.9vw, 26px)' }}>
-                  
                   Only{' '}
                   <motion.span
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.26, delay: 0.3, ease: easeOut }}
                     className="inline-block rounded-lg bg-forest px-1.5 pb-0.5 text-gold">
-                    
                     1&nbsp;in&nbsp;4
                   </motion.span>{' '}
                   Canadians turn to a financial&nbsp;advisor.<SourceMarker />
@@ -135,16 +161,13 @@ export function HeroIntro() {
                 <span
                   className="mt-1 block font-normal italic leading-[1.05] tracking-[-0.02em] text-gold-dark"
                   style={{ fontSize: 'clamp(36px, 3.8vw, 52px)' }}>
-                  
                   We're changing that.
                 </span>
               </motion.h2>
-
               <motion.p variants={fadeUp} className="mx-auto mt-1 max-w-[520px] text-[15px] leading-relaxed text-muted">
                 Experts from top financial firms bid for you.
               </motion.p>
             </div>
-
             <div className="flex flex-1 items-center" style={{ paddingTop: 0, paddingBottom: 'clamp(12px, calc(0.6vh + 10px), 26px)' }}>
               <SuggestionGrid onPick={ask.autoType} disabled={busy} />
             </div>
@@ -152,12 +175,12 @@ export function HeroIntro() {
         )}
       </AnimatePresence>
 
-      {/* Arena overlay — always mounted so AnimatePresence works */}
+      {/* Arena overlay */}
       <BiddingArena />
 
-      {/* Chat Response Panel — shown after arena concludes */}
+      {/* Multi-turn chat conversation */}
       <AnimatePresence mode="wait">
-        {showChat && chat && (
+        {showChat && (
           <motion.div
             key="chat"
             initial={{ opacity: 0, y: 16 }}
@@ -165,53 +188,60 @@ export function HeroIntro() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.35, ease: easeOut }}
             className="flex flex-1 flex-col">
-            
-            {/* User question chip */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-forest/15 bg-white px-3.5 py-1.5 text-sm font-medium text-forest shadow-sm">
-                <SearchIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{chat.query}</span>
-              </div>
+
+            {/* Reset button */}
+            <div className="mb-2 flex justify-end">
               <button
                 type="button"
                 onClick={handleReset}
                 className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-muted transition-colors hover:text-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40">
-                
                 <RotateCcwIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                New Question
+                New Topic
               </button>
             </div>
 
-            {/* Answer area */}
-            <div className="mt-3 flex-1 overflow-y-auto">
-              {chat.loading ? (
-                <div className="flex items-center gap-2 py-4 text-sm text-muted">
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
-                  <span>SafeBot is analyzing your question…</span>
-                </div>
-              ) : chat.answer ? (
-                <div className="rounded-2xl border border-line bg-white px-4 py-3">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    className="chat-markdown text-[13px] leading-relaxed text-ink">
-                    {chat.answer}
-                  </ReactMarkdown>
-                </div>
-              ) : null}
-
-              {/* Follow-up chips */}
-              {!chat.loading && chat.followUps.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {chat.followUps.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleFollowUp(chip)}
-                      className="rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-medium text-forest transition-colors hover:bg-gold-light">
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Conversation stream */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {messages.map((msg, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: easeOut }}
+                  className={msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
+                  {msg.role === 'user' ? (
+                    <div className="inline-flex max-w-[85%] items-center gap-2 rounded-full border border-forest/15 bg-white px-3.5 py-1.5 text-sm font-medium text-forest shadow-sm">
+                      <SearchIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{msg.content}</span>
+                    </div>
+                  ) : msg.loading ? (
+                    <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3">
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
+                      <span className="text-[13px] text-muted">SafeBot is analyzing your question…</span>
+                    </div>
+                  ) : (
+                    <div className="max-w-[90%] rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="chat-markdown text-[13px] leading-relaxed text-ink">
+                        {msg.content}
+                      </ReactMarkdown>
+                      {msg.followUps && msg.followUps.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {msg.followUps.map((chip, chipIdx) => (
+                            <button
+                              key={chipIdx}
+                              onClick={() => handleFollowUp(chip)}
+                              className="rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-medium text-forest transition-colors hover:bg-gold-light">
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}

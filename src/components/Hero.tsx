@@ -59,14 +59,14 @@ export function Hero() {
 
   return (
     <section className="relative mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="flex flex-col pb-4 pt-3.5 lg:h-[calc(100vh-86px)] lg:justify-center">
+      <div className="flex flex-col pb-2 pt-3 lg:h-[calc(100vh-80px)] lg:justify-between overflow-hidden">
         <div className="grid gap-8 lg:h-[min(calc(100vh-116px),720px)] lg:grid-cols-[minmax(0,1fr)_404px] lg:items-stretch lg:gap-10 xl:grid-cols-[minmax(0,1fr)_444px]">
           <div className="hero-left relative">
             <div
               id="coin-slot"
               aria-hidden="true"
               className="pointer-events-none absolute -right-12 -top-8 z-0 hidden h-44 w-44 lg:block" />
-            
+
             <HeroIntro />
           </div>
 
@@ -75,16 +75,17 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.25, ease: easeOut }}
             className="relative z-10 h-full">
-            
+
             <RatePanel
               onQuote={() => setQuotesOpen(true)}
               onBook={handleBook} />
           </motion.div>
         </div>
-      </div>
 
-      <div className="pb-10">
-        <BrandMarquee />
+        {/* Brand marquee: only the top half of the first row peeks above the fold */}
+        <div className="relative h-9 max-h-10 overflow-hidden">
+          <BrandMarquee />
+        </div>
       </div>
 
       <GetQuotesModal

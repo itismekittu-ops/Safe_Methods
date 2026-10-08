@@ -38,7 +38,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       onMouseLeave={tilt.onMouseLeave}
       className="relative flex h-full w-full flex-col rounded-[28px] border border-line/80 bg-white/95 px-5 pb-4 pt-4 shadow-panel backdrop-blur-sm"
       style={tilt.style}>
-      
+
       <div className="flex h-5 items-center">
         <h2 id="rates-heading" className="font-serif text-[20px] font-semibold leading-none text-forest">
           Top Matches
@@ -52,31 +52,30 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
 
       <div aria-hidden="true" className="min-h-3 flex-1" />
       <div className="flex h-10 items-center justify-between gap-2">
-        {hasRateType ?
-        <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full bg-cream-card ring-1 ring-inset ring-line">
+        {hasRateType ? (
+          <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full border border-line bg-cream-card p-1">
             {category.options.map((o) => {
-            const active = o.id === option.id;
-            return (
-              <button
-                key={o.id}
-                role="radio"
-                aria-checked={active}
-                disabled={busy}
-                onClick={() => setOptionId(o.id)}
-                className={`relative h-10 whitespace-nowrap rounded-full px-3 text-[12.5px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
-                active ? 'text-forest' : 'text-muted hover:text-ink'}`
-                }>
-                
-                  {active &&
-                <motion.span layoutId="option-pill" transition={pillTransition} className="absolute inset-1 rounded-full bg-gold-light" />
-                }
+              const active = o.id === option.id;
+              return (
+                <button
+                  key={o.id}
+                  role="radio"
+                  aria-checked={active}
+                  disabled={busy}
+                  onClick={() => setOptionId(o.id)}
+                  className={`relative h-8 whitespace-nowrap rounded-full px-3 text-[12px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
+                    active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'}`}>
+                  {active && (
+                    <motion.span layoutId="option-pill" transition={pillTransition} className="absolute inset-0 rounded-full bg-[#0B3D2E]" />
+                  )}
                   <span className="relative">{o.label}</span>
-                </button>);
+                </button>
+              );
             })}
-          </div> :
-
-        <span className="text-[13px] font-semibold text-muted">{option.label}</span>
-        }
+          </div>
+        ) : (
+          <span className="text-[13px] font-semibold text-muted">{option.label}</span>
+        )}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
@@ -86,7 +85,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
           <motion.ul
             key={`${revealKey}-${category.id}-${option.id}-${term.id}`}
             className="flex flex-col gap-1.5">
-            
+
             {ranked.map((q, i) => {
               const advisor = advisors.find((a) => a.id === q.advisorId);
               if (!advisor) return null;

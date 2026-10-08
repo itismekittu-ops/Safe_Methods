@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { easeOut } from '../../utils/motion';
 import type { Advisor } from '../../types/rates';
@@ -12,6 +12,7 @@ interface AdvisorAvatarProps {
 }
 
 export function AdvisorAvatar({ advisor, className = '', reveal = false, revealDuration = 0.3 }: AdvisorAvatarProps) {
+  const [imgError, setImgError] = useState(false);
   const revealProps = reveal ?
   {
     initial: { filter: 'blur(10px)', scale: 1.15, opacity: 0.5 },
@@ -20,24 +21,23 @@ export function AdvisorAvatar({ advisor, className = '', reveal = false, revealD
   } :
   {};
 
-  if (advisor.photo) {
+  if (advisor.photo && !imgError) {
     return (
       <motion.img
         src={advisor.photo}
         alt=""
+        onError={() => setImgError(true)}
         className={`shrink-0 rounded-full object-cover ${className}`}
-        {...revealProps} />);
-
-
+        {...revealProps} />
+    );
   }
 
   return (
     <motion.span
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center rounded-full bg-forest font-serif font-medium text-gold ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-[#0B3D2E] font-serif font-medium text-[#C9A227] ${className}`}
       {...revealProps}>
-      
       {advisor.initials}
-    </motion.span>);
-
+    </motion.span>
+  );
 }
