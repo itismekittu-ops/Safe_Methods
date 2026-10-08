@@ -11,6 +11,7 @@ import { useAskInput } from '../hooks/useAskInput';
 import { useBidding } from '../contexts/BiddingContext';
 import { easeOut, fadeUp, stagger } from '../utils/motion';
 import { supabase } from '../lib/supabase';
+import { findPreCannedMatch } from '../data/preCannedQuestions';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -25,37 +26,50 @@ interface HeroIntroProps {
 
 export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const reduced = useReducedMotion() ?? false;
-  const { ask: startBidding, arena, cachedAnswer, followUps } = useBidding();
+  const { ask: startBidding, arena, clearCache } = useBidding();
   const busy = arena.run !== null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isFetchingRef = useRef(false);
+  const isFetchingRef = useRef<string | null>(null);
 
   const handleSendMessage = useCallback(async (question: string) => {
-    if (!question.trim() || isFetchingRef.current) return;
-    isFetchingRef.current = true;
+    const trimmed = question.trim();
+    if (!trimmed || isFetchingRef.current === trimmed) return;
+    isFetchingRef.current = trimmed;
 
-    // Trigger duel animation
-    startBidding(question);
+    // Trigger Bidding Arena animation
+    startBidding(trimmed);
 
-    // Append user message immediately
-    setMessages((prev) => [...prev, { role: 'user', content: question }, { role: 'assistant', content: '', loading: true }]);
+    // Append user message + temporary loading state
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: trimmed },
+      { role: 'assistant', content: '', loading: true }
+    ]);
 
     try {
-      // 1. Check if cached answer was provided by BiddingContext
-      if (cachedAnswer) {
+      // 1. Direct local pre-canned check (Instant response)
+      const cached = findPreCannedMatch(trimmed);
+      if (cached) {
         setMessages((prev) => {
-          const filtered = prev.filter((m) => !m.loading);
-          return [...filtered, { role: 'assistant', content: cachedAnswer, followUps: followUps || [] }];
+          const clean = prev.filter((m) => !m.loading);
+          return [
+            ...clean,
+            {
+              role: 'assistant',
+              content: cached.answer,
+              followUps: cached.followUpQuestions || []
+            }
+          ];
         });
-        isFetchingRef.current = false;
+        isFetchingRef.current = null;
         return;
       }
 
-      // 2. Query LLM via Supabase Edge Function
+      // 2. Novel question -> Query Supabase Edge Function (safebot-chat)
       const { data, error } = await supabase.functions.invoke('safebot-chat', {
-        body: { message: question }
+        body: { message: trimmed }
       });
 
       if (error || !data) {
@@ -66,26 +80,33 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       const dynamicFollowUps = data.followUps || [];
 
       setMessages((prev) => {
-        const filtered = prev.filter((m) => !m.loading);
-        return [...filtered, { role: 'assistant', content: replyText, followUps: dynamicFollowUps }];
+        const clean = prev.filter((m) => !m.loading);
+        return [
+          ...clean,
+          {
+            role: 'assistant',
+            content: replyText,
+            followUps: dynamicFollowUps
+          }
+        ];
       });
     } catch {
       setMessages((prev) => {
-        const filtered = prev.filter((m) => !m.loading);
+        const clean = prev.filter((m) => !m.loading);
         return [
-          ...filtered,
+          ...clean,
           {
             role: 'assistant',
             content:
-              'I am having trouble connecting to live rates right now. Please explore our posted rates on the right or book a direct consultation with one of our verified advisors.',
-            followUps: ['Best mortgage rate?', 'Best GIC rates?']
+              'Safe Methods provides free, transparent financial guidance and lets top Canadian institutions bid for your business. Please explore our posted rates on the right or book a direct consultation with one of our verified advisors.',
+            followUps: ['Best mortgage rate?', 'Best GIC rates?', 'Smart way to borrow money?']
           }
         ];
       });
     } finally {
-      isFetchingRef.current = false;
+      isFetchingRef.current = null;
     }
-  }, [cachedAnswer, followUps, startBidding]);
+  }, [startBidding]);
 
   const ask = useAskInput(reduced, handleSendMessage);
 
@@ -97,7 +118,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
   const handleReset = () => {
     setMessages([]);
-    isFetchingRef.current = false;
+    clearCache();
+    isFetchingRef.current = null;
   };
 
   const showChat = messages.length > 0 && !busy;
@@ -110,7 +132,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
     >
-      {/* 1. Intro View */}
+      {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -166,7 +188,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 2. Bidding Arena Animation Overlay */}
+      {/* 2. Bidding Arena Overlay */}
       <BiddingArena />
 
       {/* 3. Multi-Turn Conversation Stream */}
@@ -181,7 +203,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
             {/* Header with New Topic button */}
-            <div className="mb-2 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
+            <div className="mb-1.5 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
               <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">
                 SafeBot Guidance
               </p>
@@ -238,7 +260,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* Quote Box: strictly on latest assistant response */}
+                        {/* Quote Box: Rendered ONLY on latest assistant response */}
                         {isLatest && (
                           <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
@@ -259,7 +281,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: strictly on latest response */}
+                        {/* Follow-up chips: Rendered ONLY on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (

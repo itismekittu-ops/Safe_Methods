@@ -60,8 +60,7 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
       {/* 
-        Hero viewport: 
-        Cards fill the visible screen at 100% zoom with room for the disclaimer text, 
+        Hero viewport: cards fit the visible screen at 100% zoom with room for the disclaimer text, 
         and the top line of the marquee peeks right at the bottom edge.
       */}
       <div className="flex flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[690px]">
@@ -89,10 +88,7 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* 
-          Marquee container: 
-          Peeks Line 1 above the fold at 100% zoom; scrolling reveals both full lines.
-        */}
+        {/* Brand marquee container: peeks line 1 at 100% zoom; scrolling reveals both lines */}
         <div className="relative z-10 mt-2 h-12 shrink-0 overflow-visible pointer-events-none">
           <BrandMarquee />
         </div>

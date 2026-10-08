@@ -36,7 +36,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white px-4 py-3 sm:px-5 sm:py-3.5 shadow-panel overflow-hidden"
+      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white p-3.5 sm:p-4 shadow-panel overflow-hidden"
       style={tilt.style}
     >
       <div className="flex h-5 items-center shrink-0">
@@ -45,11 +45,11 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </h2>
       </div>
 
-      <div className="shrink-0 pt-0.5">
+      <div className="shrink-0 pt-1">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      <div className="flex h-8 items-center justify-between gap-2 shrink-0">
+      <div className="flex h-8 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-7 rounded-full border border-line bg-cream-card p-0.5">
             {category.options.map((o) => {
@@ -79,12 +79,12 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* Card list */}
-      <div aria-live="polite" className="shrink-0 py-0.5">
+      {/* 5-Card list */}
+      <div aria-live="polite" className="shrink-0 py-1">
         <AnimatePresence mode="wait" initial>
           <motion.ul
             key={`${revealKey}-${category.id}-${option.id}-${term.id}`}
-            className="flex flex-col gap-1"
+            className="flex flex-col gap-1 sm:gap-1.5"
           >
             {ranked.map((q, i) => {
               const advisor = advisors.find((a) => a.id === q.advisorId);
