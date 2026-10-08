@@ -2,6 +2,7 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SearchIcon } from 'lucide-react';
 import { ArenaStage } from './ArenaStage';
+import { ArenaErrorBoundary } from './ArenaErrorBoundary';
 import { useBidding } from '../../contexts/BiddingContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { easeOut } from '../../utils/motion';
@@ -63,7 +64,6 @@ export function BiddingArena() {
               className="absolute inset-0 rounded-full bg-gold"
               animate={{ scale: [1, 2.2], opacity: [0.7, 0] }}
               transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }} />
-
             }
               <span className="relative h-2 w-2 rounded-full bg-gold" />
             </span>
@@ -74,10 +74,11 @@ export function BiddingArena() {
           className={`relative flex-1 ${desktop ? '' : 'flex items-center justify-center py-2'}`}
           style={{ perspective: 1000 }}>
           
-            <ArenaStage run={run} state={arena} desktop={desktop} />
+            <ArenaErrorBoundary>
+              <ArenaStage run={run} state={arena} desktop={desktop} />
+            </ArenaErrorBoundary>
           </div>
         </motion.div>
       }
     </AnimatePresence>);
-
 }

@@ -21,11 +21,13 @@ export function ArenaStage({ run, state, desktop }: ArenaStageProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useElementSize(ref);
   const geo = useMemo(() => pentagonLayout(width, height), [width, height]);
-  const winnerId = run.ranked[0].advisorId;
+
+  // Defensive: ranked may be empty or missing entries
+  const ranked = run?.ranked ?? [];
+  const winnerId = ranked.length > 0 ? ranked[0].advisorId : null;
   const showWinner = phase === 'winner' || phase === 'landing';
   const clashing = phase === 'round1' || phase === 'round2' || phase === 'duel';
 
-  // Subtle 150ms shake timed to the collision peak of each lunge.
   useEffect(() => {
     if (round === 0) return;
     const amp = phase === 'duel' ? 4 : 3;
@@ -41,15 +43,18 @@ export function ArenaStage({ run, state, desktop }: ArenaStageProps) {
 
   const renderCard = (advisor: Advisor) => {
     const slot = advisors.indexOf(advisor);
-    const rankIndex = run.ranked.findIndex((q) => q.advisorId === advisor.id);
+    const rankIndex = ranked.findIndex((q) => q.advisorId === advisor.id);
+    if (rankIndex < 0) return null;
+    const finalRate = ranked[rankIndex]?.rate ?? 0;
     const isWinner = showWinner && advisor.id === winnerId;
     const g = geo.slots[slot];
+    if (!g) return null;
     return (
       <ArenaCard
         key={advisor.id}
         advisor={advisor}
         rankIndex={rankIndex}
-        finalRate={run.ranked[rankIndex].rate}
+        finalRate={finalRate}
         lowerWins={lowerWins(run.categoryId)}
         round={round}
         totalRounds={totalRounds}
@@ -62,9 +67,8 @@ export function ArenaStage({ run, state, desktop }: ArenaStageProps) {
         layoutId={desktop ? arenaLayoutId(run.id, advisor.id) : undefined}
         pos={desktop ? isWinner ? geo.winner : { left: g.left, top: g.top } : undefined}
         toward={g.toward}
-        tilt={g.tilt} />);
-
-
+        tilt={g.tilt} />
+    );
   };
 
   if (!desktop) {
@@ -72,14 +76,11 @@ export function ArenaStage({ run, state, desktop }: ArenaStageProps) {
       <motion.div animate={shake} className="flex w-full max-w-sm flex-col items-stretch gap-2">
         <AnimatePresence>{remaining.map(renderCard)}</AnimatePresence>
       </motion.div>);
-
   }
 
-  // Pentagon around the centre of the card, each card leaning inward.
   return (
     <motion.div ref={ref} animate={shake} style={{ transformStyle: 'preserve-3d' }} className="absolute inset-0">
       {width > 0 && remaining.map(renderCard)}
       {width > 0 && clashing && round > 0 && <SparkBurst key={round} x={geo.cx} y={geo.cy} />}
     </motion.div>);
-
 }
