@@ -58,10 +58,12 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="flex flex-col pb-2 pt-2 lg:h-[calc(100vh-80px)] lg:justify-between overflow-hidden">
-        <div className="grid gap-6 flex-1 lg:h-[min(calc(100vh-140px),680px)] lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_440px] items-stretch relative z-10">
-          <div className="hero-left relative">
+    <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
+      {/* Dynamic desktop viewport container: completely fits at 100% zoom without cutting off bottom buttons */}
+      <div className="flex flex-1 flex-col justify-between pb-2 pt-1 lg:min-h-[calc(100vh-84px)] lg:max-h-[calc(100vh-76px)] overflow-hidden">
+        {/* Two-column card grid */}
+        <div className="relative z-10 grid flex-1 items-stretch gap-4 sm:gap-5 lg:max-h-[calc(100vh-150px)] lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px]">
+          <div className="hero-left relative z-10 flex h-full flex-col">
             <div
               id="coin-slot"
               aria-hidden="true"
@@ -71,10 +73,10 @@ export function Hero() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.25, ease: easeOut }}
-            className="relative z-10 h-full">
+            transition={{ duration: 0.3, delay: 0.2, ease: easeOut }}
+            className="relative z-10 flex h-full flex-col">
 
             <RatePanel
               onQuote={() => setQuotesOpen(true)}
@@ -82,8 +84,8 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Brand marquee: sits below the cards, only top half peeks above the fold */}
-        <div className="h-9 shrink-0 overflow-hidden relative z-0 mt-2 pointer-events-none">
+        {/* Brand marquee: strictly below the cards, showing both tracks peeking at the fold */}
+        <div className="relative z-0 mt-2 h-14 shrink-0 overflow-hidden pt-1 pointer-events-none">
           <BrandMarquee />
         </div>
       </div>
@@ -95,5 +97,6 @@ export function Hero() {
         sessionToken={sessionToken}
         initialCategory={categoryIdToRequestMode(categoryId)}
       />
-    </section>);
+    </section>
+  );
 }
