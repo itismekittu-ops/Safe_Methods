@@ -125,18 +125,17 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Interactive 5-Advisor Bidding Arena & Hero Experience
+#### (F1-US14) Interactive 5-Advisor Bidding Arena & Chat Stream Integration
 
 * **As a** visitor, 
 * **WHEN I** enter a financial inquiry or click a suggested prompt in the hero section, 
-* **I want to** watch an interactive, animated 3D "Bidding Arena" where 5 leading Canadian bank advisors (David Chen / BMO, Victor Gaur / RBC, Sarah Mitchell / TD, Emily Roberts / Scotiabank, Daniel Singh / CIBC) compete across rounds to offer the most competitive rate, 
+* **I want to** watch an interactive, animated 3D "Bidding Arena" where 5 leading Canadian bank advisors (David Chen / BMO, Emily Roberts / Scotiabank, Daniel Singh / CIBC, Victor Gaur / RBC, Sarah Mitchell / TD) compete across rounds to offer the most competitive rate, 
 * **AND** have the winning card smoothly fly and land in the #1 slot of the Top Matches panel with an arrival sparkle and animated ticker count-up, 
+* **AND** once the duel concludes, have the left hero container smoothly render the chat response (displaying the instant verified answer for cached pre-canned queries from `src/data/preCannedQuestions.ts`, or the completed response from `safebot-chat` for novel queries), 
+* **AND** provide clickable suggested follow-up chips and a "New Question" reset action to return cleanly to the 6-suggestion cards grid without white-screen unmounts, 
 * **AND** ensure all underlying rates reflect live data queried dynamically from the Supabase `rates` table, 
-* **AND** retain sub-50ms instant responses for pre-canned demo queries (`src/data/preCannedQuestions.ts`) while routing novel queries to `safebot-chat`, 
-* **AND** clicking "Get Competing Quotes" opens the Get Quotes modal with marketing attribution preserved, 
-* **AND** clicking "Book a Consultant" triggers the Calendly consultation workflow, 
-* **So that** I experience an engaging, visual representation of financial competition while receiving real market data. 
-* **Dependencies:** F1-US1, F1-US2, Supabase rates, GetQuotesModal
+* **So that** I experience an engaging competitive visual representation alongside actionable, grounded financial guidance. 
+* **Dependencies:** F1-US1, F1-US2, Supabase rates, safebot-chat, GetQuotesModal
 
 ---
 
