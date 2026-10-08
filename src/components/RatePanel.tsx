@@ -1,6 +1,5 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { toast } from 'sonner';
 import { QuoteCta } from './QuoteCta';
 import { RateCard } from './RateCard';
 import { EmptyRankSlot } from './EmptyRankSlot';
@@ -14,7 +13,12 @@ import { arenaLayoutId, rankQuotes } from '../utils/ranking';
 
 const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
-export function RatePanel() {
+interface RatePanelProps {
+  onQuote: () => void;
+  onBook: () => void;
+}
+
+export function RatePanel({ onQuote, onBook }: RatePanelProps) {
   const { categoryId, optionId, termId, revealKey, selectCategory, setOptionId, setTermId, arena } = useBidding();
   const desktop = useMediaQuery('(min-width: 1024px)');
   const tilt = useTilt(4);
@@ -41,7 +45,6 @@ export function RatePanel() {
         </h2>
       </div>
 
-      {/* Flexible spacers: minimum gaps fit a ~640px screen; extra card height spreads evenly between sections. */}
       <div aria-hidden="true" className="min-h-4 flex-1" />
       <div>
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
@@ -69,8 +72,7 @@ export function RatePanel() {
                 }
                   <span className="relative">{o.label}</span>
                 </button>);
-
-          })}
+            })}
           </div> :
 
         <span className="text-[13px] font-semibold text-muted">{option.label}</span>
@@ -101,9 +103,8 @@ export function RatePanel() {
                   best={i === 0}
                   arrived={arrived}
                   quickFlight={run?.quick ?? false}
-                  layoutId={arrived && run ? arenaLayoutId(run.id, advisor.id) : undefined} />);
-
-
+                  layoutId={arrived && run ? arenaLayoutId(run.id, advisor.id) : undefined} />
+              );
             })}
           </motion.ul>
         </AnimatePresence>
@@ -111,10 +112,7 @@ export function RatePanel() {
 
       <div aria-hidden="true" className="min-h-[18px] flex-1" />
       <div>
-        <QuoteCta
-          onQuote={() => toast.success(`We'll connect you with ${category.label.toLowerCase()} experts for free quotes.`)} />
-        
+        <QuoteCta onQuote={onQuote} onBook={onBook} />
       </div>
     </motion.section>);
-
 }

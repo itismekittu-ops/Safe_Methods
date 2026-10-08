@@ -29,10 +29,36 @@ export default {content: [
         success: 'var(--success)',
         warning: 'var(--warning)',
         destructive: 'var(--destructive)',
+        // ── Private-wealth theme tokens ──
+        cream: {
+          DEFAULT: '#F7F3EA',
+          card: '#FBF7EF',
+          deep: '#EDE7D8',
+          bubble: '#FFFBF0',
+        },
+        forest: {
+          DEFAULT: '#0B3D2E',
+          soft: '#16513E',
+          ink: '#062418',
+        },
+        gold: {
+          DEFAULT: '#C9A227',
+          light: '#F0D780',
+          dark: '#9A7A1A',
+        },
+        line: {
+          DEFAULT: '#E3DCCB',
+          80: 'rgba(227, 220, 203, 0.8)',
+        },
+        ink: '#1F1B16',
+        sage: '#8A9B87',
+        note: '#7A7264',
       },
       fontFamily: {
         heading: ['"Playfair Display"', 'Georgia', 'serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',
@@ -42,6 +68,7 @@ export default {content: [
       boxShadow: {
         soft: 'var(--shadow-soft)',
         raised: 'var(--shadow-raised)',
+        panel: '0 8px 30px -12px rgba(11, 61, 46, 0.18)',
       },
       spacing: {
         1: '4px',

@@ -192,8 +192,6 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken, initialCate
           requestType: mode,
           loan_amount: mode === "loan" ? Number(loanAmount) : undefined,
           loanAmount: mode === "loan" ? Number(loanAmount) : undefined,
-          monthly_income: mode === "loan" ? Number(monthlyIncome) : undefined,
-          monthlyIncome: mode === "loan" ? Number(monthlyIncome) : undefined,
           investment_amount: mode === "investment" ? Number(investmentAmount) : undefined,
           investmentAmount: mode === "investment" ? Number(investmentAmount) : undefined,
           tenure: mode === "investment" ? tenure : undefined,

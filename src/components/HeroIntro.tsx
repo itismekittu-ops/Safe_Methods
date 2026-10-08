@@ -1,5 +1,7 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { AskInput } from './AskInput';
 import { SuggestionGrid } from './SuggestionGrid';
 import { BiddingArena } from './arena/BiddingArena';
@@ -10,9 +12,11 @@ import { easeOut, fadeUp, stagger } from '../utils/motion';
 
 export function HeroIntro() {
   const reduced = useReducedMotion() ?? false;
-  const { ask: startBidding, arena } = useBidding();
+  const { ask: startBidding, arena, cachedAnswer, chatReply, followUps } = useBidding();
   const ask = useAskInput(reduced, startBidding);
   const busy = arena.run !== null;
+  const answer = cachedAnswer ?? chatReply ?? null;
+  const showAnswer = !busy && answer !== null;
 
   return (
     <motion.div
@@ -32,7 +36,6 @@ export function HeroIntro() {
             variants={fadeUp}
             className="mx-auto font-serif font-semibold text-forest">
             
-            {/* One line at ~26px; at narrower widths it wraps into two balanced lines. */}
             <span
               className="relative inline-block leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
               style={{ fontSize: 'clamp(19px, 1.9vw, 26px)' }}>
@@ -52,7 +55,7 @@ export function HeroIntro() {
               className="mt-1 block font-normal italic leading-[1.05] tracking-[-0.02em] text-gold-dark"
               style={{ fontSize: 'clamp(36px, 3.8vw, 52px)' }}>
               
-              We’re changing that.
+              We're changing that.
             </span>
           </motion.h2>
 
@@ -68,6 +71,36 @@ export function HeroIntro() {
 
       <BiddingArena />
 
+      {/* Answer display after arena concludes */}
+      <AnimatePresence>
+        {showAnswer && answer && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease: easeOut }}
+            className="mb-3 max-h-[240px] overflow-y-auto rounded-2xl border border-line bg-white px-4 py-3">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              className="chat-markdown text-[13px] leading-relaxed text-ink">
+              {answer}
+            </ReactMarkdown>
+            {followUps.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {followUps.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => ask.autoType(chip)}
+                    className="rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-medium text-forest transition-colors hover:bg-gold-light">
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div variants={fadeUp} className="mt-auto border-t border-line pt-[18px]">
         <AskInput
           value={ask.value}
@@ -80,5 +113,4 @@ export function HeroIntro() {
         
       </motion.div>
     </motion.div>);
-
 }

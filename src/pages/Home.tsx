@@ -1,12 +1,13 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SEO } from '../components/SEO';
-import { HeroSection } from '../components/HeroSection';
+import { Hero } from '../components/Hero';
 import { ServicesSection } from '../components/ServicesSection';
 import { FaqSection } from '../components/FaqSection';
 import { BlogSection } from '../components/BlogSection';
 import { ContactSection } from '../components/ContactSection';
 import { ExitIntentPopup } from '../components/ExitIntentPopup';
+import { BiddingProvider } from '../contexts/BiddingContext';
 
 const FINANCIAL_SERVICE_JSONLD = {
   "@context": "https://schema.org",
@@ -46,7 +47,9 @@ export function Home() {
           {JSON.stringify(FINANCIAL_SERVICE_JSONLD)}
         </script>
       </Helmet>
-      <HeroSection />
+      <BiddingProvider>
+        <Hero />
+      </BiddingProvider>
       <ServicesSection />
       <FaqSection />
       <BlogSection />

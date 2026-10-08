@@ -124,3 +124,41 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem !important;
   line-height: 1.5 !important;
 }
+
+/* ── Arena / Hero animations ── */
+
+@keyframes marquee-ltr {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes marquee-rtl {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.marquee-ltr { animation: marquee-ltr linear infinite; }
+.marquee-rtl { animation: marquee-rtl linear infinite; }
+
+@keyframes cta-button {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1px); }
+}
+.cta-button { animation: cta-button 2.4s ease-in-out infinite; }
+
+@keyframes cta-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.15; transform: scale(1.012); }
+}
+.cta-pulse { animation: cta-pulse 2.8s ease-in-out infinite; }
+
+@keyframes cta-shine {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  60%  { transform: translateX(420%) skewX(-20deg); }
+  100% { transform: translateX(420%) skewX(-20deg); }
+}
+.cta-shine { animation: cta-shine 3.5s ease-in-out infinite; }
+
+@keyframes cta-nudge {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(3px); }
+}
+.cta-arrow { animation: cta-nudge 1.8s ease-in-out infinite; }
