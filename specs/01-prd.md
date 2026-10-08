@@ -125,20 +125,19 @@ An inline, persistent two-column split layout embedded in the homepage hero that
 * **So that** mobile users receive comparable engagement opportunities.
 * **Dependencies:** F1-US11
 
-#### (F1-US14) Interactive 5-Advisor Bidding Arena, Viewport Peeking Marquee & Multi-Turn Stream
+#### (F1-US14) Interactive 5-Advisor Bidding Arena, Viewport Peeking Marquee & Grounded Chat Stream
 
 * **As a** visitor, 
-* **WHEN I** enter any financial question (pre-canned or novel) in the hero input bar, 
+* **WHEN I** enter any financial inquiry or click a suggested prompt in the hero section, 
 * **I want to** watch the 5-advisor Bidding Arena duel animation narrow down to the best market rate, 
-* **AND** when the duel concludes, have the left hero section transition into an active multi-turn conversational chat thread displaying: 
+* **AND** when the duel concludes, have the left hero section transition into a clean, scrollable chat panel constrained to the card's height displaying: 
   * My inquiry paired with SafeBot's formatted response (from local cache for pre-canned queries, or streamed via `safebot-chat` for novel queries), 
-  * Selectable follow-up prompt chips, 
-  * A clear message history and a "New Question" reset button to return to the 6-suggestion grid, 
-* **AND** ensure all 5 category tabs (`Loan`, `Mortgage`, `Investment`, `Mutual Fund`, `Debt`) and sub-toggles (`Fixed`, `Variable`, `Fixed Rate GIC`, `Market Linked GIC`) in the Top Matches panel remain fully visible and distinct at all times with high-contrast text, 
-* **AND** format the hero viewport (`100vh - navbar`) such that the bottom Canadian institution Brand Marquee only shows the top half of its first moving row peeking above the viewport edge as a scroll cue, 
-* **AND** ensure the 5 advisor cards maintain stable layout geometry during duel transitions without collapsing the Top Matches card container. 
+  * Clickable follow-up chips and a prominent "New Question" button to return to the 6-suggestion cards grid, 
+* **AND** ensure all text across sub-headlines, advisor titles, and search input placeholders uses high-contrast typography (`#5B6660` / `#1C2B25`) that is never washed out or invisible against the `#F6F2EA` ivory background, 
+* **AND** ensure all 5 category tabs (`Loan`, `Mortgage`, `Investment`, `Mutual Fund`, `Debt`) and sub-toggles (`Fixed`, `Variable`, `Fixed Rate GIC`, `Market Linked GIC`) remain clearly visible with distinct contrast states, 
+* **AND** constrain the Hero section to the desktop viewport (`calc(100vh - 86px)`) so that only the top 30px (top half of the first line) of the Canadian Brand Marquee peeks above the bottom fold as a visual scroll cue, 
+* **AND** ensure live data from the Supabase `rates` table powers all advisor rankings deterministically. 
 * **Dependencies:** F1-US1, F1-US2, Supabase rates, safebot-chat, GetQuotesModal
-
 ---
 
 ## FEATURE 2: (F2) User Authentication
