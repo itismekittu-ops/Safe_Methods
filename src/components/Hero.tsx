@@ -60,12 +60,11 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
       {/* 
-        Strict desktop viewport containment for 100% zoom.
-        Uses h-[calc(100vh-84px)] to completely prevent page vertical scrollbars.
+        Hero cards fill the viewport, leaving dedicated space for the marquee.
       */}
-      <div className="flex flex-col justify-between pt-1 pb-1 lg:h-[calc(100vh-80px)] lg:max-h-[760px] overflow-hidden">
+      <div className="flex flex-col justify-start pt-1 lg:h-[calc(100vh-80px)] lg:min-h-[580px] lg:max-h-[720px]">
         {/* Two-column card grid */}
-        <div className="relative z-20 grid flex-1 items-stretch gap-4 sm:gap-5 lg:h-[calc(100vh-160px)] lg:max-h-[660px] lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px]">
+        <div className="relative z-20 grid flex-1 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full flex-col">
             <div
               id="coin-slot"
@@ -87,8 +86,8 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Both lines of moving brand marquee positioned strictly in their own row below the cards */}
-        <div className="relative z-10 mt-1 h-14 shrink-0 overflow-hidden pointer-events-none bg-transparent">
+        {/* Brand marquee sitting strictly in its own section below the grid */}
+        <div className="relative z-10 mt-2 h-14 shrink-0 overflow-hidden pointer-events-none">
           <BrandMarquee />
         </div>
       </div>

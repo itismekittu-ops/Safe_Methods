@@ -99,7 +99,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   }, [chatReply, followUps, pendingQuery, messages]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }
   }, [messages]);
 
   const handleReset = () => {
@@ -120,9 +122,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       variants={stagger}
       initial="hidden"
       animate="show"
-      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] px-5 pb-4 pt-5 sm:px-6 shadow-sm overflow-hidden"
+      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-5 sm:p-6 shadow-sm overflow-hidden"
     >
-      {/* Intro / Suggestion Grid view */}
+      {/* Intro / Suggestion Grid */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -168,7 +170,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </motion.p>
             </div>
 
-            <div className="my-auto py-1.5">
+            <div className="my-auto py-2">
               <SuggestionGrid onPick={ask.autoType} disabled={busy} />
             </div>
           </motion.div>
@@ -178,19 +180,19 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       {/* Arena overlay */}
       <BiddingArena />
 
-      {/* Multi-turn chat conversation */}
+      {/* Multi-turn Chat Stream */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
             key="chat"
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.35, ease: easeOut }}
-            className="flex flex-1 flex-col overflow-hidden"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: easeOut }}
+            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-2"
           >
-            {/* Header with New Topic button */}
-            <div className="mb-1.5 flex items-center justify-between border-b border-[#E3DCCD] pb-1">
+            {/* Header */}
+            <div className="mb-2 flex items-center justify-between border-b border-[#E3DCCD] pb-1.5 shrink-0">
               <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">SafeBot Guidance</p>
               <button
                 type="button"
@@ -202,21 +204,21 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
-            {/* Message thread: clamped so search bar stays visible at 100% zoom */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto max-h-[clamp(190px,26vh,260px)] pr-2 flex flex-col gap-2.5">
+            {/* Scrollable messages container filling full card height */}
+            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto pr-2 flex flex-col gap-3">
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
 
                 return (
                   <motion.div
                     key={idx}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: easeOut }}
                     className={msg.role === 'user' ? 'flex justify-end' : 'flex flex-col items-start gap-2'}
                   >
                     {msg.role === 'user' ? (
-                      <div className="inline-flex max-w-[85%] items-center gap-2 rounded-full border border-forest/15 bg-white px-3 py-1.5 text-xs font-medium text-forest shadow-sm">
+                      <div className="inline-flex max-w-[85%] items-center gap-2 rounded-full border border-forest/15 bg-white px-3.5 py-1.5 text-xs font-medium text-forest shadow-sm">
                         <SearchIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{msg.content}</span>
                       </div>
@@ -227,40 +229,40 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                       </div>
                     ) : (
                       <>
-                        <div className="max-w-[95%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3.5 py-2.5 shadow-sm">
+                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-4 py-3 shadow-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="chat-markdown text-[12.5px] leading-relaxed text-ink"
+                            className="chat-markdown text-[13px] leading-relaxed text-ink space-y-2"
                           >
                             {msg.content}
                           </ReactMarkdown>
                         </div>
 
-                        {/* In-chat Get Competing Quotes callout — rendered ONLY on the latest assistant response */}
+                        {/* Inline Quote CTA — strictly on latest assistant response */}
                         {isLatest && (
-                          <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+                          <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-3 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
-                              <p className="text-[12px] font-semibold text-[#0B3D2E]">Want real offers from top Canadian institutions?</p>
+                              <p className="text-[12.5px] font-semibold text-[#0B3D2E]">Want real offers from top Canadian institutions?</p>
                               <p className="text-[11px] text-[#5B6660]">Make banks compete with no obligation and compare side-by-side.</p>
                             </div>
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="whitespace-nowrap rounded-xl bg-[#0B3D2E] px-3 py-1.5 text-xs font-semibold text-[#F3E7BF] hover:bg-[#145440] transition-colors shrink-0"
+                              className="whitespace-nowrap rounded-xl bg-[#0B3D2E] px-3.5 py-2 text-xs font-semibold text-[#F3E7BF] hover:bg-[#145440] transition-colors shrink-0"
                             >
                               Get Competing Quotes →
                             </button>
                           </div>
                         )}
 
-                        {/* Follow-up chips — rendered ONLY on the latest assistant response */}
+                        {/* Follow-up suggestion chips — strictly on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
                               <button
                                 key={chipIdx}
                                 onClick={() => handleFollowUp(chip)}
-                                className="rounded-full border border-[#E3DCCD] bg-white px-2.5 py-1 text-[11.5px] font-medium text-forest transition-colors hover:border-forest hover:bg-gold-light/40"
+                                className="rounded-full border border-[#E3DCCD] bg-white px-3 py-1 text-[11.5px] font-medium text-forest transition-colors hover:border-forest hover:bg-gold-light/40"
                               >
                                 {chip}
                               </button>
@@ -277,8 +279,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* AskInput — pinned cleanly at the bottom */}
-      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2">
+      {/* Pinned AskInput bar */}
+      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2.5 shrink-0">
         <AskInput
           value={ask.value}
           status={ask.status}

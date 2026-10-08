@@ -28,7 +28,7 @@ function MarqueeRow({ names, direction, seconds }: MarqueeRowProps) {
                 className={`whitespace-nowrap px-6 leading-none text-[#5B6660] ${
                   brandStyles[name] ?? ''
                 }`}
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '13.5px' }}
               >
                 {name}
               </li>
@@ -42,9 +42,9 @@ function MarqueeRow({ names, direction, seconds }: MarqueeRowProps) {
 
 export function BrandMarquee() {
   return (
-    <div className="flex w-full flex-col gap-1.5 py-0.5">
-      <MarqueeRow names={brandRows[0]} direction="ltr" seconds={38} />
-      <MarqueeRow names={brandRows[1]} direction="rtl" seconds={48} />
+    <div className="flex w-full flex-col gap-1.5 py-1">
+      <MarqueeRow names={brandRows[0]} direction="ltr" seconds={36} />
+      <MarqueeRow names={brandRows[1]} direction="rtl" seconds={46} />
     </div>
   );
 }
