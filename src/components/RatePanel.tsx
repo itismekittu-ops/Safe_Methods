@@ -71,7 +71,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* Static 5-card list with clean, fixed h-[46px] slots */}
+      {/* Static 5-card list with fixed h-[46px] slots preventing overlap */}
       <div aria-live="polite" className="shrink-0 py-1">
         <ul className="flex flex-col gap-1.5">
           {ranked.map((q, i) => {

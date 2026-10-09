@@ -11,7 +11,7 @@ import { useAskInput } from '../hooks/useAskInput';
 import { useBidding } from '../contexts/BiddingContext';
 import { easeOut, fadeUp, stagger } from '../utils/motion';
 import { supabase } from '../lib/supabase';
-import { findPreCannedMatch } from '../data/preCannedQuestions';
+import { findPreCannedMatch, formatPreCannedResponse } from '../data/preCannedQuestions';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -38,27 +38,28 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // Trigger Bidding Arena duel animation
+    // 1. Trigger the Bidding Arena duel animation
     startBidding(trimmed);
 
-    // 1. Direct synchronous pre-canned check
-    const cached = findPreCannedMatch(trimmed);
+    // 2. Synchronous pre-canned check (exact logic restored from HeroSection.tsx)
+    const match = findPreCannedMatch(trimmed);
 
-    if (cached) {
+    if (match) {
+      const botReply = formatPreCannedResponse(match) || match.answer;
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: trimmed },
         {
           role: 'assistant',
-          content: cached.answer,
-          followUps: cached.followUpQuestions || []
+          content: botReply,
+          followUps: match.followUpChips || match.followUpQuestions || []
         }
       ]);
       activeDispatchRef.current = null;
       return;
     }
 
-    // 2. Fall back to live Supabase Edge Function for novel questions
+    // 3. Fall back to live Supabase Edge Function for novel questions
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -106,7 +107,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     }
   }, [startBidding]);
 
-  // Hook receives handleSendMessage so all clicks and searches evaluate the cache
+  // Hook receives handleSendMessage so both typing and autoType invoke the resolver
   const ask = useAskInput(reduced, handleSendMessage);
 
   useEffect(() => {
@@ -180,7 +181,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             </div>
 
             <div className="my-auto py-1 shrink-0">
-              <SuggestionGrid onPick={ask.autoType} disabled={busy} />
+              <SuggestionGrid onPick={handleSendMessage} disabled={busy} />
             </div>
           </motion.div>
         )}
@@ -312,7 +313,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           inputRef={ask.inputRef}
           disabled={busy}
           onChange={ask.onChange}
-          onSubmit={ask.submit}
+          onSubmit={handleSendMessage}
         />
       </motion.div>
     </motion.div>
