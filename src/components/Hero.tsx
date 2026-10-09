@@ -58,9 +58,15 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-84px)] lg:max-h-[660px]">
-        <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
+    <section className="relative mx-auto flex w-full max-w-7xl flex-col px-3 sm:px-6 lg:px-8">
+      {/* 
+        Hero viewport: 
+        Fits cleanly on 32" monitors, standard 1080p, and 14" laptop screens at 100% zoom.
+        Keeps both cards, CTAs, and the compliance text fully in frame.
+      */}
+      <div className="flex flex-col justify-between pt-1 pb-1 lg:h-[calc(100vh-80px)] lg:max-h-[690px]">
+        {/* Two-column card grid */}
+        <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-3 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
             <div
               id="coin-slot"
@@ -83,7 +89,11 @@ export function Hero() {
           </motion.div>
         </div>
 
-        <div className="relative z-10 mt-1 h-10 shrink-0 overflow-hidden pointer-events-none">
+        {/* 
+          Marquee peek container:
+          Peeks the top track right at the viewport fold; scrolling down reveals the full dual-track marquee.
+        */}
+        <div className="relative z-10 mt-1 h-9 sm:h-10 shrink-0 overflow-hidden pointer-events-none">
           <BrandMarquee />
         </div>
       </div>

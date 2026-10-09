@@ -31,17 +31,26 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeDispatchRef = useRef<string | null>(null);
 
-  const scrollToBottom = useCallback(() => {
-    window.setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          top: scrollRef.current.scrollHeight,
-          behavior: 'smooth',
+  // Auto-scrolls directly to the latest response anchor
+  const scrollToBottom = useCallback((smooth = true) => {
+    const scroll = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: smooth ? 'smooth' : 'auto',
+          block: 'end',
         });
+      } else if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
-    }, 40);
+    };
+    // Double-tick execution to ensure markdown DOM nodes have finished layout calculation
+    requestAnimationFrame(() => {
+      scroll();
+      setTimeout(scroll, 60);
+    });
   }, []);
 
   const handleSendMessage = useCallback(async (question: string) => {
@@ -49,8 +58,10 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
+    // Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
+    // 1. Synchronously resolve pre-canned cache
     const match = findPreCannedMatch(trimmed);
 
     if (match) {
@@ -69,6 +80,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       return;
     }
 
+    // 2. Novel query -> Dispatch to Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -122,7 +134,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const ask = useAskInput(reduced, handleSendMessage);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages, scrollToBottom]);
 
   const handleReset = () => {
@@ -138,8 +152,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       variants={stagger}
       initial="hidden"
       animate="show"
-      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
+      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-3.5 sm:p-5 shadow-sm overflow-hidden"
     >
+      {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -195,8 +210,10 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
+      {/* 2. Bidding Arena Overlay */}
       <BiddingArena />
 
+      {/* 3. Multi-Turn Conversation Stream */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
@@ -205,8 +222,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: easeOut }}
-            className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
+            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
+            {/* Header: New Topic positioned in top right */}
             <div className="flex items-center justify-end pb-1 shrink-0">
               <button
                 type="button"
@@ -218,6 +236,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
+            {/* Scrollable Message Thread */}
             <div
               ref={scrollRef}
               className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2.5"
@@ -260,18 +279,19 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
+                        {/* Centered In-chat Quote Banner (Magic Patterns reference) */}
                         {isLatest && (
-                          <div className="w-full max-w-[96%] mx-auto my-1 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-4 py-2.5 text-center shadow-xs">
+                          <div className="w-full max-w-[96%] mx-auto my-1 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-4 py-2 text-center shadow-xs">
                             <button
                               type="button"
                               onClick={() => {
                                 const target = document.getElementById('rates-heading');
                                 target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                               }}
-                              className="group inline-flex items-center gap-1.5 font-serif text-[13px] font-semibold text-[#0B3D2E] hover:underline"
+                              className="group inline-flex items-center gap-1.5 font-serif text-[12.5px] font-semibold text-[#0B3D2E] hover:underline"
                             >
                               <span>Your best options are on the right</span>
-                              <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                              <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                             </button>
                             <p className="text-[11px] font-medium text-[#5B6660]">
                               Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
@@ -279,7 +299,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#124E3B]"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#124E3B]"
                             >
                               <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
                               Get Quotes
@@ -287,6 +307,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
+                        {/* Follow-up chips: strictly on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
@@ -305,11 +326,14 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   </motion.div>
                 );
               })}
+              {/* Dedicated bottom anchor for guaranteed scroll-down behavior */}
+              <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* 4. Pinned AskInput Bar */}
       <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
         <AskInput
           value={ask.value}
