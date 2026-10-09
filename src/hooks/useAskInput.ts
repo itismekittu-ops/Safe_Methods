@@ -1,63 +1,85 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type AskStatus = 'idle' | 'error' | 'sending' | 'sent';
+const TYPE_SPEED = 24;
 
-export function useAskInput(reduced: boolean, onAsk: (question: string) => void) {
+export function useAskInput(reduced: boolean, onSend: (text: string) => void) {
   const [value, setValue] = useState('');
-  const [status, setStatus] = useState<AskStatus>('idle');
-  const [submitted, setSubmitted] = useState('');
-  const [isAutoTyping, setIsAutoTyping] = useState(false);
-  const typingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [status, setStatus] = useState<'idle' | 'auto_typing' | 'sent'>('idle');
+  const [submitted, setSubmitted] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<number | null>(null);
 
-  const stopTyping = useCallback(() => {
-    if (typingRef.current) clearInterval(typingRef.current);
-    typingRef.current = null;
-    setIsAutoTyping(false);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
   }, []);
 
-  useEffect(() => stopTyping, [stopTyping]);
+  const onChange = useCallback((v: string) => {
+    if (status === 'auto_typing' && timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+    }
+    setValue(v);
+    setStatus('idle');
+  }, [status]);
 
-  const autoType = useCallback(
-    (question: string) => {
-      stopTyping();
-      setStatus('idle');
-      onAsk(question);
-      if (reduced) {
-        setValue(question);
-        return;
-      }
-      let i = 0;
-      setValue('');
-      setIsAutoTyping(true);
-      typingRef.current = setInterval(() => {
-        i += 1;
-        setValue(question.slice(0, i));
-        if (i >= question.length) stopTyping();
-      }, 32);
-    },
-    [reduced, stopTyping, onAsk]
-  );
+  const submit = useCallback((override?: string) => {
+    // If an override is passed (from AskInput), use it; otherwise read current value
+    const text = typeof override === 'string' && override.trim().length > 0 
+      ? override.trim() 
+      : value.trim();
 
-  const onChange = (next: string) => {
-    stopTyping();
-    if (status === 'error' || status === 'sent') setStatus('idle');
-    setValue(next);
-  };
+    if (!text) return;
 
-  const submit = () => {
-    const question = value.trim();
-    if (!question) {
-      setStatus('error');
-      inputRef.current?.focus();
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+    }
+
+    setSubmitted(text);
+    setStatus('sent');
+    setValue(''); // Clear the input field immediately
+    onSend(text);  // Trigger the search / cache / LLM pipeline
+  }, [value, onSend]);
+
+  const autoType = useCallback((question: string) => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+    }
+
+    if (reduced) {
+      setValue(question);
+      submit(question);
       return;
     }
-    stopTyping();
-    setSubmitted(question);
-    setStatus('sent');
-    setValue('');
-    onAsk(question);
-  };
 
-  return { value, status, submitted, isAutoTyping, inputRef, autoType, onChange, submit };
+    setStatus('auto_typing');
+    setValue('');
+    let idx = 0;
+
+    const step = () => {
+      idx += 1;
+      setValue(question.slice(0, idx));
+      if (idx < question.length) {
+        timerRef.current = window.setTimeout(step, TYPE_SPEED);
+      } else {
+        timerRef.current = window.setTimeout(() => {
+          submit(question);
+        }, 120);
+      }
+    };
+
+    timerRef.current = window.setTimeout(step, TYPE_SPEED);
+  }, [reduced, submit]);
+
+  return {
+    value,
+    status,
+    submitted,
+    inputRef,
+    onChange,
+    submit,
+    autoType,
+  };
 }

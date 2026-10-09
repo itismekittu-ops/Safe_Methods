@@ -38,10 +38,10 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // 1. Trigger the Bidding Arena duel animation
+    // 1. Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
-    // 2. Synchronous pre-canned check (exact logic restored from HeroSection.tsx)
+    // 2. Synchronous pre-canned check (exact logic from working HeroSection.tsx)
     const match = findPreCannedMatch(trimmed);
 
     if (match) {
@@ -59,7 +59,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       return;
     }
 
-    // 3. Fall back to live Supabase Edge Function for novel questions
+    // 3. Novel query -> Dispatch to Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -107,7 +107,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     }
   }, [startBidding]);
 
-  // Hook receives handleSendMessage so both typing and autoType invoke the resolver
+  // Hook wires up handleSendMessage correctly for both typing and auto-typing
   const ask = useAskInput(reduced, handleSendMessage);
 
   useEffect(() => {
@@ -181,7 +181,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             </div>
 
             <div className="my-auto py-1 shrink-0">
-              <SuggestionGrid onPick={handleSendMessage} disabled={busy} />
+              <SuggestionGrid onPick={ask.autoType} disabled={busy} />
             </div>
           </motion.div>
         )}
@@ -313,7 +313,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           inputRef={ask.inputRef}
           disabled={busy}
           onChange={ask.onChange}
-          onSubmit={handleSendMessage}
+          onSubmit={ask.submit}
         />
       </motion.div>
     </motion.div>
