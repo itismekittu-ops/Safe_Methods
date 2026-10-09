@@ -71,14 +71,14 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* Static 5-card slot list with stable geometry */}
+      {/* Static 5-card list with clean, fixed h-[46px] slots */}
       <div aria-live="polite" className="shrink-0 py-1">
         <ul className="flex flex-col gap-1.5">
           {ranked.map((q, i) => {
             const advisor = advisors.find((a) => a.id === q.advisorId);
             if (!advisor) return null;
 
-            // Render empty slot while advisor is actively dueling in the arena
+            // Render empty slot while advisor is actively bidding in the arena
             if (run && !arena.landed.includes(advisor.id)) {
               return (
                 <li key={`slot-${advisor.id}`} className="h-[46px]">
