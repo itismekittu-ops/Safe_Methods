@@ -34,19 +34,16 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white p-3.5 sm:p-4 shadow-panel overflow-hidden transition-shadow duration-300"
       style={tilt.style}
     >
-      {/* Heading */}
       <div className="flex h-5 items-center shrink-0">
         <h2 id="rates-heading" className="font-serif text-[18px] sm:text-[19px] font-semibold leading-none text-forest">
           Top Matches
         </h2>
       </div>
 
-      {/* Row 1: Category Switcher */}
       <div className="shrink-0 pt-0.5">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      {/* Row 2: Rate Type + Tenure Dropdown in same line with unified pill styling */}
       <div className="flex h-8 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-7 rounded-full border border-line bg-cream-card p-0.5">
@@ -72,7 +69,6 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
           <span className="text-[12px] font-semibold text-[#5B6660]">{option.label}</span>
         )}
 
-        {/* Compact pill-styled Tenure Dropdown matching the toggle bar */}
         <div className="flex h-7 items-center rounded-full border border-line bg-cream-card px-2">
           <select
             value={termId}
@@ -89,14 +85,12 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </div>
       </div>
 
-      {/* Static 5-card list with fixed h-[44px] slots to prevent overlap */}
       <div aria-live="polite" className="shrink-0 py-0.5">
         <ul className="flex flex-col gap-1 sm:gap-1.5">
           {ranked.map((q, i) => {
             const advisor = advisors.find((a) => a.id === q.advisorId);
             if (!advisor) return null;
 
-            // Render empty slot while advisor is actively bidding in the arena
             if (run && !arena.landed.includes(advisor.id)) {
               return (
                 <li key={`slot-${advisor.id}`} className="h-[44px]">
@@ -121,7 +115,6 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </ul>
       </div>
 
-      {/* Bottom CTAs & Legal Text (Fully visible at 100% zoom) */}
       <div className="shrink-0 pt-0.5">
         <QuoteCta onQuote={onQuote} onBook={onBook} />
       </div>

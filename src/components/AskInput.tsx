@@ -1,104 +1,86 @@
-import React from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpIcon, CheckCircle2Icon, Loader2Icon } from 'lucide-react';
-import { useTypewriter } from '../hooks/useTypewriter';
-import { askTopics } from '../data/suggestions';
-import { easeOut } from '../utils/motion';
-import type { AskStatus } from '../hooks/useAskInput';
+import React, { useEffect, useState } from 'react';
+import { ArrowUpIcon } from 'lucide-react';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+
+const PLACEHOLDER_TERMS = [
+  'loans...',
+  'mortgages...',
+  'personal investments...',
+  'mutual funds...',
+  'debt consolidation...',
+];
+
+function useRotatingTerm(intervalMs: number, enabled: boolean) {
+  const [termIndex, setTermIndex] = useState(0);
+  useEffect(() => {
+    if (!enabled) return;
+    const id = setInterval(() => {
+      setTermIndex((prev) => (prev + 1) % PLACEHOLDER_TERMS.length);
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs, enabled]);
+  return PLACEHOLDER_TERMS[termIndex];
+}
 
 interface AskInputProps {
   value: string;
-  status: AskStatus;
-  submitted: string;
-  inputRef: React.RefObject<HTMLInputElement>;
+  status: 'idle' | 'auto_typing' | 'sent';
+  submitted: string | null;
   disabled?: boolean;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (text?: string) => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
-export function AskInput({ value, status, submitted, inputRef, disabled = false, onChange, onSubmit }: AskInputProps) {
-  const reduced = useReducedMotion() ?? false;
-  const typed = useTypewriter(askTopics, { paused: value.length > 0, reduced });
-  const sending = status === 'sending' || disabled;
+export function AskInput({
+  value,
+  status,
+  disabled = false,
+  onChange,
+  onSubmit,
+  inputRef,
+}: AskInputProps) {
+  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const canSend = value.trim().length > 0 && status !== 'auto_typing' && !disabled;
+  const rotatingTerm = useRotatingTerm(2200, status !== 'auto_typing');
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSend) return;
+    onSubmit(value);
+  };
 
   return (
-    <div className="relative">
-      <div id="ask-status" aria-live="polite" className="absolute -top-[22px] left-1 right-1">
-        <AnimatePresence mode="wait">
-          {status === 'error' &&
-          <motion.p
-            key="error"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18, ease: easeOut }}
-            className="truncate text-[13px] text-red-700">
-            
-              Type a question, or pick one above.
-            </motion.p>
-          }
-          {status === 'sent' &&
-          <motion.p
-            key="sent"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18, ease: easeOut }}
-            className="flex items-center gap-1.5 truncate text-[13px] text-forest">
-            
-              <CheckCircle2Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span className="truncate">Got it. We're lining up experts to answer “{submitted}”</span>
-            </motion.p>
-          }
-        </AnimatePresence>
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit();
-        }}
-        className={`ask-field flex items-center gap-2 rounded-full border bg-cream py-[9px] pl-5 pr-[9px] transition-colors duration-150 focus-within:border-forest/40 focus-within:bg-white ${
-        status === 'error' ? 'border-red-300' : 'border-line'}`
-        }>
-        
-        <div className="relative min-w-0 flex-1">
-          <input
-            id="ask"
-            aria-label="Ask a question about loans, mortgages or investments"
-            ref={inputRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            readOnly={sending}
-            autoComplete="off"
-            aria-invalid={status === 'error'}
-            aria-describedby="ask-status"
-            className="h-10 w-full bg-transparent text-[15px] text-ink outline-none disabled:opacity-60" />
-          
-          {value.length === 0 &&
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex items-center truncate text-[15px] text-[#5B6660]">
-            
-              <span className="whitespace-nowrap">Ask me anything about&nbsp;</span>
-              <span className="truncate font-semibold text-[#1C2B25]">{typed}</span>
-              {!reduced && <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-forest/60" />}
+    <form onSubmit={submit} className="relative flex w-full flex-col">
+      <div className="relative flex w-full items-center">
+        {!value && (
+          <div className="pointer-events-none absolute left-4 text-xs sm:text-sm text-[#738079] select-none flex items-center gap-1">
+            <span>Ask me anything about</span>
+            <span className="font-semibold text-forest transition-opacity duration-300">
+              {rotatingTerm}
             </span>
-          }
-        </div>
+          </div>
+        )}
+
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          disabled={disabled || status === 'auto_typing'}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label="Financial inquiry"
+          className="h-10 sm:h-11 w-full rounded-full border border-[#D8CEBA] bg-white pl-4 pr-12 text-xs sm:text-sm text-forest placeholder:text-transparent focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/20 disabled:bg-[#F3EFE6] transition-all"
+        />
+
         <button
           type="submit"
-          disabled={sending}
-          aria-label="Send"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-forest text-cream transition-[background-color,transform] duration-150 hover:bg-forest-soft active:scale-[0.94] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:opacity-80">
-          
-          {status === 'sending' ?
-          <Loader2Icon className="h-4 w-4 animate-spin" aria-hidden="true" /> :
-
-          <ArrowUpIcon className="h-4 w-4" strokeWidth={2.4} aria-hidden="true" />
-          }
+          disabled={!canSend}
+          aria-label="Send message"
+          className="absolute right-1.5 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#0B3D2E] text-white transition-opacity hover:bg-[#124E3B] disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ArrowUpIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
         </button>
-      </form>
-    </div>);
-
+      </div>
+    </form>
+  );
 }

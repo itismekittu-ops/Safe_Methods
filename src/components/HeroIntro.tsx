@@ -33,7 +33,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeDispatchRef = useRef<string | null>(null);
 
-  // Smooth auto-scroll that executes after layout renders for both cached & LLM answers
   const scrollToBottom = useCallback(() => {
     window.setTimeout(() => {
       if (scrollRef.current) {
@@ -50,10 +49,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
-    // 1. Synchronously resolve pre-canned cache
     const match = findPreCannedMatch(trimmed);
 
     if (match) {
@@ -72,7 +69,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       return;
     }
 
-    // 2. Novel query -> Dispatch to Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -144,7 +140,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
     >
-      {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -200,10 +195,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 2. Bidding Arena Overlay */}
       <BiddingArena />
 
-      {/* 3. Multi-Turn Conversation Stream */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
@@ -214,7 +207,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             transition={{ duration: 0.3, ease: easeOut }}
             className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header: SafeBot Guidance title and divider removed; New Topic positioned cleanly in top right */}
             <div className="flex items-center justify-end pb-1 shrink-0">
               <button
                 type="button"
@@ -226,7 +218,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
-            {/* Scrollable Message Thread */}
             <div
               ref={scrollRef}
               className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2.5"
@@ -269,7 +260,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* Centered In-chat Quote Banner (matches image_331b13.jpg) */}
                         {isLatest && (
                           <div className="w-full max-w-[96%] mx-auto my-1 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-4 py-2.5 text-center shadow-xs">
                             <button
@@ -297,7 +287,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: strictly on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
@@ -321,7 +310,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 4. Pinned AskInput Bar */}
       <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
         <AskInput
           value={ask.value}
