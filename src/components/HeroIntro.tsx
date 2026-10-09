@@ -34,7 +34,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeDispatchRef = useRef<string | null>(null);
 
-  // Smooth scroll pinned strictly to the bottom of the conversation
   const scrollToBottom = useCallback((smooth = true) => {
     const doScroll = () => {
       if (messagesEndRef.current) {
@@ -48,7 +47,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       }
     };
 
-    // Staggered execution ensures ReactMarkdown DOM calculation is complete
     requestAnimationFrame(doScroll);
     setTimeout(doScroll, 80);
     setTimeout(doScroll, 180);
@@ -59,10 +57,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
-    // 1. Synchronously resolve pre-canned cache
     const match = findPreCannedMatch(trimmed);
 
     if (match) {
@@ -81,7 +77,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       return;
     }
 
-    // 2. Novel query -> Dispatch to Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -153,7 +148,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       variants={stagger}
       initial="hidden"
       animate="show"
-      className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-3.5 sm:p-5 shadow-sm overflow-hidden"
+      className="relative z-20 flex h-full flex-col justify-between rounded-[24px] border border-[#E3DCCD] bg-[#FBF9F4] p-3 sm:p-4 shadow-sm overflow-hidden"
     >
       {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
       <AnimatePresence mode="wait">
@@ -169,14 +164,14 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               busy ? 'pointer-events-none opacity-20 blur-[6px]' : ''
             }`}
           >
-            <div className="text-center pt-1 shrink-0">
+            <div className="text-center pt-0.5 shrink-0">
               <motion.h2
                 variants={fadeUp}
                 className="mx-auto font-serif font-semibold text-forest"
               >
                 <span
                   className="relative inline-block leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
-                  style={{ fontSize: 'clamp(18px, 1.8vw, 24px)' }}
+                  style={{ fontSize: 'clamp(17px, 1.7vw, 22px)' }}
                 >
                   Only{' '}
                   <motion.span
@@ -191,14 +186,14 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                 </span>
                 <span
                   className="mt-0.5 block font-normal italic leading-[1.05] tracking-[-0.02em] text-gold-dark"
-                  style={{ fontSize: 'clamp(28px, 3vw, 42px)' }}
+                  style={{ fontSize: 'clamp(26px, 2.7vw, 38px)' }}
                 >
                   We're changing that.
                 </span>
               </motion.h2>
               <motion.p
                 variants={fadeUp}
-                className="mx-auto mt-0.5 max-w-[480px] text-[13px] leading-relaxed text-[#5B6660]"
+                className="mx-auto mt-0.5 max-w-[480px] text-[12.5px] leading-relaxed text-[#5B6660]"
               >
                 Experts from top financial firms bid for you.
               </motion.p>
@@ -240,7 +235,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             {/* Scrollable Message Thread */}
             <div
               ref={scrollRef}
-              className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2.5"
+              className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2"
             >
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
@@ -271,38 +266,38 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                       </div>
                     ) : (
                       <>
-                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3.5 py-2.5 shadow-sm">
+                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3 py-2 shadow-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="chat-markdown text-[12.5px] leading-relaxed text-ink space-y-1.5"
+                            className="chat-markdown text-[12px] leading-relaxed text-ink space-y-1.5"
                           >
                             {msg.content}
                           </ReactMarkdown>
                         </div>
 
-                        {/* Centered In-chat Quote Banner (Magic Patterns reference) */}
+                        {/* Centered In-chat Quote Banner */}
                         {isLatest && (
-                          <div className="w-full max-w-[96%] mx-auto my-1 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-4 py-2 text-center shadow-xs">
+                          <div className="w-full max-w-[96%] mx-auto my-0.5 flex flex-col items-center justify-center gap-1 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-3.5 py-1.5 text-center shadow-xs">
                             <button
                               type="button"
                               onClick={() => {
                                 const target = document.getElementById('rates-heading');
                                 target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                               }}
-                              className="group inline-flex items-center gap-1.5 font-serif text-[12.5px] font-semibold text-[#0B3D2E] hover:underline"
+                              className="group inline-flex items-center gap-1 font-serif text-[12px] font-semibold text-[#0B3D2E] hover:underline"
                             >
                               <span>Your best options are on the right</span>
                               <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                             </button>
-                            <p className="text-[11px] font-medium text-[#5B6660]">
+                            <p className="text-[10.5px] font-medium text-[#5B6660]">
                               Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
                             </p>
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#124E3B]"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3 py-1 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#124E3B]"
                             >
-                              <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                              <FileTextIcon className="h-3 w-3" aria-hidden="true" />
                               Get Quotes
                             </button>
                           </div>
@@ -327,7 +322,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   </motion.div>
                 );
               })}
-              {/* Dedicated bottom anchor element */}
               <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
             </div>
           </motion.div>
@@ -335,7 +329,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       </AnimatePresence>
 
       {/* 4. Pinned AskInput Bar */}
-      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
+      <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-1.5 shrink-0">
         <AskInput
           value={ask.value}
           status={ask.status}
