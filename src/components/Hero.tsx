@@ -61,12 +61,11 @@ export function Hero() {
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-3 sm:px-6 lg:px-8">
       {/* 
         Hero viewport: 
-        Fits cleanly on 32" monitors, standard 1080p, and 14" laptop screens at 100% zoom.
-        Keeps both cards, CTAs, and the compliance text fully in frame.
+        The two main panels take the full height of the initial screen.
+        Fits cleanly on 32" monitors and 14" laptop screens at 100% zoom.
       */}
-      <div className="flex flex-col justify-between pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[675px]">
-        {/* Two-column card grid */}
-        <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-3 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
+      <div className="flex w-full flex-col justify-start pt-1 pb-3 lg:h-[calc(100vh-84px)] lg:min-h-[640px]">
+        <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
             <div
               id="coin-slot"
@@ -88,14 +87,15 @@ export function Hero() {
             />
           </motion.div>
         </div>
+      </div>
 
-        {/* 
-          Marquee container:
-          Peeks Line 1 right at the viewport fold; scrolling down reveals both lines completely.
-        */}
-        <div className="relative z-10 mt-1 h-[72px] shrink-0 overflow-hidden pointer-events-none">
-          <BrandMarquee />
-        </div>
+      {/* 
+        Dual-track moving brand marquee:
+        Positioned below the hero cards.
+        Users scroll to view both moving lines (ltr & rtl) clearly without viewport clipping.
+      */}
+      <div className="relative z-10 w-full py-4 overflow-hidden pointer-events-none">
+        <BrandMarquee />
       </div>
 
       <GetQuotesModal
