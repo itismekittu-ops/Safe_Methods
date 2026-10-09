@@ -64,7 +64,7 @@ export function Hero() {
         Fits cleanly on 32" monitors, standard 1080p, and 14" laptop screens at 100% zoom.
         Keeps both cards, CTAs, and the compliance text fully in frame.
       */}
-      <div className="flex flex-col justify-between pt-1 pb-1 lg:h-[calc(100vh-80px)] lg:max-h-[690px]">
+      <div className="flex flex-col justify-between pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[675px]">
         {/* Two-column card grid */}
         <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-3 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
@@ -90,10 +90,10 @@ export function Hero() {
         </div>
 
         {/* 
-          Marquee peek container:
-          Peeks the top track right at the viewport fold; scrolling down reveals the full dual-track marquee.
+          Marquee container:
+          Peeks Line 1 right at the viewport fold; scrolling down reveals both lines completely.
         */}
-        <div className="relative z-10 mt-1 h-9 sm:h-10 shrink-0 overflow-hidden pointer-events-none">
+        <div className="relative z-10 mt-1 h-[72px] shrink-0 overflow-hidden pointer-events-none">
           <BrandMarquee />
         </div>
       </div>

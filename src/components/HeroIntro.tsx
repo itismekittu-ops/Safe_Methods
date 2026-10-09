@@ -34,23 +34,24 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeDispatchRef = useRef<string | null>(null);
 
-  // Auto-scrolls directly to the latest response anchor
+  // Smooth scroll pinned strictly to the bottom of the conversation
   const scrollToBottom = useCallback((smooth = true) => {
-    const scroll = () => {
+    const doScroll = () => {
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({
           behavior: smooth ? 'smooth' : 'auto',
           block: 'end',
         });
-      } else if (scrollRef.current) {
+      }
+      if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     };
-    // Double-tick execution to ensure markdown DOM nodes have finished layout calculation
-    requestAnimationFrame(() => {
-      scroll();
-      setTimeout(scroll, 60);
-    });
+
+    // Staggered execution ensures ReactMarkdown DOM calculation is complete
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 180);
   }, []);
 
   const handleSendMessage = useCallback(async (question: string) => {
@@ -222,7 +223,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: easeOut }}
-            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
+            className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
             {/* Header: New Topic positioned in top right */}
             <div className="flex items-center justify-end pb-1 shrink-0">
@@ -326,7 +327,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   </motion.div>
                 );
               })}
-              {/* Dedicated bottom anchor for guaranteed scroll-down behavior */}
+              {/* Dedicated bottom anchor element */}
               <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
             </div>
           </motion.div>
