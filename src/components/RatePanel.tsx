@@ -1,17 +1,13 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { QuoteCta } from './QuoteCta';
 import { RateCard } from './RateCard';
 import { EmptyRankSlot } from './EmptyRankSlot';
 import { CategoryTabs } from './CategoryTabs';
 import { TermSelect } from './TermSelect';
 import { useTilt } from '../hooks/useTilt';
-import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useBidding } from '../contexts/BiddingContext';
 import { advisors, rateCategories, terms } from '../data/rates';
 import { rankQuotes } from '../utils/ranking';
-
-const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
 interface RatePanelProps {
   onQuote: () => void;
@@ -20,7 +16,6 @@ interface RatePanelProps {
 
 export function RatePanel({ onQuote, onBook }: RatePanelProps) {
   const { categoryId, optionId, termId, selectCategory, setOptionId, setTermId, arena } = useBidding();
-  const desktop = useMediaQuery('(min-width: 1024px)');
   const tilt = useTilt(4);
 
   const category = rateCategories.find((c) => c.id === categoryId) ?? rateCategories[0];
@@ -32,7 +27,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
   const hasRateType = category.options.length > 1;
 
   return (
-    <motion.section
+    <section
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
@@ -45,11 +40,11 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         </h2>
       </div>
 
-      <div className="shrink-0 pt-0.5">
+      <div className="shrink-0 pt-1">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      <div className="flex h-8 items-center justify-between gap-2 shrink-0">
+      <div className="flex h-8 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-7 rounded-full border border-line bg-cream-card p-0.5">
             {category.options.map((o) => {
@@ -61,13 +56,10 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   aria-checked={active}
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
-                  className={`relative h-6 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
-                    active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
+                  className={`relative h-6 whitespace-nowrap rounded-full px-2.5 text-[11px] font-semibold transition-colors duration-150 focus:outline-none ${
+                    active ? 'bg-[#0B3D2E] text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
                   }`}
                 >
-                  {active && (
-                    <motion.span layoutId="option-pill" transition={pillTransition} className="absolute inset-0 rounded-full bg-[#0B3D2E]" />
-                  )}
                   <span className="relative">{o.label}</span>
                 </button>
               );
@@ -79,30 +71,33 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* Static 5-card list without overlapping motion collisions */}
-      <div aria-live="polite" className="shrink-0 py-0.5">
-        <ul className="flex flex-col gap-1">
+      {/* Static 5-card slot list with stable geometry */}
+      <div aria-live="polite" className="shrink-0 py-1">
+        <ul className="flex flex-col gap-1.5">
           {ranked.map((q, i) => {
             const advisor = advisors.find((a) => a.id === q.advisorId);
             if (!advisor) return null;
 
             // Render empty slot while advisor is actively dueling in the arena
             if (run && !arena.landed.includes(advisor.id)) {
-              return <EmptyRankSlot key={`slot-${advisor.id}`} rank={i + 1} />;
+              return (
+                <li key={`slot-${advisor.id}`} className="h-[46px]">
+                  <EmptyRankSlot rank={i + 1} />
+                </li>
+              );
             }
 
-            const arrived = run !== null && desktop;
-
             return (
-              <RateCard
-                key={advisor.id}
-                advisor={advisor}
-                rate={q.rate}
-                index={i}
-                best={i === 0}
-                arrived={arrived}
-                quickFlight={run?.quick ?? false}
-              />
+              <li key={advisor.id} className="h-[46px]">
+                <RateCard
+                  advisor={advisor}
+                  rate={q.rate}
+                  index={i}
+                  best={i === 0}
+                  arrived={false}
+                  quickFlight={false}
+                />
+              </li>
             );
           })}
         </ul>
@@ -111,6 +106,6 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       <div className="shrink-0 pt-0.5">
         <QuoteCta onQuote={onQuote} onBook={onBook} />
       </div>
-    </motion.section>
+    </section>
   );
 }

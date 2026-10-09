@@ -38,14 +38,13 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // Trigger Bidding Arena duel animation
+    // Trigger Bidding Arena animation
     startBidding(trimmed);
 
-    // 1. Immediately check local pre-canned cache
+    // 1. Direct synchronous pre-canned check (Zero latency, prevents blank state)
     const cached = findPreCannedMatch(trimmed);
 
     if (cached) {
-      // Append user question and pre-canned response directly (NO blank state)
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: trimmed },
@@ -59,7 +58,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       return;
     }
 
-    // 2. If novel, append user message with loading indicator
+    // 2. Novel question -> Query Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
@@ -130,7 +129,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-[#FBF9F4] p-4 sm:p-5 shadow-sm overflow-hidden"
     >
-      {/* 1. Intro View (Default 6 Demo Cards) */}
+      {/* Intro View */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -186,10 +185,10 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 2. Bidding Arena Overlay */}
+      {/* Bidding Arena Overlay */}
       <BiddingArena />
 
-      {/* 3. Multi-Turn Conversation Stream */}
+      {/* Multi-Turn Conversation Stream */}
       <AnimatePresence mode="wait">
         {showChat && (
           <motion.div
@@ -200,7 +199,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             transition={{ duration: 0.3, ease: easeOut }}
             className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header with New Topic reset button */}
+            {/* Header */}
             <div className="mb-1.5 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
               <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">
                 SafeBot Guidance
@@ -258,7 +257,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* In-chat Get Competing Quotes Box: rendered ONLY on latest assistant response */}
+                        {/* In-chat quote box: strictly on latest assistant response */}
                         {isLatest && (
                           <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                             <div>
@@ -279,7 +278,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: rendered ONLY on latest response */}
+                        {/* Follow-up chips: strictly on latest response */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
@@ -303,7 +302,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 4. Pinned AskInput Bar */}
+      {/* Pinned AskInput Bar */}
       <motion.div variants={fadeUp} className="mt-auto border-t border-[#E3DCCD] pt-2 shrink-0">
         <AskInput
           value={ask.value}
