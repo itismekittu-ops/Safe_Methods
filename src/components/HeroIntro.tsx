@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { SearchIcon, RotateCcwIcon } from 'lucide-react';
+import { SearchIcon, RotateCcwIcon, FileTextIcon, ArrowRightIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AskInput } from './AskInput';
@@ -33,15 +33,27 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeDispatchRef = useRef<string | null>(null);
 
+  // Smooth auto-scroll that executes after layout renders for both cached & LLM answers
+  const scrollToBottom = useCallback(() => {
+    window.setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+    }, 40);
+  }, []);
+
   const handleSendMessage = useCallback(async (question: string) => {
     const trimmed = question.trim();
     if (!trimmed || activeDispatchRef.current === trimmed) return;
     activeDispatchRef.current = trimmed;
 
-    // 1. Trigger Bidding Arena duel animation
+    // Trigger Bidding Arena duel animation
     startBidding(trimmed);
 
-    // 2. Synchronous pre-canned check (exact logic from working HeroSection.tsx)
+    // 1. Synchronously resolve pre-canned cache
     const match = findPreCannedMatch(trimmed);
 
     if (match) {
@@ -56,15 +68,17 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         }
       ]);
       activeDispatchRef.current = null;
+      scrollToBottom();
       return;
     }
 
-    // 3. Novel query -> Dispatch to Supabase Edge Function
+    // 2. Novel query -> Dispatch to Supabase Edge Function
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: trimmed },
       { role: 'assistant', content: '', loading: true }
     ]);
+    scrollToBottom();
 
     try {
       const { data, error } = await supabase.functions.invoke('safebot-chat', {
@@ -89,6 +103,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           }
         ];
       });
+      scrollToBottom();
     } catch {
       setMessages((prev) => {
         const clean = prev.filter((m) => !m.loading);
@@ -102,19 +117,17 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
           }
         ];
       });
+      scrollToBottom();
     } finally {
       activeDispatchRef.current = null;
     }
-  }, [startBidding]);
+  }, [startBidding, scrollToBottom]);
 
-  // Hook wires up handleSendMessage correctly for both typing and auto-typing
   const ask = useAskInput(reduced, handleSendMessage);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    }
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const handleReset = () => {
     setMessages([]);
@@ -199,17 +212,14 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: easeOut }}
-            className="flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
+            className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header with New Topic reset button */}
-            <div className="mb-1.5 flex items-center justify-between border-b border-[#E3DCCD] pb-1 shrink-0">
-              <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#5B6660]">
-                SafeBot Guidance
-              </p>
+            {/* Header: SafeBot Guidance title and divider removed; New Topic positioned cleanly in top right */}
+            <div className="flex items-center justify-end pb-1 shrink-0">
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex min-h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-[#0B3D2E] transition-colors hover:bg-[#EDE6D8]"
+                className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11.5px] font-semibold text-[#0B3D2E] transition-colors hover:bg-[#EDE6D8]"
               >
                 <RotateCcwIcon className="h-3 w-3" aria-hidden="true" />
                 New Topic
@@ -259,23 +269,30 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </ReactMarkdown>
                         </div>
 
-                        {/* In-chat Get Competing Quotes Box: strictly on latest assistant response */}
+                        {/* Centered In-chat Quote Banner (matches image_331b13.jpg) */}
                         {isLatest && (
-                          <div className="w-full rounded-2xl border border-[#C9A227]/40 bg-[#FAF6EC] p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
-                            <div>
-                              <p className="text-[12px] font-semibold text-[#0B3D2E]">
-                                Want real offers from top Canadian institutions?
-                              </p>
-                              <p className="text-[11px] text-[#5B6660]">
-                                Make banks compete with no obligation and compare side-by-side.
-                              </p>
-                            </div>
+                          <div className="w-full max-w-[96%] mx-auto my-1 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D8CEBA] bg-[#FAF7F0] px-4 py-2.5 text-center shadow-xs">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const target = document.getElementById('rates-heading');
+                                target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                              }}
+                              className="group inline-flex items-center gap-1.5 font-serif text-[13px] font-semibold text-[#0B3D2E] hover:underline"
+                            >
+                              <span>Your best options are on the right</span>
+                              <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                            </button>
+                            <p className="text-[11px] font-medium text-[#5B6660]">
+                              Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
+                            </p>
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="whitespace-nowrap rounded-xl bg-[#0B3D2E] px-3 py-1.5 text-xs font-semibold text-[#F3E7BF] hover:bg-[#145440] transition-colors shrink-0"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#124E3B]"
                             >
-                              Get Competing Quotes →
+                              <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                              Get Quotes
                             </button>
                           </div>
                         )}
