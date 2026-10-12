@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CountUp } from './CountUp';
 import { ArrivalSparkle } from './arena/ArrivalSparkle';
 import { arenaFlight, easeOut } from '../utils/motion';
 import type { Advisor } from '../types/rates';
@@ -21,19 +22,21 @@ export function RateCard({
   best,
   layoutId,
   arrived = false,
-  quickFlight = false
+  quickFlight = false,
 }: RateCardProps) {
   const delay = index * 0.04;
   const flight = arenaFlight(quickFlight);
   const [sparkle] = useState(arrived && best);
   const childLayout = arrived ? ('position' as const) : undefined;
 
-  const initials = advisor.initials || advisor.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const initials =
+    advisor.initials ||
+    advisor.name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
 
   return (
     <motion.div
@@ -45,7 +48,7 @@ export function RateCard({
         duration: arrived ? flight.duration : 0.26,
         delay: arrived ? 0 : delay,
         ease: easeOut,
-        layout: flight
+        layout: flight,
       }}
       style={{ borderRadius: 14 }}
       className={`relative z-10 flex h-[46px] sm:h-[48px] items-center justify-between border pl-3 pr-4 transition-colors duration-150 ${
@@ -84,9 +87,14 @@ export function RateCard({
         </motion.div>
       </div>
 
+      {/* Animated CountUp Rate Display */}
       <motion.div layout={childLayout} className="flex shrink-0 items-center justify-end pl-2">
-        <p className={`font-serif text-[17px] font-bold leading-none tabular-nums ${best ? 'text-[#0B3D2E]' : 'text-ink'}`}>
-          {rate.toFixed(2)}%
+        <p
+          className={`font-serif text-[17px] font-bold leading-none tabular-nums ${
+            best ? 'text-[#0B3D2E]' : 'text-ink'
+          }`}
+        >
+          <CountUp value={rate} delay={delay + 0.05} instant={arrived} />
         </p>
       </motion.div>
     </motion.div>

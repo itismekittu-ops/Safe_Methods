@@ -49,7 +49,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      {/* Row 2: Magic Patterns Rate Type (Cream/Gold Active Pill) + TermSelect Component */}
+      {/* Row 2: Rate Type with clear, high-contrast labels */}
       <div className="flex h-10 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full bg-cream-card ring-1 ring-inset ring-line p-0.5">
@@ -63,7 +63,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
                   className={`relative h-9 whitespace-nowrap rounded-full px-3.5 text-[12.5px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
-                    active ? 'text-forest' : 'text-muted hover:text-ink'
+                    active ? 'text-[#0B3D2E]' : 'text-[#424F49] hover:text-[#0B3D2E]'
                   }`}
                 >
                   {active && (
@@ -79,14 +79,14 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
             })}
           </div>
         ) : (
-          <span className="text-[13px] font-semibold text-muted">{option.label}</span>
+          <span className="text-[13px] font-semibold text-[#424F49]">{option.label}</span>
         )}
 
         {/* Full Magic Patterns TermSelect Component */}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* 5-Card list with clear gap-2 vertical spacing and bordered cards */}
+      {/* 5-Card list with clear gap-2 vertical spacing */}
       <div aria-live="polite" className="shrink-0 py-1">
         <AnimatePresence mode="wait" initial={false}>
           <motion.ul

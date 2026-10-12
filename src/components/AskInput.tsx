@@ -1,9 +1,8 @@
 import React from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpIcon, CheckCircle2Icon } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowUpIcon } from 'lucide-react';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { askTopics } from '../data/suggestions';
-import { easeOut } from '../utils/motion';
 
 interface AskInputProps {
   value: string;
@@ -18,7 +17,6 @@ interface AskInputProps {
 export function AskInput({
   value,
   status,
-  submitted,
   disabled = false,
   onChange,
   onSubmit,
@@ -59,9 +57,11 @@ export function AskInput({
           {value.length === 0 && (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center truncate text-[14px] sm:text-[15px] text-muted select-none"
+              className="pointer-events-none absolute inset-0 flex items-center truncate text-[14px] sm:text-[15px] select-none"
             >
-              <span className="whitespace-nowrap">Ask me anything about&nbsp;</span>
+              <span className="whitespace-nowrap font-medium text-[#33403A]">
+                Ask me anything about&nbsp;
+              </span>
               <span className="truncate font-semibold text-ink">{typed}</span>
               {!reduced && <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-forest/60" />}
             </span>
