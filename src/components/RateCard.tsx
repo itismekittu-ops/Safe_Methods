@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ArrivalSparkle } from './arena/ArrivalSparkle';
+import { arenaFlight, easeOut } from '../utils/motion';
 import type { Advisor } from '../types/rates';
 
 interface RateCardProps {
@@ -11,9 +14,21 @@ interface RateCardProps {
   quickFlight?: boolean;
 }
 
-export function RateCard({ advisor, rate, best }: RateCardProps) {
-  // Dynamically compute initials from advisor name (e.g., "David Chen" -> "DC")
-  const initials = advisor.name
+export function RateCard({
+  advisor,
+  rate,
+  index,
+  best,
+  layoutId,
+  arrived = false,
+  quickFlight = false
+}: RateCardProps) {
+  const delay = index * 0.04;
+  const flight = arenaFlight(quickFlight);
+  const [sparkle] = useState(arrived && best);
+  const childLayout = arrived ? ('position' as const) : undefined;
+
+  const initials = advisor.initials || advisor.name
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -21,43 +36,59 @@ export function RateCard({ advisor, rate, best }: RateCardProps) {
     .toUpperCase();
 
   return (
-    <div className="flex h-full w-full items-center justify-between rounded-xl px-1.5 py-0.5 transition-colors hover:bg-cream-card/50">
+    <motion.div
+      layoutId={layoutId}
+      initial={arrived ? { opacity: best ? 1 : 0.6 } : { opacity: 0, x: 18 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+      transition={{
+        duration: arrived ? flight.duration : 0.26,
+        delay: arrived ? 0 : delay,
+        ease: easeOut,
+        layout: flight
+      }}
+      style={{ borderRadius: 14 }}
+      className={`relative z-10 flex h-[46px] sm:h-[48px] items-center justify-between border pl-3 pr-4 transition-colors duration-150 ${
+        best
+          ? 'border-forest/20 bg-white shadow-xs'
+          : 'border-[#E3DCCD] bg-[#FBF9F4] hover:bg-white'
+      }`}
+    >
+      {sparkle && <ArrivalSparkle delay={flight.duration} />}
+
       <div className="flex items-center gap-2.5 min-w-0">
-        {/* Magic Patterns avatar circle badge */}
-        <div
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tracking-tight shadow-xs ${
+        <motion.span
+          layout={childLayout}
+          aria-hidden="true"
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tracking-tight ${
             best
-              ? 'bg-[#0B3D2E] text-white'
+              ? 'bg-[#0B3D2E] text-white shadow-xs'
               : 'bg-[#EDE5D8] text-[#0B3D2E] border border-[#DDD3C2]'
           }`}
         >
           {initials}
-        </div>
+        </motion.span>
 
-        {/* Advisor Details */}
-        <div className="min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-1.5 leading-none">
-            <span className="truncate text-[12.5px] font-semibold text-forest">
-              {advisor.name}
-            </span>
+        <motion.div layout={childLayout} className="min-w-0 flex-1 leading-[1.15]">
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-[13.5px] font-semibold text-ink">{advisor.name}</p>
             {best && (
-              <span className="inline-flex items-center rounded-md border border-[#DFCBA0] bg-[#FAF2DC] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#8C6D1F]">
+              <span className="whitespace-nowrap rounded-md border border-[#DFCBA0] bg-[#FAF2DC] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#8C6D1F]">
                 Top pick
               </span>
             )}
           </div>
-          <p className="truncate text-[10.5px] text-[#738079] mt-0.5">
-            {advisor.firm} · {advisor.title}
+          <p className="truncate text-[11px] text-[#5B6660]">
+            {advisor.firm} · {advisor.title || advisor.role}
           </p>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Magic Patterns Serif Rate Display */}
-      <div className="shrink-0 text-right pl-2">
-        <span className="font-serif text-[16.5px] font-bold tracking-tight text-forest">
+      <motion.div layout={childLayout} className="flex shrink-0 items-center justify-end pl-2">
+        <p className={`font-serif text-[17px] font-bold leading-none tabular-nums ${best ? 'text-[#0B3D2E]' : 'text-ink'}`}>
           {rate.toFixed(2)}%
-        </span>
-      </div>
-    </div>
+        </p>
+      </motion.div>
+    </motion.div>
   );
 }

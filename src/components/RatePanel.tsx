@@ -4,12 +4,13 @@ import { QuoteCta } from './QuoteCta';
 import { RateCard } from './RateCard';
 import { EmptyRankSlot } from './EmptyRankSlot';
 import { CategoryTabs } from './CategoryTabs';
+import { TermSelect } from './TermSelect';
 import { useTilt } from '../hooks/useTilt';
 import { useBidding } from '../contexts/BiddingContext';
 import { advisors, rateCategories, terms } from '../data/rates';
 import { rankQuotes } from '../utils/ranking';
 
-const pillSpring = { type: 'spring', stiffness: 500, damping: 35 } as const;
+const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
 interface RatePanelProps {
   onQuote: () => void;
@@ -33,25 +34,25 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
       aria-labelledby="rates-heading"
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      className="relative flex h-full w-full flex-col justify-between rounded-[24px] border border-[#E3DCCD] bg-white px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-panel overflow-hidden transition-shadow duration-300"
+      className="relative flex h-full w-full flex-col justify-between rounded-[28px] border border-[#E3DCCD] bg-white px-4 py-3 sm:px-5 sm:py-4 shadow-panel overflow-hidden transition-shadow duration-300"
       style={tilt.style}
     >
       {/* Heading */}
       <div className="flex h-5 items-center shrink-0">
-        <h2 id="rates-heading" className="font-serif text-[18px] sm:text-[19px] font-semibold leading-none text-forest">
+        <h2 id="rates-heading" className="font-serif text-[19px] sm:text-[20px] font-semibold leading-none text-forest">
           Top Matches
         </h2>
       </div>
 
-      {/* Row 1: Horizontally Scrollable Category Switcher */}
-      <div className="shrink-0 pt-0.5">
+      {/* Row 1: Horizontally Scrollable Category Tabs */}
+      <div className="shrink-0 pt-1">
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      {/* Row 2: Rate Type + Tenure Dropdown (compacted to preserve card spacing below) */}
-      <div className="flex h-6.5 items-center justify-between gap-2 shrink-0">
+      {/* Row 2: Magic Patterns Rate Type (Cream/Gold Active Pill) + TermSelect Component */}
+      <div className="flex h-10 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
-          <div role="radiogroup" aria-label="Rate type" className="flex h-6 rounded-full border border-line bg-cream-card p-0.5">
+          <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full bg-cream-card ring-1 ring-inset ring-line p-0.5">
             {category.options.map((o) => {
               const active = o.id === option.id;
               return (
@@ -61,15 +62,15 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
                   aria-checked={active}
                   disabled={busy}
                   onClick={() => setOptionId(o.id)}
-                  className={`relative h-5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-semibold transition-colors duration-150 focus:outline-none ${
-                    active ? 'text-white' : 'text-[#0B3D2E] hover:text-forest-soft'
+                  className={`relative h-9 whitespace-nowrap rounded-full px-3.5 text-[12.5px] font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-default ${
+                    active ? 'text-forest' : 'text-muted hover:text-ink'
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="option-pill"
-                      transition={pillSpring}
-                      className="absolute inset-0 rounded-full bg-[#0B3D2E] shadow-xs"
+                      transition={pillTransition}
+                      className="absolute inset-0 rounded-full bg-gold-light"
                     />
                   )}
                   <span className="relative z-10">{o.label}</span>
@@ -78,35 +79,22 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
             })}
           </div>
         ) : (
-          <span className="text-[11px] font-semibold text-[#5B6660]">{option.label}</span>
+          <span className="text-[13px] font-semibold text-muted">{option.label}</span>
         )}
 
-        {/* Pill-styled Tenure Dropdown matching toggle bar */}
-        <div className="flex h-6 items-center rounded-full border border-line bg-cream-card px-2">
-          <select
-            value={termId}
-            disabled={busy}
-            onChange={(e) => setTermId(e.target.value)}
-            className="bg-transparent text-[10.5px] font-semibold text-[#0B3D2E] focus:outline-none cursor-pointer"
-          >
-            {terms.map((t) => (
-              <option key={t.id} value={t.id} className="text-forest bg-white">
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Full Magic Patterns TermSelect Component */}
+        <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* 5-Card list with gap-2 vertical spacing and h-[45px] card slots */}
-      <div aria-live="polite" className="shrink-0 py-0.5">
+      {/* 5-Card list with clear gap-2 vertical spacing and bordered cards */}
+      <div aria-live="polite" className="shrink-0 py-1">
         <AnimatePresence mode="wait" initial={false}>
           <motion.ul
             key={`${category.id}-${option.id}-${term.id}`}
-            initial={{ opacity: 0, y: 3 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -3 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
             className="flex flex-col gap-2"
           >
             {ranked.map((q, i) => {
@@ -115,14 +103,14 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
 
               if (run && !arena.landed.includes(advisor.id)) {
                 return (
-                  <li key={`slot-${advisor.id}`} className="h-[45px]">
+                  <li key={`slot-${advisor.id}`} className="h-[46px] sm:h-[48px]">
                     <EmptyRankSlot rank={i + 1} />
                   </li>
                 );
               }
 
               return (
-                <li key={advisor.id} className="h-[45px]">
+                <li key={advisor.id} className="h-[46px] sm:h-[48px]">
                   <RateCard
                     advisor={advisor}
                     rate={q.rate}
