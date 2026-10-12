@@ -63,17 +63,20 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
 
     if (match) {
       const botReply = formatPreCannedResponse(match) || match.answer;
-      setMessages((prev) => [
-        ...prev,
-        { role: 'user', content: trimmed },
-        {
-          role: 'assistant',
-          content: botReply,
-          followUps: match.followUpChips || match.followUpQuestions || []
-        }
-      ]);
-      activeDispatchRef.current = null;
-      scrollToBottom();
+      // Timed transition matching Magic Patterns duel resolution
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'user', content: trimmed },
+          {
+            role: 'assistant',
+            content: botReply,
+            followUps: match.followUpChips || match.followUpQuestions || []
+          }
+        ]);
+        activeDispatchRef.current = null;
+        scrollToBottom();
+      }, 350);
       return;
     }
 
@@ -150,7 +153,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[24px] border border-[#E3DCCD] bg-[#FBF9F4] p-3 sm:p-4 shadow-sm overflow-hidden"
     >
-      {/* 1. Initial Hero State (Headline + 6 Suggestion Cards) */}
+      {/* 1. Initial Hero State */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -220,7 +223,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             transition={{ duration: 0.3, ease: easeOut }}
             className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* Header: New Topic positioned in top right */}
             <div className="flex items-center justify-end pb-1 shrink-0">
               <button
                 type="button"
@@ -232,7 +234,6 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
               </button>
             </div>
 
-            {/* Scrollable Message Thread */}
             <div
               ref={scrollRef}
               className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-2"
@@ -243,9 +244,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                 return (
                   <motion.div
                     key={idx}
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, ease: easeOut }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className={
                       msg.role === 'user'
                         ? 'flex justify-end'
@@ -266,7 +267,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                       </div>
                     ) : (
                       <>
-                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3 py-2 shadow-sm">
+                        <div className="w-full max-w-[96%] rounded-2xl rounded-tl-sm border border-[#E3DCCD] bg-white px-3.5 py-2 shadow-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             className="chat-markdown text-[12px] leading-relaxed text-ink space-y-1.5"
@@ -303,7 +304,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                           </div>
                         )}
 
-                        {/* Follow-up chips: strictly on latest response */}
+                        {/* Follow-up chips */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
