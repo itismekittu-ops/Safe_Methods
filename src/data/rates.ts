@@ -1,190 +1,188 @@
-import type { Advisor, RateCategory, Term } from '../types/rates';
+import type { Advisor, RateCategory, TermOption } from '../types/rates';
 
 export const advisors: Advisor[] = [
-{
-  id: 'david',
-  name: 'David Chen',
-  firm: 'BMO',
-  role: 'Wealth Management Specialist',
-  initials: 'DC',
-  photo: "/8891abcb-7ee1-4d2e-9ef8-060addbea021.jpg"
-},
-{
-  id: 'victor',
-  name: 'Victor Gaur',
-  firm: 'RBC',
-  role: 'Principal Financial Advisor',
-  initials: 'VG',
-  photo: "/f53ee42b-2219-4af4-82cf-eea93875266e.jpg"
-},
-{
-  id: 'sarah',
-  name: 'Sarah Mitchell',
-  firm: 'TD',
-  role: 'Senior Investment Advisor',
-  initials: 'SM',
-  photo: "/f20a12af-2574-4757-8c3f-7d31492026f8.jpg"
-},
-{
-  id: 'emily',
-  name: 'Emily Roberts',
-  firm: 'Scotiabank',
-  role: 'Senior Financial Advisor',
-  initials: 'ER'
-},
-{
-  id: 'daniel',
-  name: 'Daniel Singh',
-  firm: 'CIBC',
-  role: 'Wealth Management Advisor',
-  initials: 'DS'
-}];
+  {
+    id: 'david',
+    name: 'David Chen',
+    title: 'Wealth Management Specialist',
+    firm: 'BMO',
+    rating: 4.9,
+    reviewsCount: 142,
+    avatarUrl: '/8891abcb-7ee1-4d2e-9ef8-060addbea021.jpg',
+    specialties: ['High-Net-Worth Planning', 'ETF Portfolios', 'Tax Minimization'],
+  },
+  {
+    id: 'emily',
+    name: 'Emily Roberts',
+    title: 'Senior Financial Advisor',
+    firm: 'Scotiabank',
+    rating: 4.8,
+    reviewsCount: 98,
+    avatarUrl: '/f20a12af-2574-4757-8c3f-7d31492026f8.jpg',
+    specialties: ['First-Time Home Buyers', 'Debt Restructuring', 'Retirement Drawdown'],
+  },
+  {
+    id: 'daniel',
+    name: 'Daniel Singh',
+    title: 'Wealth Management Advisor',
+    firm: 'CIBC',
+    rating: 4.9,
+    reviewsCount: 176,
+    avatarUrl: '/f53ee42b-2219-4af4-82cf-eea93875266e.jpg',
+    specialties: ['Cross-Border Planning', 'RESP Strategies', 'Corporate Portfolios'],
+  },
+  {
+    id: 'victor',
+    name: 'Victor Gaur',
+    title: 'Principal Financial Advisor',
+    firm: 'RBC',
+    rating: 4.7,
+    reviewsCount: 88,
+    avatarUrl: null,
+    specialties: ['Commercial Lending', 'Mortgage Portfolios', 'Private Banking'],
+  },
+  {
+    id: 'sarah',
+    name: 'Sarah Mitchell',
+    title: 'Senior Investment Advisor',
+    firm: 'TD',
+    rating: 4.8,
+    reviewsCount: 119,
+    avatarUrl: null,
+    specialties: ['Estate Structuring', 'Mutual Funds', 'Fixed-Income Ladders'],
+  },
+];
 
+export const terms: TermOption[] = [
+  { id: '1y', label: '1 year', offset: -0.15 },
+  { id: '2y', label: '2 years', offset: -0.05 },
+  { id: '3y', label: '3 years', offset: 0.05 },
+  { id: '4y', label: '4 years', offset: 0.1 },
+  { id: '5y', label: '5 years', offset: 0 },
+];
 
 export const rateCategories: RateCategory[] = [
-{
-  id: 'loan',
-  label: 'Loan',
-  options: [
   {
-    id: 'fixed',
-    label: 'Fixed',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 3.12 },
-    { advisorId: 'victor', rate: 3.89 },
-    { advisorId: 'sarah', rate: 3.99 },
-    { advisorId: 'emily', rate: 3.54 },
-    { advisorId: 'daniel', rate: 3.71 }]
-
+    id: 'loan',
+    label: 'Loan',
+    description: 'Personal borrowing and lines of credit',
+    options: [
+      {
+        id: 'fixed',
+        label: 'Fixed',
+        quotes: [
+          { advisorId: 'david', rate: 3.26 },
+          { advisorId: 'emily', rate: 3.68 },
+          { advisorId: 'daniel', rate: 3.85 },
+          { advisorId: 'victor', rate: 4.03 },
+          { advisorId: 'sarah', rate: 4.13 },
+        ],
+      },
+      {
+        id: 'variable',
+        label: 'Variable',
+        quotes: [
+          { advisorId: 'emily', rate: 2.75 },
+          { advisorId: 'david', rate: 2.95 },
+          { advisorId: 'sarah', rate: 3.1 },
+          { advisorId: 'victor', rate: 3.25 },
+          { advisorId: 'daniel', rate: 3.4 },
+        ],
+      },
+    ],
   },
   {
-    id: 'variable',
-    label: 'Variable',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 3.45 },
-    { advisorId: 'victor', rate: 2.98 },
-    { advisorId: 'sarah', rate: 3.71 },
-    { advisorId: 'emily', rate: 3.18 },
-    { advisorId: 'daniel', rate: 3.29 }]
-
-  }]
-
-},
-{
-  id: 'mortgage',
-  label: 'Mortgage',
-  options: [
-  {
-    id: 'fixed',
-    label: 'Fixed',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 4.19 },
-    { advisorId: 'victor', rate: 4.49 },
-    { advisorId: 'sarah', rate: 4.34 },
-    { advisorId: 'emily', rate: 4.09 },
-    { advisorId: 'daniel', rate: 4.27 }]
-
+    id: 'mortgage',
+    label: 'Mortgage',
+    description: 'Residential purchase and refinance',
+    options: [
+      {
+        id: 'fixed',
+        label: 'Fixed',
+        quotes: [
+          { advisorId: 'emily', rate: 4.23 },
+          { advisorId: 'david', rate: 4.33 },
+          { advisorId: 'daniel', rate: 4.41 },
+          { advisorId: 'sarah', rate: 4.48 },
+          { advisorId: 'victor', rate: 4.63 },
+        ],
+      },
+      {
+        id: 'variable',
+        label: 'Variable',
+        quotes: [
+          { advisorId: 'daniel', rate: 3.79 },
+          { advisorId: 'victor', rate: 3.88 },
+          { advisorId: 'emily', rate: 3.95 },
+          { advisorId: 'david', rate: 4.15 },
+          { advisorId: 'sarah', rate: 4.25 },
+        ],
+      },
+    ],
   },
   {
-    id: 'variable',
-    label: 'Variable',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 4.22 },
-    { advisorId: 'victor', rate: 4.05 },
-    { advisorId: 'sarah', rate: 4.39 },
-    { advisorId: 'emily', rate: 4.14 },
-    { advisorId: 'daniel', rate: 3.96 }]
-
-  }]
-
-},
-{
-  id: 'investment',
-  label: 'Investment',
-  options: [
-  {
-    id: 'gic',
-    label: 'Fixed Rate GIC',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 4.1 },
-    { advisorId: 'victor', rate: 3.95 },
-    { advisorId: 'sarah', rate: 4.35 },
-    { advisorId: 'emily', rate: 4.22 },
-    { advisorId: 'daniel', rate: 4.05 }]
-
+    id: 'investment',
+    label: 'Investment',
+    description: 'Guaranteed and market-linked deposits',
+    options: [
+      {
+        id: 'fixed-gic',
+        label: 'Fixed Rate GIC',
+        quotes: [
+          { advisorId: 'sarah', rate: 4.49 },
+          { advisorId: 'emily', rate: 4.36 },
+          { advisorId: 'david', rate: 4.24 },
+          { advisorId: 'daniel', rate: 4.19 },
+          { advisorId: 'victor', rate: 4.09 },
+        ],
+      },
+      {
+        id: 'market-linked',
+        label: 'Market Linked GIC',
+        quotes: [
+          { advisorId: 'victor', rate: 5.85 },
+          { advisorId: 'emily', rate: 5.73 },
+          { advisorId: 'david', rate: 5.48 },
+          { advisorId: 'sarah', rate: 5.19 },
+          { advisorId: 'daniel', rate: 4.95 },
+        ],
+      },
+    ],
   },
   {
-    id: 'market',
-    label: 'Market Linked GIC',
-    caption: 'Sample return',
-    quotes: [
-    { advisorId: 'david', rate: 5.4 },
-    { advisorId: 'victor', rate: 5.85 },
-    { advisorId: 'sarah', rate: 5.2 },
-    { advisorId: 'emily', rate: 5.6 },
-    { advisorId: 'daniel', rate: 5.05 }]
-
-  }]
-
-},
-{
-  id: 'funds',
-  label: 'Mutual Fund',
-  options: [
-  {
-    id: 'all',
-    label: 'Mutual funds',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 6.4 },
-    { advisorId: 'victor', rate: 6.8 },
-    { advisorId: 'sarah', rate: 7.2 },
-    { advisorId: 'emily', rate: 6.95 },
-    { advisorId: 'daniel', rate: 7.6 }]
-
-  }]
-
-},
-{
-  id: 'debt',
-  label: 'Debt Consolidation',
-  shortLabel: 'Debt',
-  options: [
-  {
-    id: 'fixed',
-    label: 'Fixed',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 6.89 },
-    { advisorId: 'victor', rate: 6.49 },
-    { advisorId: 'sarah', rate: 7.15 },
-    { advisorId: 'emily', rate: 6.75 },
-    { advisorId: 'daniel', rate: 6.99 }]
-
+    id: 'funds',
+    label: 'Mutual Fund',
+    description: 'Targeted equity and balanced strategies',
+    options: [
+      {
+        id: 'balanced',
+        label: 'Mutual Funds',
+        quotes: [
+          { advisorId: 'daniel', rate: 7.74 },
+          { advisorId: 'sarah', rate: 7.54 },
+          { advisorId: 'emily', rate: 7.09 },
+          { advisorId: 'victor', rate: 7.0 },
+          { advisorId: 'david', rate: 6.54 },
+        ],
+      },
+    ],
   },
   {
-    id: 'variable',
-    label: 'Variable',
-    caption: 'Sample rate',
-    quotes: [
-    { advisorId: 'david', rate: 6.6 },
-    { advisorId: 'victor', rate: 6.35 },
-    { advisorId: 'sarah', rate: 6.88 },
-    { advisorId: 'emily', rate: 6.19 },
-    { advisorId: 'daniel', rate: 6.42 }]
-
-  }]
-
-}];
-
-
-export const terms: Term[] = [
-{ id: '1y', label: '1 year', offset: -0.18 },
-{ id: '2y', label: '2 years', offset: -0.06 },
-{ id: '3y', label: '3 years', offset: 0 },
-{ id: '5y', label: '5 years', offset: 0.14 }];
+    id: 'debt',
+    label: 'Debt Management',
+    description: 'Consolidation loans from Canadian schedules',
+    options: [
+      {
+        id: 'fixed',
+        label: 'Fixed Loan',
+        quotes: [
+          { advisorId: 'david', rate: 7.24 },
+          { advisorId: 'emily', rate: 7.49 },
+          { advisorId: 'daniel', rate: 7.85 },
+          { advisorId: 'victor', rate: 8.1 },
+          { advisorId: 'sarah', rate: 8.35 },
+        ],
+      },
+    ],
+  },
+];

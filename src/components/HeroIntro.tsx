@@ -167,11 +167,11 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             <div className="text-center pt-0.5 shrink-0">
               <motion.h2
                 variants={fadeUp}
-                className="mx-auto font-serif font-semibold text-forest"
+                className="mx-auto font-serif font-semibold text-forest leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
               >
                 <span
-                  className="relative inline-block leading-[1.25] tracking-[-0.02em] [text-wrap:balance]"
-                  style={{ fontSize: 'clamp(17px, 1.7vw, 22px)' }}
+                  className="block text-forest"
+                  style={{ fontSize: 'clamp(18px, 1.8vw, 23px)' }}
                 >
                   Only{' '}
                   <motion.span
@@ -185,15 +185,15 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   Canadians turn to a financial&nbsp;advisor.<SourceMarker />
                 </span>
                 <span
-                  className="mt-0.5 block font-normal italic leading-[1.05] tracking-[-0.02em] text-gold-dark"
-                  style={{ fontSize: 'clamp(26px, 2.7vw, 38px)' }}
+                  className="mt-1 block font-serif font-semibold text-gold-dark"
+                  style={{ fontSize: 'clamp(18px, 1.8vw, 23px)' }}
                 >
                   We're changing that.
                 </span>
               </motion.h2>
               <motion.p
                 variants={fadeUp}
-                className="mx-auto mt-0.5 max-w-[480px] text-[12.5px] leading-relaxed text-[#5B6660]"
+                className="mx-auto mt-1 max-w-[480px] text-[12.5px] leading-relaxed text-[#5B6660]"
               >
                 Experts from top financial firms bid for you.
               </motion.p>
