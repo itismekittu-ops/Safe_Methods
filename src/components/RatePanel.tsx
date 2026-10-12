@@ -8,7 +8,6 @@ import { TermSelect } from './TermSelect';
 import { useTilt } from '../hooks/useTilt';
 import { useBidding } from '../contexts/BiddingContext';
 import { advisors, rateCategories, terms } from '../data/rates';
-import { rankQuotes } from '../utils/ranking';
 
 const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
@@ -18,13 +17,13 @@ interface RatePanelProps {
 }
 
 export function RatePanel({ onQuote, onBook }: RatePanelProps) {
-  const { categoryId, optionId, termId, selectCategory, setOptionId, setTermId, arena } = useBidding();
+  const { categoryId, optionId, termId, liveQuotes, selectCategory, setOptionId, setTermId, arena } = useBidding();
   const tilt = useTilt(4);
 
   const category = rateCategories.find((c) => c.id === categoryId) ?? rateCategories[0];
   const option = category.options.find((o) => o.id === optionId) ?? category.options[0];
   const term = terms.find((t) => t.id === termId) ?? terms[0];
-  const ranked = rankQuotes(option.quotes, category.id, term.offset);
+  const ranked = liveQuotes;
   const run = arena.run;
   const busy = run !== null;
   const hasRateType = category.options.length > 1;
@@ -49,7 +48,7 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
         <CategoryTabs value={categoryId} onChange={selectCategory} disabled={busy} />
       </div>
 
-      {/* Row 2: Rate Type with clear, high-contrast labels */}
+      {/* Row 2: Rate Type + TermSelect Dropdown */}
       <div className="flex h-10 items-center justify-between gap-2 shrink-0 pt-0.5">
         {hasRateType ? (
           <div role="radiogroup" aria-label="Rate type" className="flex h-10 rounded-full bg-cream-card ring-1 ring-inset ring-line p-0.5">
@@ -82,11 +81,10 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
           <span className="text-[13px] font-semibold text-[#424F49]">{option.label}</span>
         )}
 
-        {/* Full Magic Patterns TermSelect Component */}
         <TermSelect value={termId} onChange={setTermId} disabled={busy} />
       </div>
 
-      {/* 5-Card list with clear gap-2 vertical spacing */}
+      {/* 5-Card list connected to live Supabase rates */}
       <div aria-live="polite" className="shrink-0 py-1">
         <AnimatePresence mode="wait" initial={false}>
           <motion.ul
