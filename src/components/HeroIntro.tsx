@@ -25,16 +25,19 @@ interface HeroIntroProps {
 }
 
 /**
- * Normalizes inline bullet characters (•) into standard markdown list syntax
- * so each bullet renders strictly on its own line.
+ * Normalizes text so that:
+ * 1. Headings (Overview, Guidance Questions, Current Rates, Pros, Cons) are bolded on their own lines.
+ * 2. Every single bullet point (•) starts on its own line with a clear, visible bullet dot.
  */
-function normalizeBullets(text: string): string {
+function formatChatResponse(text: string): string {
   if (!text) return '';
+
   return text
-    // Replace inline bullets with a newline and a markdown bullet
-    .replace(/\s*•\s*/g, '\n\n* ')
-    // Ensure section headers (like "Overview", "Guidance Questions", "Current Rates") start on their own lines
-    .replace(/(^|\n)(Overview|Guidance Questions|Current Rates|Pros|Cons):?/g, '\n\n### $2\n')
+    .replace(/\r\n/g, '\n')
+    // Ensure section titles are treated as bold headings with proper spacing
+    .replace(/(^|\n)(Overview|Guidance Questions|Current Rates|Pros|Cons):?/g, '\n\n**$2**\n')
+    // Split inline bullet points (•, -, *) so every bullet is strictly on its own line
+    .replace(/(?:^|\s+)[•\-\*]\s+/g, '\n\n• ')
     .trim();
 }
 
@@ -74,11 +77,9 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
     }
   }, [resetBidding]);
 
-  // Requirement 4: Logo click triggers full reset of the conversation window
+  // Listen to logo click event to clear state
   useEffect(() => {
-    const onReset = () => {
-      handleReset();
-    };
+    const onReset = () => handleReset();
     window.addEventListener('reset-safe-chat', onReset);
     return () => window.removeEventListener('reset-safe-chat', onReset);
   }, [handleReset]);
@@ -178,7 +179,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       animate="show"
       className="relative z-20 flex h-full flex-col justify-between rounded-[24px] border border-[#E3DCCD] bg-[#FBF9F4] p-3 sm:p-4 shadow-sm overflow-hidden"
     >
-      {/* 1. Initial Hero State */}
+      {/* 1. Initial Hero State (6 Question Cards) */}
       <AnimatePresence mode="wait">
         {showIntro && (
           <motion.div
@@ -266,7 +267,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                       msg.role === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    {/* User message chip (visible across all turns) */}
+                    {/* User Question Chip (rendered for every question asked) */}
                     {msg.role === 'user' ? (
                       <div className="inline-flex max-w-[85%] items-center gap-1.5 rounded-full border border-forest/15 bg-white px-3.5 py-1 text-xs font-medium text-forest shadow-xs my-0.5">
                         <SearchIcon className="h-3 w-3 shrink-0 text-forest/70" aria-hidden="true" />
@@ -280,29 +281,36 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                     ) : (
                       <div className="w-full flex flex-col gap-2">
                         {/* 
-                          Requirement 2: Border removed completely (no border, no white card box).
+                          Requirement 2: Border removed completely (no border, no card wrapper).
                           Requirement 3: Reduced font size text-[13px] leading-snug.
-                          Bullet Fix: Each bullet point formatted to render on its own distinct line.
+                          Bullet Fix: Each bullet point rendered with visible dot on its own line.
                         */}
                         <div className="w-full bg-transparent p-0 text-[13px] leading-snug text-ink">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="chat-markdown space-y-1.5 [&_h3]:font-bold [&_h3]:text-[13.5px] [&_h3]:text-forest [&_h3]:mb-1 [&_h3]:mt-2.5 [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-4.5 [&_li]:my-1 [&_li]:leading-snug [&_p]:mb-1 [&_strong]:font-bold [&_strong]:text-forest"
+                            className="chat-markdown space-y-1 text-[13px] leading-snug text-ink"
+                            components={{
+                              strong: ({ node, ...props }) => (
+                                <span className="block font-bold text-forest text-[13.5px] mt-2 mb-0.5" {...props} />
+                              ),
+                              p: ({ node, ...props }) => (
+                                <p className="my-1 text-[13px] leading-snug text-ink" {...props} />
+                              ),
+                            }}
                           >
-                            {normalizeBullets(msg.content)}
+                            {formatChatResponse(msg.content)}
                           </ReactMarkdown>
                         </div>
 
                         {/* 
                           Requirements 5 & 6:
-                          - Outer enclosing card border is removed.
-                          - Line 1 is centered at the top.
-                          - Line 2 is centered directly below it.
-                          - The "Get Quotes" button is placed neatly centered below both lines.
+                          - Box border removed.
+                          - Line 1 centered at top.
+                          - Line 2 centered directly below it.
+                          - "Get Quotes" button centered below both lines.
                         */}
                         {isLatest && (
                           <div className="w-full my-2 flex flex-col items-center justify-center text-center gap-1.5 py-1 px-2">
-                            {/* First line in the middle */}
                             <button
                               type="button"
                               onClick={() => {
@@ -315,12 +323,10 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                               <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                             </button>
 
-                            {/* Second line in the middle */}
                             <p className="text-[11.5px] text-[#5B6660]">
                               Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
                             </p>
 
-                            {/* Centered button */}
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
@@ -358,8 +364,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       </AnimatePresence>
 
       {/* 
-        Requirement 7:
-        Hairline separator border removed (no border-t) and padding tightened to pt-1.
+        Requirement 7: 
+        Separator border removed (no border-t) and padding reduced to pt-1.
       */}
       <motion.div variants={fadeUp} className="mt-auto pt-1 shrink-0 border-0">
         <AskInput
