@@ -16,7 +16,11 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#FAF7F0] border-b border-[#E3DCCD]">
+    /* 
+      1. Line removed: 'border-b border-[#E3DCCD]' eliminated.
+      2. Background matched: Changed from 'bg-[#FAF7F0]' to 'bg-cream' (exact home section background).
+    */
+    <header className="sticky top-0 z-40 w-full bg-cream border-none shadow-none">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo - Clicking resets chat and refreshes the home screen */}
         <a
