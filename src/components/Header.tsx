@@ -13,6 +13,13 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    // Requirement 4: Dispatches chat reset to HeroIntro
+    window.dispatchEvent(new CustomEvent('reset-safe-chat'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -8 }}
@@ -27,7 +34,9 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
         <a
           href="/"
-          className="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+          onClick={handleLogoClick}
+          className="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 cursor-pointer select-none"
+          title="Safe Methods — Start a new chat"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-forest text-gold">
             <ShieldIcon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
