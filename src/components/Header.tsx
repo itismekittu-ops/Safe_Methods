@@ -15,9 +15,12 @@ export function Header() {
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    // Dispatch global reset event to reset conversation and restore hero state
     window.dispatchEvent(new CustomEvent('reset-safe-chat'));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.location.reload();
+    } else {
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -36,7 +39,7 @@ export function Header() {
           href="/"
           onClick={handleLogoClick}
           className="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 cursor-pointer select-none"
-          title="Start a new chat"
+          title="Safe Methods — Start a new chat"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-forest text-gold">
             <ShieldIcon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
@@ -44,7 +47,6 @@ export function Header() {
           <span className="font-serif text-xl font-medium text-forest">Safe Methods</span>
         </a>
 
-        {/* Borderless Login link matching Magic Patterns */}
         <a
           href="/login"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-forest transition-colors duration-150 hover:bg-cream-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
