@@ -24,9 +24,23 @@ interface HeroIntroProps {
   onOpenQuotesModal: () => void;
 }
 
+/**
+ * Normalizes inline bullet characters (•) into standard markdown list syntax
+ * so each bullet renders strictly on its own line.
+ */
+function normalizeBullets(text: string): string {
+  if (!text) return '';
+  return text
+    // Replace inline bullets with a newline and a markdown bullet
+    .replace(/\s*•\s*/g, '\n\n* ')
+    // Ensure section headers (like "Overview", "Guidance Questions", "Current Rates") start on their own lines
+    .replace(/(^|\n)(Overview|Guidance Questions|Current Rates|Pros|Cons):?/g, '\n\n### $2\n')
+    .trim();
+}
+
 export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const reduced = useReducedMotion() ?? false;
-  const { ask: startBidding, arena } = useBidding();
+  const { ask: startBidding, arena, reset: resetBidding } = useBidding();
   const busy = arena.run !== null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -55,11 +69,16 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
   const handleReset = useCallback(() => {
     setMessages([]);
     activeDispatchRef.current = null;
-  }, []);
+    if (resetBidding) {
+      resetBidding();
+    }
+  }, [resetBidding]);
 
-  // Requirements 1 & 4: Listen to logo click event from Header.tsx to reset chat
+  // Requirement 4: Logo click triggers full reset of the conversation window
   useEffect(() => {
-    const onReset = () => handleReset();
+    const onReset = () => {
+      handleReset();
+    };
     window.addEventListener('reset-safe-chat', onReset);
     return () => window.removeEventListener('reset-safe-chat', onReset);
   }, [handleReset]);
@@ -229,97 +248,91 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             transition={{ duration: 0.3, ease: easeOut }}
             className="relative flex flex-1 min-h-0 flex-col overflow-hidden pb-1"
           >
-            {/* 
-              REQUIREMENT 1: 
-              "New Topic" button removed. 
-              The query pill aligns neatly at the top without extra header padding.
-            */}
-            <div className="flex items-center justify-end pb-1.5 shrink-0">
-              {messages.find((m) => m.role === 'user') && (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-forest/15 bg-white px-3 py-1 text-xs font-medium text-forest shadow-xs">
-                  <SearchIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
-                  <span className="truncate max-w-[260px] sm:max-w-[340px]">
-                    {messages.find((m) => m.role === 'user')?.content}
-                  </span>
-                </div>
-              )}
-            </div>
-
+            {/* Scrollable chat thread */}
             <div
               ref={scrollRef}
-              className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-2"
+              className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-3"
             >
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
-
-                if (msg.role === 'user') {
-                  return null; // Top header already displays the active query
-                }
 
                 return (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col items-start gap-1.5 w-full"
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className={`w-full flex flex-col ${
+                      msg.role === 'user' ? 'items-end' : 'items-start'
+                    }`}
                   >
-                    {msg.loading ? (
+                    {/* User message chip (visible across all turns) */}
+                    {msg.role === 'user' ? (
+                      <div className="inline-flex max-w-[85%] items-center gap-1.5 rounded-full border border-forest/15 bg-white px-3.5 py-1 text-xs font-medium text-forest shadow-xs my-0.5">
+                        <SearchIcon className="h-3 w-3 shrink-0 text-forest/70" aria-hidden="true" />
+                        <span className="truncate">{msg.content}</span>
+                      </div>
+                    ) : msg.loading ? (
                       <div className="flex items-center gap-2 py-2 text-[12.5px] text-[#5B6660]">
                         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" />
                         <span>SafeBot is analyzing your question…</span>
                       </div>
                     ) : (
-                      <>
+                      <div className="w-full flex flex-col gap-2">
                         {/* 
-                          REQUIREMENT 2: Border removed completely (no card wrapper, no border, no shadow).
-                          REQUIREMENT 3: Font size reduced to text-[13px] leading-snug with compact headings.
+                          Requirement 2: Border removed completely (no border, no white card box).
+                          Requirement 3: Reduced font size text-[13px] leading-snug.
+                          Bullet Fix: Each bullet point formatted to render on its own distinct line.
                         */}
                         <div className="w-full bg-transparent p-0 text-[13px] leading-snug text-ink">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="chat-markdown space-y-1.5 [&_h3]:font-bold [&_h3]:text-[13.5px] [&_h3]:text-forest [&_h3]:mb-0.5 [&_h3]:mt-2 [&_h4]:font-bold [&_h4]:text-[13px] [&_h4]:text-forest [&_strong]:font-bold [&_strong]:text-forest [&_p]:mb-1 [&_ul]:my-1 [&_li]:my-0.5"
+                            className="chat-markdown space-y-1.5 [&_h3]:font-bold [&_h3]:text-[13.5px] [&_h3]:text-forest [&_h3]:mb-1 [&_h3]:mt-2.5 [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-4.5 [&_li]:my-1 [&_li]:leading-snug [&_p]:mb-1 [&_strong]:font-bold [&_strong]:text-forest"
                           >
-                            {msg.content}
+                            {normalizeBullets(msg.content)}
                           </ReactMarkdown>
                         </div>
 
                         {/* 
-                          REQUIREMENT 5: Border, dividing lines, and box background removed.
-                          REQUIREMENT 6: The two sentences and the button are placed together in a single inline row.
+                          Requirements 5 & 6:
+                          - Outer enclosing card border is removed.
+                          - Line 1 is centered at the top.
+                          - Line 2 is centered directly below it.
+                          - The "Get Quotes" button is placed neatly centered below both lines.
                         */}
                         {isLatest && (
-                          <div className="w-full my-1 flex flex-wrap items-center justify-between gap-2 py-1 px-0.5">
-                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#5B6660]">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const target = document.getElementById('rates-heading');
-                                  target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                }}
-                                className="group inline-flex items-center gap-1 font-serif text-[12px] font-semibold text-[#0B3D2E] hover:underline"
-                              >
-                                <span>Your best options are on the right</span>
-                                <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                              </button>
-                              <span className="hidden sm:inline text-stone-400">&bull;</span>
-                              <span className="text-[11px] text-[#5B6660]">
-                                Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
-                              </span>
-                            </div>
+                          <div className="w-full my-2 flex flex-col items-center justify-center text-center gap-1.5 py-1 px-2">
+                            {/* First line in the middle */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const target = document.getElementById('rates-heading');
+                                target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                              }}
+                              className="group inline-flex items-center justify-center gap-1 font-serif text-[12.5px] font-semibold text-[#0B3D2E] hover:underline"
+                            >
+                              <span>Your best options are on the right</span>
+                              <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                            </button>
 
+                            {/* Second line in the middle */}
+                            <p className="text-[11.5px] text-[#5B6660]">
+                              Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
+                            </p>
+
+                            {/* Centered button */}
                             <button
                               type="button"
                               onClick={onOpenQuotesModal}
-                              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-[#124E3B] shadow-xs"
+                              className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3.5 py-1 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#124E3B] shadow-xs"
                             >
-                              <FileTextIcon className="h-3 w-3" aria-hidden="true" />
+                              <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
                               <span>Get Quotes</span>
                             </button>
                           </div>
                         )}
 
-                        {/* Follow-up chips */}
+                        {/* Contextual Follow-up Chips */}
                         {isLatest && msg.followUps && msg.followUps.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {msg.followUps.map((chip, chipIdx) => (
@@ -333,7 +346,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                             ))}
                           </div>
                         )}
-                      </>
+                      </div>
                     )}
                   </motion.div>
                 );
@@ -345,8 +358,8 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
       </AnimatePresence>
 
       {/* 
-        REQUIREMENT 7: 
-        Separator border removed (no border-t) and padding reduced to pt-1.
+        Requirement 7:
+        Hairline separator border removed (no border-t) and padding tightened to pt-1.
       */}
       <motion.div variants={fadeUp} className="mt-auto pt-1 shrink-0 border-0">
         <AskInput
