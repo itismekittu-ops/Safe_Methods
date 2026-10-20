@@ -1,67 +1,40 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { LogOutIcon, UserIcon } from "lucide-react";
-import { Button } from "./Button";
-import { useAuth } from "../lib/auth";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 export function Navbar() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  const handleHomeClick = () => {
-    if (window.location.pathname === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    // Dispatch reset event for SPA safety
+    window.dispatchEvent(new CustomEvent('reset-safe-chat'));
+    
+    // Force a fresh reload to reset all chat history and return to the initial 6 question cards
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.location.reload();
     } else {
-      navigate("/");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.location.href = '/';
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleHomeClick}
-            className="font-heading text-2xl font-semibold text-primary hover:text-primary/90 transition-colors cursor-pointer"
-          >
-            Safe Methods
-          </button>
-        </div>
+    <header className="sticky top-0 z-40 w-full bg-[#FAF7F0] border-b border-[#E3DCCD]">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Brand Logo - Clicking resets chat and refreshes the home screen */}
+        <a
+          href="/"
+          onClick={handleLogoClick}
+          className="font-serif text-2xl font-bold tracking-tight text-[#0B3D2E] hover:opacity-90 transition-opacity cursor-pointer select-none"
+          title="Safe Methods — Start a new chat"
+        >
+          Safe Methods
+        </a>
 
-        <div className="flex items-center gap-4 md:gap-6">
-          {user ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:flex items-center gap-2 text-sm text-foreground">
-                <UserIcon className="w-4 h-4 text-primary" />
-                {user.email}
-              </span>
-              <Link to="/account" className="hidden sm:block">
-                <Button variant="ghost" size="sm">
-                  My Account
-                </Button>
-              </Link>
-              <Button variant="secondary" size="sm" onClick={handleSignOut}>
-                <LogOutIcon className="w-4 h-4 mr-1.5" />
-                Log Out
-              </Button>
-            </div>
-          ) : (
-            <div className="hidden sm:block">
-              <Link to="/login">
-                <Button variant="secondary" size="sm">
-                  Login
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
+        {/* Login Button */}
+        <Link
+          to="/login"
+          className="rounded-lg border border-[#D8CEBA] bg-white px-3.5 py-1 text-xs sm:text-sm font-semibold text-[#0B3D2E] shadow-2xs transition-colors hover:bg-black/5"
+        >
+          Login
+        </Link>
       </div>
     </header>
   );
