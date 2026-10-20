@@ -60,11 +60,12 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-col px-3 sm:px-6 lg:px-8">
       {/* 
-        Hero viewport: 
-        Cards fill the visible screen at 100% zoom with full visibility for the disclaimer text and ChatBar.
-        Fits cleanly on 32" monitors, standard 1080p, and 14" laptop screens with zero initial scroll.
+        3. Space utilized: 
+        - pt-1 reduced to pt-0 to bring cards up against the navbar.
+        - Height expanded from calc(100vh-76px) to calc(100vh-62px) and max-h increased to 645px.
+        - Gives that vertical space directly to the chat window and Top Matches panel without clipping.
       */}
-      <div className="flex w-full flex-col justify-start pt-1 pb-1 lg:h-[calc(100vh-76px)] lg:max-h-[630px]">
+      <div className="flex w-full flex-col justify-start pt-0 pb-1 lg:h-[calc(100vh-62px)] lg:max-h-[645px]">
         <div className="relative z-20 grid flex-1 min-h-0 items-stretch gap-3 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_410px] xl:grid-cols-[minmax(0,1fr)_430px] overflow-hidden">
           <div className="hero-left relative z-20 flex h-full min-h-0 flex-col">
             <div
@@ -89,11 +90,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* 
-        Dual-track moving brand marquee:
-        Positioned below the hero viewport.
-        Users scroll to view both moving lines clearly without viewport clipping.
-      */}
+      {/* Dual-track moving brand marquee */}
       <div className="relative z-10 w-full py-4 overflow-hidden pointer-events-none">
         <BrandMarquee />
       </div>
