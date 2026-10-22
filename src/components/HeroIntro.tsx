@@ -36,13 +36,11 @@ function formatChatResponse(text: string): string {
 
   return text
     .replace(/\r\n/g, '\n')
-    // Convert section titles to markdown h3 headings so strong tags remain inline
+    // Convert section titles to markdown h3 headings
     .replace(/(^|\n)\*?\*?(Overview|Guidance Questions|Current Rates|Pros|Cons)\*?\*?:?/g, '\n\n### $2\n')
     // Strip orphaned bullet points sitting on their own line
     .replace(/\n\s*[•\-\*]\s*\n/g, '\n')
-    // Remove bullets before bold rate titles so rates align cleanly on a single line
-    .replace(/[•\-\*]\s*(\*\*?[^*]+?\*\*?)\s*\n?\s*([—\-]\s*[^\n]+)/g, '$1 $2')
-    // Split inline bullet points (•, -, *) so every list bullet is on its own line
+    // Ensure every single bullet point starts on a brand-new line
     .replace(/(?:^|\s+)[•\-\*]\s+/g, '\n\n• ')
     .trim();
 }
