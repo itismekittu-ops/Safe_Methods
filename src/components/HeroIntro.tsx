@@ -26,17 +26,23 @@ interface HeroIntroProps {
 
 /**
  * Normalizes text so that:
- * 1. Headings (Overview, Guidance Questions, Current Rates, Pros, Cons) are bolded on their own lines.
- * 2. Every single bullet point (•) starts on its own line with a clear, visible bullet dot.
+ * 1. Headings (Overview, Guidance Questions, Current Rates, Pros, Cons) are converted to markdown h3 headings.
+ * 2. Isolated bullet points (•) on their own lines are stripped.
+ * 3. Rates text stays clean and inline without extra bullet splits.
+ * 4. Standard bullet points (•) in lists start on their own lines.
  */
 function formatChatResponse(text: string): string {
   if (!text) return '';
 
   return text
     .replace(/\r\n/g, '\n')
-    // Ensure section titles are treated as bold headings with proper spacing
-    .replace(/(^|\n)(Overview|Guidance Questions|Current Rates|Pros|Cons):?/g, '\n\n**$2**\n')
-    // Split inline bullet points (•, -, *) so every bullet is strictly on its own line
+    // Convert section titles to markdown h3 headings so strong tags remain inline
+    .replace(/(^|\n)\*?\*?(Overview|Guidance Questions|Current Rates|Pros|Cons)\*?\*?:?/g, '\n\n### $2\n')
+    // Strip orphaned bullet points sitting on their own line
+    .replace(/\n\s*[•\-\*]\s*\n/g, '\n')
+    // Remove bullets before bold rate titles so rates align cleanly on a single line
+    .replace(/[•\-\*]\s*(\*\*?[^*]+?\*\*?)\s*\n?\s*([—\-]\s*[^\n]+)/g, '$1 $2')
+    // Split inline bullet points (•, -, *) so every list bullet is on its own line
     .replace(/(?:^|\s+)[•\-\*]\s+/g, '\n\n• ')
     .trim();
 }
@@ -252,7 +258,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
             {/* Scrollable chat thread */}
             <div
               ref={scrollRef}
-              className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-3"
+              className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-2"
             >
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
@@ -267,7 +273,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                       msg.role === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    {/* User Question Chip (rendered for every question asked) */}
+                    {/* User Question Chip */}
                     {msg.role === 'user' ? (
                       <div className="inline-flex max-w-[85%] items-center gap-1.5 rounded-full border border-forest/15 bg-white px-3.5 py-1 text-xs font-medium text-forest shadow-xs my-0.5">
                         <SearchIcon className="h-3 w-3 shrink-0 text-forest/70" aria-hidden="true" />
@@ -279,22 +285,24 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                         <span>SafeBot is analyzing your question…</span>
                       </div>
                     ) : (
-                      <div className="w-full flex flex-col gap-2">
+                      <div className="w-full flex flex-col gap-1.5">
                         {/* 
-                          Requirement 2: Border removed completely (no border, no card wrapper).
-                          Requirement 3: Reduced font size text-[13px] leading-snug.
-                          Bullet Fix: Each bullet point rendered with visible dot on its own line.
+                          Fix: Removed block-level span from strong, handled headings via h3.
+                          Rates and bullets now render cleanly on a single row without orphaned dots.
                         */}
                         <div className="w-full bg-transparent p-0 text-[13px] leading-snug text-ink">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             className="chat-markdown space-y-1 text-[13px] leading-snug text-ink"
                             components={{
+                              h3: ({ node, ...props }) => (
+                                <h3 className="font-bold text-forest text-[13.5px] mt-1.5 mb-0.5" {...props} />
+                              ),
                               strong: ({ node, ...props }) => (
-                                <span className="block font-bold text-forest text-[13.5px] mt-2 mb-0.5" {...props} />
+                                <strong className="font-bold text-forest text-[13px]" {...props} />
                               ),
                               p: ({ node, ...props }) => (
-                                <p className="my-1 text-[13px] leading-snug text-ink" {...props} />
+                                <p className="my-0.5 text-[13px] leading-snug text-ink" {...props} />
                               ),
                             }}
                           >
@@ -303,38 +311,46 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                         </div>
 
                         {/* 
-                          Requirements 5 & 6:
-                          - Box border removed.
-                          - Line 1 centered at top.
-                          - Line 2 centered directly below it.
-                          - "Get Quotes" button centered below both lines.
+                          Single-line CTA Row:
+                          - Left (2): "Your best options are on the right ->"
+                          - Center (3): "[Get Quotes]" button
+                          - Right (4): "Get free, no-obligation quotes in your inbox"
                         */}
                         {isLatest && (
-                          <div className="w-full my-2 flex flex-col items-center justify-center text-center gap-1.5 py-1 px-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const target = document.getElementById('rates-heading');
-                                target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                              }}
-                              className="group inline-flex items-center justify-center gap-1 font-serif text-[12.5px] font-semibold text-[#0B3D2E] hover:underline"
-                            >
-                              <span>Your best options are on the right</span>
-                              <ArrowRightIcon className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                            </button>
+                          <div className="w-full my-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1 py-1 text-xs">
+                            {/* 2. Left Side */}
+                            <div className="flex-1 text-left shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const target = document.getElementById('rates-heading');
+                                  target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }}
+                                className="group inline-flex items-center gap-1 font-serif text-[12px] font-semibold text-[#0B3D2E] hover:underline whitespace-nowrap"
+                              >
+                                <span>Your best options are on the right</span>
+                                <ArrowRightIcon className="h-3 w-3 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                              </button>
+                            </div>
 
-                            <p className="text-[11.5px] text-[#5B6660]">
-                              Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
-                            </p>
+                            {/* 3. Center Button */}
+                            <div className="shrink-0 flex justify-center">
+                              <button
+                                type="button"
+                                onClick={onOpenQuotesModal}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#124E3B] shadow-xs active:scale-[0.98] whitespace-nowrap"
+                              >
+                                <FileTextIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                <span>Get Quotes</span>
+                              </button>
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={onOpenQuotesModal}
-                              className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#0B3D2E] px-3.5 py-1 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#124E3B] shadow-xs"
-                            >
-                              <FileTextIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                              <span>Get Quotes</span>
-                            </button>
+                            {/* 4. Right Side */}
+                            <div className="flex-1 text-right shrink-0">
+                              <p className="text-[11.5px] text-[#5B6660] whitespace-nowrap">
+                                Get <span className="font-semibold text-[#0B3D2E]">free</span>, no-obligation quotes in your inbox
+                              </p>
+                            </div>
                           </div>
                         )}
 
@@ -363,10 +379,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
         )}
       </AnimatePresence>
 
-      {/* 
-        Requirement 7: 
-        Separator border removed (no border-t) and padding reduced to pt-1.
-      */}
+      {/* Search Input Bar */}
       <motion.div variants={fadeUp} className="mt-auto pt-1 shrink-0 border-0">
         <AskInput
           value={ask.value}
