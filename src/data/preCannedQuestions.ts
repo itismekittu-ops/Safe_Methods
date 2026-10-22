@@ -1484,7 +1484,7 @@ export function formatPreCannedResponse(item: PreCannedQA): string {
 if (item.response.rates && item.response.rates.length > 0) {
   parts.push('\n**Current Rates**\n');
   item.response.rates.forEach((rate) => {
-    parts.push(`${rate.label} — ${rate.details}`);
+    parts.push(`• **${rate.label}** — ${rate.details}`);
   });
 }
 
