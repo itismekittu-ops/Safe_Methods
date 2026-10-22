@@ -1481,12 +1481,12 @@ export function formatPreCannedResponse(item: PreCannedQA): string {
   }
 
   // Grounded Rates
-  if (item.response.rates && item.response.rates.length > 0) {
-    parts.push('\n**Current Rates**\n');
-    item.response.rates.forEach((rate) => {
-      parts.push(`• **${rate.label}** — ${rate.details}`);
-    });
-  }
+if (item.response.rates && item.response.rates.length > 0) {
+  parts.push('\n**Current Rates**\n');
+  item.response.rates.forEach((rate) => {
+    parts.push(`${rate.label} — ${rate.details}`);
+  });
+}
 
   return parts.join('\n');
 }
