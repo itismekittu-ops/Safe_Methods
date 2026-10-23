@@ -150,7 +150,7 @@ export function ContactSection() {
               <ClockIcon className="w-5 h-5 text-primary mt-1" />
               <div>
                 <p className="text-sm font-medium text-foreground mb-1">Response Time</p>
-                <p className="text-muted-foreground">Within 24 hours</p>
+                <p className="text-muted-foreground">Same business day</p>
               </div>
             </div>
           </div>
