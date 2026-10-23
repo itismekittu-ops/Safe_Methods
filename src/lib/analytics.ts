@@ -1,9 +1,7 @@
 const CONSENT_KEY = "safemethods_cookie_consent";
 
-// Direct fallback to your verified Measurement ID so tracking works without server secrets
-export const GA_ID =
-  (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined) ||
-  "G-TKMYQJXL2W";
+// Use your verified GA4 Measurement ID directly
+export const GA_ID = "G-TKMYQJXL2W";
 
 declare global {
   interface Window {
@@ -12,7 +10,7 @@ declare global {
   }
 }
 
-// 1. Immediately establish dataLayer & gtag in window scope so calls queue safely
+// 1. Establish dataLayer & gtag immediately in window scope so calls queue safely
 if (typeof window !== "undefined") {
   window.dataLayer = window.dataLayer || [];
   if (!window.gtag) {
@@ -54,7 +52,7 @@ export function initGA(): void {
     anonymize_ip: true,
   });
 
-  // 4. Inject Google Tag Manager script if not already present
+  // 4. Inject Google Tag Manager script
   const existingScript = document.querySelector(
     `script[src*="googletagmanager.com/gtag/js"]`
   );
@@ -79,19 +77,17 @@ export function updateGAConsent(granted: boolean): void {
     ad_personalization: state,
   });
 
-  // 5. If consent was just granted, immediately fire the current page view
+  // If consent was just granted, immediately fire the current page view
   if (granted) {
     trackPageView(window.location.pathname + window.location.search);
   }
 }
 
-// Backward-compatible alias
 export const updateConsent = updateGAConsent;
 
 export function trackPageView(path: string): void {
   if (!GA_ID || typeof window === "undefined") return;
 
-  // Let Google Consent Mode handle filtering internally; do not discard the event
   if (window.gtag) {
     window.gtag("event", "page_view", {
       page_path: path,
