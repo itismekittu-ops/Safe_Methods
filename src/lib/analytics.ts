@@ -1,10 +1,25 @@
-const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
 const CONSENT_KEY = "safemethods_cookie_consent";
+
+// Direct fallback to your verified Measurement ID so tracking works without server secrets
+export const GA_ID =
+  (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined) ||
+  "G-TKMYQJXL2W";
 
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
+  }
+}
+
+// 1. Immediately establish dataLayer & gtag in window scope so calls queue safely
+if (typeof window !== "undefined") {
+  window.dataLayer = window.dataLayer || [];
+  if (!window.gtag) {
+    window.gtag = function () {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer!.push(arguments);
+    };
   }
 }
 
@@ -16,47 +31,80 @@ function hasConsent(): boolean {
   }
 }
 
+let isInitialized = false;
+
 export function initGA(): void {
-  if (!GA_ID || typeof window === "undefined") return;
+  if (!GA_ID || typeof window === "undefined" || isInitialized) return;
 
   const consent = hasConsent();
   const consentState = consent ? "granted" : "denied";
 
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function (...args: unknown[]) {
-    window.dataLayer!.push(args);
-  };
-  window.gtag("js", new Date());
-  window.gtag("config", GA_ID, { send_page_view: false });
-  window.gtag("consent", "default", {
+  // 2. Set default consent FIRST before any config or tags execute (Google Consent Mode v2)
+  window.gtag!("consent", "default", {
     analytics_storage: consentState,
     ad_storage: consentState,
     ad_user_data: consentState,
     ad_personalization: consentState,
   });
 
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-  document.head.appendChild(script);
+  // 3. Initialize config
+  window.gtag!("js", new Date());
+  window.gtag!("config", GA_ID, {
+    send_page_view: false, // Handled manually on route changes
+    anonymize_ip: true,
+  });
+
+  // 4. Inject Google Tag Manager script if not already present
+  const existingScript = document.querySelector(
+    `script[src*="googletagmanager.com/gtag/js"]`
+  );
+  if (!existingScript) {
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(script);
+  }
+
+  isInitialized = true;
 }
 
 export function updateGAConsent(granted: boolean): void {
   if (typeof window === "undefined" || !window.gtag) return;
   const state = granted ? "granted" : "denied";
+
   window.gtag("consent", "update", {
     analytics_storage: state,
     ad_storage: state,
     ad_user_data: state,
     ad_personalization: state,
   });
+
+  // 5. If consent was just granted, immediately fire the current page view
+  if (granted) {
+    trackPageView(window.location.pathname + window.location.search);
+  }
 }
+
+// Backward-compatible alias
+export const updateConsent = updateGAConsent;
 
 export function trackPageView(path: string): void {
-  if (!GA_ID || typeof window === "undefined" || !window.gtag) return;
-  const consent = hasConsent();
-  if (!consent) return;
-  window.gtag("event", "page_view", { page_path: path });
+  if (!GA_ID || typeof window === "undefined") return;
+
+  // Let Google Consent Mode handle filtering internally; do not discard the event
+  if (window.gtag) {
+    window.gtag("event", "page_view", {
+      page_path: path,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }
 }
 
-export { GA_ID };
+export function trackEvent(
+  eventName: string,
+  params?: Record<string, unknown>
+): void {
+  if (typeof window === "undefined" || !window.gtag) return;
+  window.gtag("event", eventName, params);
+}
