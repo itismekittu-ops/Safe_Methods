@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardBody } from "../components/Card";
 import { Tabs, TabList, Tab, TabPanel } from "../components/Tabs";
@@ -24,10 +24,21 @@ const FacebookIcon = () => (
 );
 
 export function Auth() {
-  const { signUp, signIn, signInWithGoogle, signInWithFacebook, resetPassword } = useAuth();
+  const { user, signUp, signIn, signInWithGoogle, signInWithFacebook, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+
+  // If user is already authenticated, redirect away from /login
+  useEffect(() => {
+    if (user) {
+      if (user.email === "info@safemethods.org") {
+        navigate("/admin/quotes", { replace: true });
+      } else {
+        navigate("/account", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -98,12 +109,16 @@ export function Auth() {
       return;
     }
     setLoginLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error, user: loggedInUser } = await signIn(loginEmail, loginPassword);
     setLoginLoading(false);
     if (error) {
       setLoginError(error);
     } else {
-      navigate("/");
+      if (loginEmail.trim().toLowerCase() === "info@safemethods.org" || loggedInUser?.email === "info@safemethods.org") {
+        navigate("/admin/quotes");
+      } else {
+        navigate("/account");
+      }
     }
   };
 
@@ -124,13 +139,15 @@ export function Auth() {
       return;
     }
     setSignupLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    const { error, needsEmailConfirmation } = await signUp(signupEmail, signupPassword, signupName);
     setSignupLoading(false);
     if (error) {
       setSignupError(error);
+    } else if (needsEmailConfirmation) {
+      setSignupSuccess("Verification email sent! Please check your inbox and click the link to confirm your account.");
     } else {
-      setSignupSuccess("Account created! You're now signed in.");
-      setTimeout(() => navigate("/"), 1200);
+      setSignupSuccess("Account created! Redirecting to your account...");
+      setTimeout(() => navigate("/account"), 1200);
     }
   };
 
@@ -141,7 +158,15 @@ export function Auth() {
 
         <Card floating className="w-full">
           <CardBody className="p-6 sm:p-8">
-            <Tabs value={activeTab} onChange={(v) => { setActiveTab(v as "login" | "signup"); setLoginError(null); setSignupError(null); setSignupSuccess(null); }}>
+            <Tabs
+              value={activeTab}
+              onChange={(v) => {
+                setActiveTab(v as "login" | "signup");
+                setLoginError(null);
+                setSignupError(null);
+                setSignupSuccess(null);
+              }}
+            >
               <TabList className="mb-8">
                 <Tab value="login">Log In</Tab>
                 <Tab value="signup">Sign Up</Tab>
@@ -307,7 +332,7 @@ export function Auth() {
                     </p>
                   )}
                   {signupSuccess && (
-                    <p className="text-sm text-success bg-success/10 border border-success/30 rounded-md px-4 py-3">
+                    <p className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-md px-4 py-3">
                       {signupSuccess}
                     </p>
                   )}
@@ -360,7 +385,10 @@ export function Auth() {
             <p>
               Don't have an account?{" "}
               <button
-                onClick={() => { setActiveTab("signup"); setLoginError(null); }}
+                onClick={() => {
+                  setActiveTab("signup");
+                  setLoginError(null);
+                }}
                 className="text-foreground hover:text-accent font-medium transition-colors"
               >
                 Sign up
@@ -370,7 +398,11 @@ export function Auth() {
             <p>
               Already have an account?{" "}
               <button
-                onClick={() => { setActiveTab("login"); setSignupError(null); setSignupSuccess(null); }}
+                onClick={() => {
+                  setActiveTab("login");
+                  setSignupError(null);
+                  setSignupSuccess(null);
+                }}
                 className="text-foreground hover:text-accent font-medium transition-colors"
               >
                 Log in
