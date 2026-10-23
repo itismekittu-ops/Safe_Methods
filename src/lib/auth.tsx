@@ -40,9 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(newSession?.user ?? null);
       setLoading(false);
 
-      // Intercept email confirmation and OAuth tokens that land on the root URL hash
       if (event === "SIGNED_IN" && newSession && typeof window !== "undefined") {
-        if (window.location.hash.includes("access_token=")) {
+        if (window.location.hash.includes("access_token=") && (window.location.pathname === "/" || window.location.pathname === "")) {
           const destination = newSession.user.email === "info@safemethods.org" ? "/admin/quotes" : "/account";
           window.location.replace(destination);
         }
