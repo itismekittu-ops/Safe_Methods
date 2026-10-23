@@ -228,7 +228,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                 variants={fadeUp}
                 className="mx-auto mt-1 max-w-[480px] text-[12.5px] leading-relaxed text-[#5B6660]"
               >
-                Experts from top financial firms bid for you.
+                Experts from top financial firms bid for you
               </motion.p>
             </div>
 
