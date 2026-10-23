@@ -221,7 +221,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   className="mt-1 block font-serif font-semibold text-gold-dark"
                   style={{ fontSize: 'clamp(18px, 1.8vw, 23px)' }}
                 >
-                  We're changing that.
+                  We're changing that
                 </span>
               </motion.h2>
               <motion.p
