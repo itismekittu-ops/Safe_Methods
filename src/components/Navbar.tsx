@@ -1,7 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/auth';
 
 export function Navbar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     // Dispatch reset event for SPA safety
@@ -15,11 +19,14 @@ export function Navbar() {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const isAdmin = user?.email === 'info@safemethods.org';
+
   return (
-    /* 
-      1. Line removed: 'border-b border-[#E3DCCD]' eliminated.
-      2. Background matched: Changed from 'bg-[#FAF7F0]' to 'bg-cream' (exact home section background).
-    */
     <header className="sticky top-0 z-40 w-full bg-cream border-none shadow-none">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo - Clicking resets chat and refreshes the home screen */}
@@ -32,13 +39,41 @@ export function Navbar() {
           Safe Methods
         </a>
 
-        {/* Login Button */}
-        <Link
-          to="/login"
-          className="rounded-lg border border-[#D8CEBA] bg-white px-3.5 py-1 text-xs sm:text-sm font-semibold text-[#0B3D2E] shadow-2xs transition-colors hover:bg-black/5"
-        >
-          Login
-        </Link>
+        {/* Dynamic Auth Navigation */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {user ? (
+            <>
+              {isAdmin && (
+                <Link
+                  to="/admin/quotes"
+                  className="rounded-lg border border-[#D8CEBA] bg-white px-3 py-1 text-xs sm:text-sm font-semibold text-[#0B3D2E] shadow-2xs transition-colors hover:bg-black/5"
+                >
+                  Admin Quotes
+                </Link>
+              )}
+              <Link
+                to="/account"
+                className="rounded-lg bg-[#0B3D2E] px-3.5 py-1 text-xs sm:text-sm font-semibold text-white shadow-2xs transition-colors hover:bg-[#082e22]"
+              >
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="rounded-lg px-2.5 py-1 text-xs sm:text-sm font-semibold text-[#0B3D2E]/70 hover:text-red-700 hover:bg-red-50 transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-lg border border-[#D8CEBA] bg-white px-3.5 py-1 text-xs sm:text-sm font-semibold text-[#0B3D2E] shadow-2xs transition-colors hover:bg-black/5"
+            >
+              Login
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );
