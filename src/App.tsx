@@ -17,13 +17,8 @@ import { AdminQuotes } from './pages/AdminQuotes';
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return null;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
 
   return children;
 }
@@ -31,19 +26,9 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 function AdminRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return null;
-  }
-
-  // Not logged in -> send to login
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Logged in with non-admin email -> send to account dashboard
-  if (user.email !== 'info@safemethods.org') {
-    return <Navigate to="/account" replace />;
-  }
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.email !== 'info@safemethods.org') return <Navigate to="/account" replace />;
 
   return children;
 }
