@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { QuoteCta } from './QuoteCta';
 import { RateCard } from './RateCard';
@@ -8,6 +8,7 @@ import { TermSelect } from './TermSelect';
 import { useTilt } from '../hooks/useTilt';
 import { useBidding } from '../contexts/BiddingContext';
 import { advisors, rateCategories, terms } from '../data/rates';
+import { trackMixpanelEvent } from '../lib/mixpanel';
 
 const pillTransition = { type: 'spring', stiffness: 520, damping: 40 } as const;
 
@@ -27,6 +28,14 @@ export function RatePanel({ onQuote, onBook }: RatePanelProps) {
   const run = arena.run;
   const busy = run !== null;
   const hasRateType = category.options.length > 1;
+
+  useEffect(() => {
+    trackMixpanelEvent('Filter Changed', {
+      category: categoryId,
+      rate_type: optionId,
+      tenure: termId,
+    });
+  }, [categoryId, optionId, termId]);
 
   return (
     <motion.section

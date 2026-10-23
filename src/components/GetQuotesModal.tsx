@@ -5,6 +5,7 @@ import { Button } from "./Button";
 import { TextInput } from "./TextInput";
 import { Select } from "./Select";
 import { getStoredAttribution } from "../lib/attribution";
+import { trackMixpanelEvent } from "../lib/mixpanel";
 
 export interface BankMatchRef {
   name: string;
@@ -216,6 +217,7 @@ export function GetQuotesModal({ open, onClose, banks, sessionToken, initialCate
       if (!response.ok) throw new Error("submission_failed");
 
       setSuccess(true);
+      trackMixpanelEvent('Quote Submitted', { category: mode });
       setTimeout(() => {
         onClose();
         setSuccess(false);

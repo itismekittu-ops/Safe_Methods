@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import { initGA, trackPageView } from './lib/analytics';
+import { initMixpanel, trackMixpanelPageView } from './lib/mixpanel';
 import { CookieBanner } from './components/CookieBanner';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -37,6 +38,7 @@ function usePageTracking() {
   const location = useLocation();
   useEffect(() => {
     trackPageView(location.pathname + location.search);
+    trackMixpanelPageView(location.pathname + location.search);
   }, [location]);
 }
 
@@ -44,6 +46,7 @@ export function AppRoutes() {
   usePageTracking();
   useEffect(() => {
     initGA();
+    initMixpanel();
   }, []);
   return (
     <AuthProvider>

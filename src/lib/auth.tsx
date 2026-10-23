@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { identifyMixpanelUser, resetMixpanel } from "./mixpanel";
 
 interface AuthContextValue {
   user: User | null;
@@ -41,6 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
 
       if (event === "SIGNED_IN" && newSession && typeof window !== "undefined") {
+        identifyMixpanelUser(newSession.user.id, {
+          email: newSession.user.email,
+          name: newSession.user.user_metadata?.full_name,
+        });
         if (window.location.hash.includes("access_token=") && (window.location.pathname === "/" || window.location.pathname === "")) {
           const destination = newSession.user.email === "info@safemethods.org" ? "/admin/quotes" : "/account";
           window.location.replace(destination);
@@ -102,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    resetMixpanel();
     sessionStorage.removeItem("safebot_session_token");
     await supabase.auth.signOut();
   }, []);

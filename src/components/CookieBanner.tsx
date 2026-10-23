@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { updateGAConsent } from "../lib/analytics";
+import { updateMixpanelConsent } from "../lib/mixpanel";
 
 const CONSENT_KEY = "safemethods_cookie_consent";
 
@@ -21,6 +22,7 @@ export function CookieBanner() {
 
   const handleEssential = () => {
     updateGAConsent(false);
+    updateMixpanelConsent(false);
     try {
       localStorage.setItem(CONSENT_KEY, "essential");
     } catch {
@@ -31,6 +33,7 @@ export function CookieBanner() {
 
   const handleAcceptAll = () => {
     updateGAConsent(true);
+    updateMixpanelConsent(true);
     try {
       localStorage.setItem(CONSENT_KEY, "all");
     } catch {
