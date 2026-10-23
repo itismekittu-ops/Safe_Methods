@@ -6,8 +6,8 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; user?: User | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -35,12 +35,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      (async () => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setLoading(false);
-      })();
+    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      setLoading(false);
+
+      // Intercept email confirmation and OAuth tokens that land on the root URL hash
+      if (event === "SIGNED_IN" && newSession && typeof window !== "undefined") {
+        if (window.location.hash.includes("access_token=")) {
+          const destination = newSession.user.email === "info@safemethods.org" ? "/admin/quotes" : "/account";
+          window.location.replace(destination);
+        }
+      }
     });
 
     return () => {
@@ -49,46 +55,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://safemethods.com";
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: `${origin}/account`,
+      },
     });
     if (error) {
-      // An already-registered address must not be distinguishable from a new
-      // one, otherwise the signup form becomes an account-existence oracle.
       const message = /already|registered|exists/i.test(error.message)
         ? "Check your email to finish setting up your account."
         : "We couldn't complete your signup. Please check your details and try again.";
       return { error: message };
     }
     if (data.user && !data.session) {
-      return { error: "Check your email to finish setting up your account." };
+      return { error: null, needsEmailConfirmation: true };
     }
-    return { error: null };
+    return { error: null, needsEmailConfirmation: false };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    // One message for every failure, so a wrong password and an unknown
-    // address are indistinguishable.
-    if (error) return { error: "Incorrect email or password." };
-    return { error: null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: "Incorrect email or password.", user: null };
+    return { error: null, user: data.user };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://safemethods.com";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/` },
+      options: { redirectTo: `${origin}/account` },
     });
     if (error) return { error: "We couldn't start sign-in. Please try again." };
     return { error: null };
   }, []);
 
   const signInWithFacebook = useCallback(async () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://safemethods.com";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
-      options: { redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/account` },
+      options: { redirectTo: `${origin}/account` },
     });
     if (error) return { error: "We couldn't start sign-in. Please try again." };
     return { error: null };
@@ -100,10 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://safemethods.com";
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://safemethods.com"}/reset-password`,
+      redirectTo: `${origin}/reset-password`,
     });
-    // Same answer whether or not the address has an account.
     if (error) return { error: null };
     return { error: null };
   }, []);
@@ -115,7 +123,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signInWithFacebook, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signUp,
+        signIn,
+        signInWithGoogle,
+        signInWithFacebook,
+        signOut,
+        resetPassword,
+        updatePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
