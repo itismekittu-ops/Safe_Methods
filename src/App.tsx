@@ -14,6 +14,20 @@ import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { ConsultantPortal } from './pages/ConsultantPortal';
 import { AdminQuotes } from './pages/AdminQuotes';
 
+function ProtectedRoute({ children }: { children: React.ReactElement }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function AdminRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
 
@@ -54,7 +68,14 @@ export function AppRoutes() {
           <Route path="/services" element={<ServiceDetail />} />
           <Route path="/blog" element={<BlogPost />} />
           <Route path="/login" element={<Auth />} />
-          <Route path="/account" element={<Account />} />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <Account />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
