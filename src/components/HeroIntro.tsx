@@ -215,7 +215,7 @@ export function HeroIntro({ onOpenQuotesModal }: HeroIntroProps) {
                   >
                     1&nbsp;in&nbsp;4
                   </motion.span>{' '}
-                  Canadians turn to a financial&nbsp;advisor.<SourceMarker />
+                  Canadians turn to a financial&nbsp;advisor<SourceMarker />
                 </span>
                 <span
                   className="mt-1 block font-serif font-semibold text-gold-dark"
