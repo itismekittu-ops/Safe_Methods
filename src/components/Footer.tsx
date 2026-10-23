@@ -105,6 +105,30 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Regulatory data disclosure (footnote [1] target) */}
+        <div
+          id="source-1"
+          className="scroll-mt-24 transition-all duration-500 target:bg-[#114b39] target:border-[#D8CEBA]/40 target:ring-1 target:ring-[#D8CEBA]/30 p-4 rounded-lg border border-[#D8CEBA]/20 mb-6"
+        >
+          <div className="flex items-start gap-3">
+            <p className="text-xs text-primary-foreground/70 leading-relaxed flex-1">
+              <span className="font-semibold text-accent">[1]</span>{' '}
+              Source: Financial Consumer Agency of Canada (FCAC), 2024 Canadian
+              Financial Capability Survey. &ldquo;Use&rdquo; refers to Canadians
+              who identified a professional financial advisor or planner as a
+              source of financial advice; it does not necessarily mean an ongoing
+              advisory relationship or an in-person meeting. Survey conducted
+              February&ndash;March 2024.
+            </p>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="shrink-0 text-xs text-primary-foreground/50 hover:text-accent transition-colors whitespace-nowrap"
+            >
+              Back to top
+            </button>
+          </div>
+        </div>
+
         <div className="pt-8 border-t border-primary-foreground/15 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-primary-foreground/60">
             &copy; 2026 Safe Methods. All rights reserved.

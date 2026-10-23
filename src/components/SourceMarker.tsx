@@ -54,8 +54,15 @@ export function SourceMarker() {
         href={`#${headlineSource.id}`}
         aria-label="Source for this statistic"
         aria-describedby={open ? TOOLTIP_ID : undefined}
+        onClick={(e) => {
+          e.preventDefault();
+          const target = document.getElementById(headlineSource.id);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }}
         className="-my-[5px] -ml-1.5 inline-block rounded px-2 py-[5px] text-[0.55em] font-semibold leading-none text-forest no-underline">
-        
+
         1
       </a>
 
